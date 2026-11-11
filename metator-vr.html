@@ -393,14 +393,17 @@ const VR_EYE = 1.6, VR_IPD = 0.064, VR_DWELL = 1.4, VR_WALK_DWELL = 1.5;
 const VR_SKY = [0.80, 0.90, 0.97];
 const TYPE_EMOJI = { photo: '📷', note: '📝', audio: '🎧', panorama: '🌐', intrusion: '🚨', video: '📹', acces: '🔑', informatique: '💻', visiophonie: '📞' };
 
+const VR_PREC = '#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\n';
 const VR_SHADERS = {
-  mesh: ['attribute vec3 p;attribute vec4 c;uniform mat4 vp;uniform vec3 eye;uniform float fogd;varying vec4 vc;varying float vf;' +
-    'void main(){vec3 w=vec3(p.x,p.z,-p.y);gl_Position=vp*vec4(w,1.);vc=c;float d=length(w-eye);vf=clamp((d-fogd*.35)/(fogd*.65),0.,1.)*.8;}',
-    'precision mediump float;uniform vec3 fogc;varying vec4 vc;varying float vf;void main(){gl_FragColor=vec4(mix(vc.rgb,fogc,vf),vc.a);}'],
-  tex: ['attribute vec3 p;attribute vec2 uv;uniform mat4 vp;uniform vec3 eye;uniform float fogd;varying vec2 vu;varying float vf;' +
-    'void main(){gl_Position=vp*vec4(p,1.);vu=uv;vf=fogd>0.?clamp((length(p-eye)-fogd*.35)/(fogd*.65),0.,1.)*.8:0.;}',
-    'precision mediump float;uniform sampler2D t;uniform vec4 tint;uniform vec3 fogc;varying vec2 vu;varying float vf;' +
-    'void main(){vec4 c=texture2D(t,vu)*tint;if(c.a<.02)discard;gl_FragColor=vec4(mix(c.rgb,fogc,vf),c.a);}'],
+  // brume calculée par pixel (et non par sommet) : un grand sol aux coins lointains ne se voile plus en entier
+  mesh: ['attribute vec3 p;attribute vec4 c;uniform mat4 vp;varying vec4 vc;varying vec3 vw;' +
+    'void main(){vec3 w=vec3(p.x,p.z,-p.y);gl_Position=vp*vec4(w,1.);vc=c;vw=w;}',
+    VR_PREC + 'uniform vec3 fogc;uniform vec3 eye;uniform float fogd;varying vec4 vc;varying vec3 vw;' +
+    'void main(){float f=clamp((length(vw-eye)-fogd*.45)/(fogd*.55),0.,1.)*.6;gl_FragColor=vec4(mix(vc.rgb,fogc,f),vc.a);}'],
+  tex: ['attribute vec3 p;attribute vec2 uv;uniform mat4 vp;varying vec2 vu;varying vec3 vw;' +
+    'void main(){gl_Position=vp*vec4(p,1.);vu=uv;vw=p;}',
+    VR_PREC + 'uniform sampler2D t;uniform vec4 tint;uniform vec3 fogc;uniform vec3 eye;uniform float fogd;varying vec2 vu;varying vec3 vw;' +
+    'void main(){vec4 c=texture2D(t,vu)*tint;if(c.a<.02)discard;float f=fogd>0.?clamp((length(vw-eye)-fogd*.45)/(fogd*.55),0.,1.)*.6:0.;gl_FragColor=vec4(mix(c.rgb,fogc,f),c.a);}'],
   // ciel ou photo 360° : un triangle plein écran, la direction de chaque pixel donne la couleur
   sphere: ['attribute vec2 p;varying vec2 vp;void main(){vp=p;gl_Position=vec4(p,.99999,1.);}',
     'precision highp float;uniform mat4 inv;uniform sampler2D t;uniform float sky;varying vec2 vp;' +
