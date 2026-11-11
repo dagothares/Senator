@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<!--
+  METATOR VR — visite en casque VR d'un pack « .metator-vr » créé dans Metator PC (bouton « 🥽 Pack VR »).
+  • Outil autonome : à poser seul sur une adresse https (les capteurs de mouvement l'exigent), avec
+    metator-vr.webmanifest, metator-vr-sw.js et les deux icônes metator-vr-icon-*.png (application installable, hors ligne).
+  • Le pack est choisi sur le téléphone à chaque visite (copié par câble, e-mail, Bluetooth…) : rien n'est conservé.
+  • Casque type Cardboard (vue stéréo, suivi de la tête) ou « visite sans casque » (glisser le doigt pour regarder).
+-->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#16233d">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Metator VR</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22 aria-hidden=%22true%22%3E%3Ccircle cx=%2232%22 cy=%2232%22 r=%2231%22 fill=%22%231d4f9c%22/%3E%3Ccircle cx=%2232%22 cy=%2232%22 r=%2228%22 fill=%22none%22 stroke=%22%23f2c14e%22 stroke-width=%222.2%22/%3E%3Cellipse cx=%229.9%22 cy=%2224.0%22 rx=%221.9%22 ry=%224.2%22 transform=%22rotate%2820 9.9 24.0%29%22 fill=%22%237cc35a%22/%3E%3Cellipse cx=%2254.1%22 cy=%2224.0%22 rx=%221.9%22 ry=%224.2%22 transform=%22rotate%28-20 54.1 24.0%29%22 fill=%22%237cc35a%22/%3E%3Cellipse cx=%228.5%22 cy=%2230.8%22 rx=%221.9%22 ry=%224.2%22 transform=%22rotate%283 8.5 30.8%29%22 fill=%22%237cc35a%22/%3E%3Cellipse cx=%2255.5%22 cy=%2230.8%22 rx=%221.9%22 ry=%224.2%22 transform=%22rotate%28-3 55.5 30.8%29%22 fill=%22%237cc35a%22/%3E%3Cellipse cx=%229.2%22 cy=%2237.7%22 rx=%221.9%22 ry=%224.2%22 transform=%22rotate%28-14 9.2 37.7%29%22 fill=%22%237cc35a%22/%3E%3Cellipse cx=%2254.8%22 cy=%2237.7%22 rx=%221.9%22 ry=%224.2%22 transform=%22rotate%2814 54.8 37.7%29%22 fill=%22%237cc35a%22/%3E%3Cellipse cx=%2211.9%22 cy=%2244.1%22 rx=%221.9%22 ry=%224.2%22 transform=%22rotate%28-31 11.9 44.1%29%22 fill=%22%237cc35a%22/%3E%3Cellipse cx=%2252.1%22 cy=%2244.1%22 rx=%221.9%22 ry=%224.2%22 transform=%22rotate%2831 52.1 44.1%29%22 fill=%22%237cc35a%22/%3E%3Cellipse cx=%2216.3%22 cy=%2249.5%22 rx=%221.9%22 ry=%224.2%22 transform=%22rotate%28-48 16.3 49.5%29%22 fill=%22%237cc35a%22/%3E%3Cellipse cx=%2247.7%22 cy=%2249.5%22 rx=%221.9%22 ry=%224.2%22 transform=%22rotate%2848 47.7 49.5%29%22 fill=%22%237cc35a%22/%3E%3Cellipse cx=%2222.1%22 cy=%2253.3%22 rx=%221.9%22 ry=%224.2%22 transform=%22rotate%28-65 22.1 53.3%29%22 fill=%22%237cc35a%22/%3E%3Cellipse cx=%2241.9%22 cy=%2253.3%22 rx=%221.9%22 ry=%224.2%22 transform=%22rotate%2865 41.9 53.3%29%22 fill=%22%237cc35a%22/%3E%0A%3Cpath d=%22M31 21v29%22 stroke=%22%23c98b45%22 stroke-width=%223.4%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M28 50h6l-3 6z%22 fill=%22%23f2c14e%22/%3E%0A%3Cg style=%22transform-origin:17px 20px%22%3E%3Cpath d=%22M17 20v14%22 stroke=%22%23e8eef8%22 stroke-width=%221%22/%3E%3Cpath d=%22M15 34h4l-2 4z%22 fill=%22%23e63946%22/%3E%3C/g%3E%0A%3Cg style=%22transform-origin:47px 15px%3Banimation-delay:-.7s%22%3E%3Cpath d=%22M47 15v14%22 stroke=%22%23e8eef8%22 stroke-width=%221%22/%3E%3Cpath d=%22M45 29h4l-2 4z%22 fill=%22%23e63946%22/%3E%3C/g%3E%0A%3Cg style=%22transform-origin:33px 11px%3Banimation-delay:-1.2s%22%3E%3Cpath d=%22M33 11v12%22 stroke=%22%23e8eef8%22 stroke-width=%221%22/%3E%3Cpath d=%22M31 23h4l-2 4z%22 fill=%22%23e63946%22/%3E%3C/g%3E%0A%3Cpath d=%22M17 20L47 15%22 stroke=%22%23f2a019%22 stroke-width=%223.4%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M33 11l-2 14%22 stroke=%22%23ffc94a%22 stroke-width=%223%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2232%22 cy=%2217.6%22 r=%222.6%22 fill=%22%23b8740a%22/%3E%3C/svg%3E">
+<style>
+/* Metator VR — page d'accueil */
+:root { --ink: #16233d; --muted: #61708c; --line: #e3e8f0; --bg: #eef5fc; --accent: #2f7fdc; --accent2: #1d56a0; --green: #3fb04a; --green2: #2a7f33; --brand: #1d4f9c;
+  --round: ui-rounded, "SF Pro Rounded", "Nunito", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--ink); font: 16px/1.4 var(--round); }
+button { font: inherit; color: inherit; border: none; background: none; cursor: pointer; }
+select { font: inherit; width: 100%; padding: 12px 14px; border: 2px solid var(--line); border-radius: 14px; background: #fff; color: var(--ink); }
+.hidden { display: none !important; }
+.home { min-height: 100dvh; display: flex; flex-direction: column; }
+.hero { position: relative; overflow: hidden; padding: calc(16px + env(safe-area-inset-top)) 18px 0; min-height: 300px; background: linear-gradient(180deg, #16233d 0%, #2b4c86 45%, #7cc4f2 82%, #eef5fc 100%); color: #fff; }
+.hero .stars { position: absolute; inset: 0; pointer-events: none; background-image: radial-gradient(1.5px 1.5px at 12% 18%, #fff 50%, transparent), radial-gradient(1px 1px at 32% 8%, #fff 50%, transparent), radial-gradient(1.5px 1.5px at 66% 14%, #fff 50%, transparent), radial-gradient(1px 1px at 82% 26%, #fff 50%, transparent), radial-gradient(1px 1px at 48% 30%, #dbeafe 50%, transparent); opacity: .8; }
+.brand { position: relative; display: flex; align-items: center; gap: 12px; }
+.brand .emblem { width: 62px; height: 62px; flex: none; filter: drop-shadow(0 4px 0 rgba(0,0,0,.25)); }
+.brand h1 { margin: 0; font: 900 32px/1 var(--round); letter-spacing: -.01em; }
+.brand h1 b { color: #ffc94a; }
+.brand h1 small { display: inline-block; margin-left: 6px; padding: 3px 9px; border-radius: 10px; background: #f2a019; color: #fff; font-size: 13px; vertical-align: 6px; letter-spacing: .04em; }
+.brand p { margin: 4px 0 0; font-size: 13.5px; color: #cfe1ff; }
+.scene { position: relative; max-width: 460px; margin: 6px auto -16px; }
+.scene svg { width: 100%; height: auto; display: block; }
+.panel { position: relative; flex: 1; padding: 6px 18px calc(22px + env(safe-area-inset-bottom)); max-width: 520px; width: 100%; margin: 0 auto; }
+.big { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 58px; margin-bottom: 12px; padding: 12px 16px; border-radius: 18px; font-size: 18px; font-weight: 800; background: #fff; color: var(--ink); border: 2px solid var(--line); box-shadow: 0 5px 0 #d3dbe6; }
+.big:active { transform: translateY(3px); box-shadow: 0 2px 0 #d3dbe6; }
+.big.go, .big.primary { color: #fff; border-color: transparent; background: var(--c); box-shadow: 0 5px 0 var(--c2); }
+.big.go { --c: var(--green); --c2: var(--green2); font-size: 19px; }
+.big.primary { --c: var(--accent); --c2: var(--accent2); }
+.lnk { display: block; margin: 4px auto 0; padding: 8px; color: var(--accent); font-weight: 700; text-decoration: underline; }
+.tips { margin: 6px 0 14px; padding: 12px 14px; list-style: none; border-radius: 16px; background: #fff; font-size: 14px; line-height: 1.45; box-shadow: 0 4px 0 #d8e3f0; }
+.tips li + li { margin-top: 6px; }
+.note { margin: 10px 4px 0; font-size: 12.5px; color: var(--muted); text-align: center; }
+#packCard:empty { display: none; }
+#packCard { margin-bottom: 14px; padding: 14px; border-radius: 20px; background: #fff; box-shadow: 0 4px 0 #d8e3f0, 0 8px 18px rgba(16,42,84,.06); animation: rise .3s; }
+.pk-head b { display: block; font-size: 20px; font-weight: 900; }
+.pk-head span { color: var(--muted); font-size: 13.5px; }
+.pk-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 12px; }
+.pk-chips span { padding: 3px 9px; border-radius: 10px; background: var(--bg); font-size: 13px; font-weight: 700; }
+.home.loaded #btnOpen, .home.loaded .tips { display: none; }
+.vr-field { display: block; margin-bottom: 12px; font-weight: 800; font-size: 14px; color: var(--muted); }
+.vr-field select { margin-top: 6px; }
+.vr-check { display: flex; align-items: center; gap: 10px; margin: 0 2px 6px; font-size: 14.5px; font-weight: 700; }
+.vr-check input { width: 22px; height: 22px; flex: none; accent-color: var(--green); }
+.toast { position: fixed; left: 16px; right: 16px; top: calc(16px + env(safe-area-inset-top)); z-index: 60; padding: 14px 18px; border-radius: 18px; background: #16233d; color: #fff; text-align: center; font-weight: 700; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+.toast.error { background: #b91c1c; }
+.busy { position: fixed; inset: 0; z-index: 70; display: flex; flex-direction: column; gap: 16px; align-items: center; justify-content: center; background: rgba(15,30,60,.6); color: #fff; font-weight: 800; }
+.busy::before { content: ''; width: 46px; height: 46px; border-radius: 50%; border: 5px solid rgba(255,255,255,.3); border-top-color: #ffc94a; animation: spin .8s linear infinite; }
+.busy:empty { display: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes rise { from { transform: translateY(10px); opacity: 0; } }
+@keyframes fade { from { opacity: 0; } }
+/* Lecteur VR */
+.vr-screen { position: fixed; inset: 0; z-index: 50; background: #000; touch-action: none; user-select: none; -webkit-user-select: none; }
+.vr-screen canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#vrHud { pointer-events: none; }
+.vr-quit { position: absolute; top: calc(10px + env(safe-area-inset-top)); right: calc(10px + env(safe-area-inset-right)); z-index: 2; width: 44px; height: 44px; border-radius: 50%; background: rgba(0,0,0,.45); color: #fff; font-size: 20px; font-weight: 900; }
+.vr-screen.stereo .vr-quit { top: 6px; right: auto; left: 50%; transform: translateX(-50%); width: 34px; height: 34px; font-size: 15px; opacity: .55; }
+.vr-divider { position: absolute; top: 46px; bottom: 0; left: 50%; width: 2px; margin-left: -1px; background: rgba(255,255,255,.12); pointer-events: none; }
+.vr-mono-hint { position: absolute; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom)); transform: translateX(-50%); padding: 8px 16px; border-radius: 18px; background: rgba(0,0,0,.45); color: #fff; font-size: 13.5px; font-weight: 700; white-space: nowrap; pointer-events: none; animation: fade 4s 6s forwards reverse; }
+</style>
+</head>
+<body>
+<section id="home" class="home">
+  <header class="hero">
+    <div class="stars" aria-hidden="true"></div>
+    <div class="brand"><span id="emblem"></span>
+      <div><h1>Meta<b>tor</b><small>VR</small></h1><p>Visitez le site en réalité virtuelle</p></div></div>
+    <div class="scene" id="scene" aria-hidden="true"></div>
+  </header>
+  <main class="panel">
+    <div id="packCard"></div>
+    <button id="btnOpen" class="big primary">📂 Ouvrir un pack VR</button>
+    <ul class="tips">
+      <li><b>1.</b> Dans Metator sur le PC : bouton « 🥽 Pack VR ». Copiez le fichier « .metator-vr » sur ce téléphone.</li>
+      <li><b>2.</b> Touchez « Ouvrir un pack VR » et choisissez-le (souvent dans Téléchargements).</li>
+      <li><b>3.</b> « Lancer dans le casque », puis placez le téléphone dans le casque.</li>
+      <li><b>👀 Avancer :</b> regardez le sol, la cible se remplit… vous y êtes. <b>⬇ Menu :</b> baissez la tête.</li>
+    </ul>
+    <p class="note">Le pack n’est pas conservé : il est relu à chaque visite. Rien ne quitte le téléphone.</p>
+  </main>
+</section>
+<div id="toast" class="toast hidden"></div>
+<div id="busy" class="busy"></div>
+<input id="packInput" type="file" accept=".metator-vr,.zip,application/zip,application/octet-stream" hidden>
+<script>
+'use strict';
+/* ======================================================================
+   Les instruments du metator (l'arpenteur romain), dessinés en isométrique pour les écrans de lancement :
+   groma (angles droits), chorobate (niveau à eau), dioptre (visées), decempeda (perche de 10 pieds),
+   fil à plomb (perpendiculum), odomètre (compteur de distance) et cadran solaire.
+   Chaque fonction reçoit une projection P(i, j, z) → [x, y] et T, la taille d'une unité en pixels.
+   ====================================================================== */
+const RT = {
+  mix(hex, k) { const n = parseInt(hex.slice(1), 16), f = c => Math.max(0, Math.min(255, Math.round(c + (k > 0 ? (255 - c) * k : c * k)))); return `rgb(${f(n >> 16)},${f((n >> 8) & 255)},${f(n & 255)})`; },
+  pts: a => a.map(p => p.map(v => v.toFixed(1)).join(',')).join(' '),
+  line: (a, b, col, w, extra = '') => `<line x1="${a[0].toFixed(1)}" y1="${a[1].toFixed(1)}" x2="${b[0].toFixed(1)}" y2="${b[1].toFixed(1)}" stroke="${col}" stroke-width="${w}" stroke-linecap="round"${extra}/>`,
+  /** pavé : dessus et deux faces visibles */
+  box(P, i, j, w, d, h, col, z = 0) {
+    const A = P(i, j + d, z), B = P(i + w, j + d, z), C = P(i + w, j, z), At = P(i, j + d, z + h), Bt = P(i + w, j + d, z + h), Ct = P(i + w, j, z + h), Dt = P(i, j, z + h);
+    return `<polygon points="${RT.pts([A, B, Bt, At])}" fill="${RT.mix(col, -0.12)}"/><polygon points="${RT.pts([B, C, Ct, Bt])}" fill="${RT.mix(col, -0.3)}"/><polygon points="${RT.pts([Dt, Ct, Bt, At])}" fill="${RT.mix(col, 0.15)}"/>`;
+  },
+  /** cercle horizontal (plateau) ou vertical (roue, axe le long de j) */
+  ring(P, ci, cj, cz, r, vertical, n = 28) { return Array.from({ length: n }, (_, k) => { const t = k / n * Math.PI * 2; return vertical ? P(ci + r * Math.cos(t), cj, cz + r * Math.sin(t)) : P(ci + r * Math.cos(t), cj + r * Math.sin(t), cz); }); },
+  shadow: (p, rx, ry) => `<ellipse cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" rx="${rx}" ry="${ry}" fill="rgba(0,0,0,.18)"/>`,
+  plumb(top, len, T, delay = 0) {   // fil et plomb qui se balancent
+    const s = T / 34;
+    return `<g class="rt-swing" style="transform-origin:${top[0].toFixed(1)}px ${top[1].toFixed(1)}px;animation-delay:-${delay}s">${RT.line(top, [top[0], top[1] + len], '#33415c', 1.1 * s)}<path d="M${(top[0] - 3 * s).toFixed(1)} ${(top[1] + len).toFixed(1)}h${6 * s}l${-3 * s} ${6 * s}z" fill="#e63946"/></g>`;
+  },
+};
+const ROMAN_TOOLS = {
+  /** la groma : bâton, bras décalé, croix à quatre fils à plomb */
+  groma(P, i, j, T, h = 2.3, arm = 0.7) {
+    const s = T / 34, foot = P(i, j, 0), top = P(i, j, h), hub = P(i + 0.18, j + 0.18, h + 0.12);
+    const ends = [[arm, 0], [-arm, 0], [0, arm], [0, -arm]].map(([dx, dy]) => P(i + 0.18 + dx, j + 0.18 + dy, h + 0.12));
+    let g = RT.shadow(foot, 16 * s, 7 * s) + RT.line(foot, top, '#8a5a2b', 6 * s) + RT.line(top, hub, '#8a5a2b', 4.5 * s);
+    ends.forEach((e, k) => { g += RT.plumb(e, 46 * s, T, (k * 0.55).toFixed(2)); });
+    return g + RT.line(ends[0], ends[1], '#f2a019', 6 * s) + RT.line(ends[2], ends[3], '#ffc94a', 6 * s) + `<circle cx="${hub[0].toFixed(1)}" cy="${hub[1].toFixed(1)}" r="${4 * s}" fill="#b8740a"/>`;
+  },
+  /** le chorobate : long banc de niveau, rigole d'eau sur le dessus, fils à plomb sur les côtés */
+  chorobate(P, i, j, T, L = 2.2) {
+    const s = T / 34, w = 0.22, H = 0.62, wood = '#a0672e';
+    let g = RT.shadow(P(i + L / 2, j + w / 2, 0), L * T * 0.72, 9 * s);
+    for (const di of [0.12, L - 0.12]) for (const dj of [0, w]) g += RT.line(P(i + di, j + dj, 0), P(i + di, j + dj, H), RT.mix(wood, -0.2), 4 * s);
+    for (const di of [0.12, L - 0.12]) g += RT.line(P(i + di, j + w, 0.12), P(i + (di < 1 ? di + 0.45 : di - 0.45), j + w, H), RT.mix(wood, -0.1), 3 * s);
+    g += RT.box(P, i, j, L, w, 0.12, wood, H);
+    g += `<polygon points="${RT.pts([P(i + 0.25, j + 0.07, H + 0.121), P(i + L - 0.25, j + 0.07, H + 0.121), P(i + L - 0.25, j + w - 0.07, H + 0.121), P(i + 0.25, j + w - 0.07, H + 0.121)])}" fill="#5bbcf0" class="rt-water"/>`;
+    for (const di of [0.32, L - 0.32]) { const t = P(i + di, j + w + 0.02, H); g += RT.plumb(t, 0.42 * T, T, di < 1 ? 0.3 : 1.1); g += RT.line(P(i + di - 0.06, j + w + 0.02, 0.12), P(i + di + 0.06, j + w + 0.02, 0.12), '#f2f2f2', 2 * s); }
+    return g;
+  },
+  /** la dioptre : trépied, colonne, plateau gradué et alidade qui tourne lentement */
+  dioptre(P, i, j, T) {
+    const s = T / 34, apex = P(i, j, 1.0), r = 0.38, bronze = '#c9933f';
+    let g = RT.shadow(P(i, j, 0), 20 * s, 8 * s);
+    for (const a of [0.4, 2.5, 4.6]) g += RT.line(P(i + r * Math.cos(a), j + r * Math.sin(a), 0), apex, '#7a5532', 3.4 * s);
+    g += RT.line(apex, P(i, j, 1.28), '#7a5532', 4.5 * s);
+    const disc = RT.ring(P, i, j, 1.3, 0.3, false);
+    g += `<polygon points="${RT.pts(disc)}" fill="${bronze}" stroke="${RT.mix(bronze, -0.35)}" stroke-width="${1.5 * s}"/>`;
+    for (let k = 0; k < 12; k++) { const t = k / 12 * Math.PI * 2; g += RT.line(P(i + 0.24 * Math.cos(t), j + 0.24 * Math.sin(t), 1.3), P(i + 0.29 * Math.cos(t), j + 0.29 * Math.sin(t), 1.3), '#6b4a1a', 1 * s); }
+    const c = P(i, j, 1.33);
+    g += `<g class="rt-turn" style="transform-origin:${c[0].toFixed(1)}px ${c[1].toFixed(1)}px">${RT.line(P(i - 0.32, j + 0.1, 1.33), P(i + 0.32, j - 0.1, 1.33), '#5b3b12', 3 * s)}${RT.line(P(i - 0.3, j + 0.09, 1.33), P(i - 0.3, j + 0.09, 1.48), '#5b3b12', 2.4 * s)}${RT.line(P(i + 0.3, j - 0.09, 1.33), P(i + 0.3, j - 0.09, 1.48), '#5b3b12', 2.4 * s)}</g>`;
+    return g;
+  },
+  /** l'odomètre : chariot, grande roue et boîte à cailloux qui compte les milles */
+  odometre(P, i, j, T) {
+    const s = T / 34, R = 0.34, body = '#b5793a';
+    let g = RT.shadow(P(i + 0.35, j + 0.25, 0), 26 * s, 9 * s);
+    g += `<g class="rt-wheel">${[j, j + 0.5].map(jj => { const W = RT.ring(P, i + 0.35, jj, R, R, true); return `<polygon points="${RT.pts(W)}" fill="none" stroke="#5b3b12" stroke-width="${3 * s}"/>` + [0, 1, 2, 3].map(k => { const t = k * Math.PI / 4; return RT.line(P(i + 0.35 - R * Math.cos(t), jj, R - R * Math.sin(t)), P(i + 0.35 + R * Math.cos(t), jj, R + R * Math.sin(t)), '#7a5532', 1.4 * s); }).join(''); }).join('')}</g>`;
+    g += RT.box(P, i + 0.05, j + 0.05, 0.6, 0.4, 0.3, body, R + 0.05);
+    g += `<polygon points="${RT.pts(RT.ring(P, i + 0.35, j + 0.25, R + 0.36, 0.1, false, 16))}" fill="#e7d3a8" stroke="#5b3b12" stroke-width="${s}"/>`;
+    g += RT.line(P(i - 0.05, j + 0.25, R + 0.2), P(i - 0.55, j + 0.25, R + 0.05), '#7a5532', 3 * s);
+    return g;
+  },
+  /** le fil à plomb (perpendiculum) sur son petit chevalet */
+  perpendiculum(P, i, j, T) {
+    const s = T / 34, base = P(i, j, 0), top = P(i, j, 1.05), arm = P(i + 0.3, j, 1.05);
+    return RT.shadow(base, 12 * s, 5 * s) + RT.line(base, top, '#8a5a2b', 4 * s) + RT.line(top, arm, '#8a5a2b', 3.4 * s) + RT.line(P(i - 0.15, j, 0), P(i + 0.15, j, 0), '#6b4a1a', 4 * s) + RT.plumb(arm, 0.75 * T, T, 0.8);
+  },
+  /** le cadran solaire (scaphé) sur son socle */
+  cadran(P, i, j, T) {
+    const s = T / 34;
+    let g = RT.shadow(P(i + 0.2, j + 0.2, 0), 18 * s, 7 * s) + RT.box(P, i, j, 0.4, 0.4, 0.55, '#e8e0cc');
+    const bowl = RT.ring(P, i + 0.2, j + 0.2, 0.56, 0.17, false, 20);
+    g += `<polygon points="${RT.pts(bowl)}" fill="#cfc4a8" stroke="#8a7f66" stroke-width="${s}"/>` + RT.line(P(i + 0.2, j + 0.2, 0.56), P(i + 0.2, j + 0.2, 0.8), '#5b3b12', 2 * s);
+    return g;
+  },
+  /** un arpenteur romain en tunique ; rod = il porte la decempeda (perche de 10 pieds, embouts de bronze) */
+  agrimensor(P, i, j, T, tunic = '#c0392b', rod = true, flip = false) {
+    const s = T / 34, m = P(i, j, 0), x = m[0], y = m[1], d = flip ? -1 : 1;
+    let g = `<g class="rt-bob">${RT.shadow([x, y], 11 * s, 4.5 * s)}`;
+    g += `<rect x="${x - 5.5 * s}" y="${y - 16 * s}" width="${4.5 * s}" height="${16 * s}" rx="${2 * s}" fill="#f1c6a0"/><rect x="${x + 1 * s}" y="${y - 16 * s}" width="${4.5 * s}" height="${16 * s}" rx="${2 * s}" fill="#f1c6a0"/>`;
+    g += `<path d="M${x - 6 * s} ${y + 0.5 * s}h${6 * s}M${x + 1 * s} ${y + 0.5 * s}h${6 * s}" stroke="#6b4a1a" stroke-width="${2.4 * s}" stroke-linecap="round"/>`;
+    g += `<path d="M${x - 9 * s} ${y - 13 * s}L${x - 7 * s} ${y - 38 * s}h${14 * s}L${x + 9 * s} ${y - 13 * s}z" fill="${tunic}"/><path d="M${x - 8 * s} ${y - 27 * s}h${16 * s}" stroke="#f2c14e" stroke-width="${2 * s}"/>`;
+    g += `<circle cx="${x}" cy="${y - 45 * s}" r="${7.5 * s}" fill="#f1c6a0"/><path d="M${x - 8 * s} ${y - 47 * s}a8 7 0 0 1 ${16 * s} 0z" fill="#5b3b12"/><circle cx="${x + d * 3 * s}" cy="${y - 44 * s}" r="${1.2 * s}" fill="#2f3a4a"/>`;
+    if (rod) {   // perche sur l'épaule, alternance de segments, embouts de bronze
+      const a = [x - d * 34 * s, y - 20 * s], b = [x + d * 30 * s, y - 52 * s];
+      for (let k = 0; k < 10; k++) { const t0 = k / 10, t1 = (k + 1) / 10; g += RT.line([a[0] + (b[0] - a[0]) * t0, a[1] + (b[1] - a[1]) * t0], [a[0] + (b[0] - a[0]) * t1, a[1] + (b[1] - a[1]) * t1], k % 2 ? '#e8d3a0' : '#9c6b30', 3.2 * s, ' stroke-linecap="butt"'); }
+      g += `<circle cx="${a[0]}" cy="${a[1]}" r="${2.4 * s}" fill="#c9933f"/><circle cx="${b[0]}" cy="${b[1]}" r="${2.4 * s}" fill="#c9933f"/>`;
+      g += RT.line([x + d * 4 * s, y - 35 * s], [x + d * 12 * s, y - 42 * s], '#f1c6a0', 4 * s);
+    } else g += RT.line([x - d * 6 * s, y - 33 * s], [x - d * 20 * s, y - 42 * s], '#f1c6a0', 4.5 * s);
+    return g + '</g>';
+  },
+};
+/** Animations des instruments (à insérer une fois dans la page) */
+const ROMAN_CSS = `@keyframes rtswing{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(7deg)}}@keyframes rtturn{0%,100%{transform:rotate(-25deg)}50%{transform:rotate(25deg)}}
+@keyframes rtbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}@keyframes rtwater{0%,100%{opacity:.75}50%{opacity:1}}
+.rt-swing{animation:rtswing 2.2s ease-in-out infinite}.rt-turn{animation:rtturn 7s ease-in-out infinite}.rt-bob{animation:rtbob 2.8s ease-in-out infinite}.rt-water{animation:rtwater 3s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.rt-swing,.rt-turn,.rt-bob,.rt-water{animation:none}}`;
+
+/** Petite scène autonome (Metator mobile, Metator VR) : un chantier d'arpenteurs sur un îlot d'herbe */
+function romanScene(width = 340, height = 190) {
+  const T = Math.min(width / 12.6, height / 9.4), OX = width / 2, OY = 2.75 * T;
+  const P = (i, j, z = 0) => [OX + (i - j) * T, OY + (i + j) * T / 2 - z * T];
+  const N = 6, E = [P(0, 0), P(N, 0), P(N, N), P(0, N)], drop = 0.55 * T;
+  let g = `<polygon points="${RT.pts([E[3], E[2], [E[2][0], E[2][1] + drop], [E[3][0], E[3][1] + drop]])}" fill="#a4723f"/><polygon points="${RT.pts([E[2], E[1], [E[1][0], E[1][1] + drop], [E[2][0], E[2][1] + drop]])}" fill="#7f5630"/>`;
+  g += `<polygon points="${RT.pts(E)}" fill="#7ccc5c"/>`;
+  for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) if ((i + j) % 2) g += `<polygon points="${RT.pts([P(i, j), P(i + 1, j), P(i + 1, j + 1), P(i, j + 1)])}" fill="#86d266"/>`;
+  // voie romaine en pavés et visée à angle droit
+  g += `<polygon points="${RT.pts([P(0, 4.1), P(N, 4.1), P(N, 4.9), P(0, 4.9)])}" fill="#c9bfa8"/>`;
+  for (let k = 0; k < 12; k++) g += RT.line(P(k * 0.5, 4.1), P(k * 0.5, 4.9), '#b0a68f', 1);
+  g += `<line x1="${P(3.4, 2.2)[0]}" y1="${P(3.4, 2.2)[1]}" x2="${P(5.6, 2.2)[0]}" y2="${P(5.6, 2.2)[1]}" stroke="#e63946" stroke-width="1.8" stroke-dasharray="6 4"/>`;
+  const items = [
+    [1.6, 1.4, ROMAN_TOOLS.chorobate(P, 0.4, 0.4, T, 2.1)],
+    [5.6, 3.2, ROMAN_TOOLS.groma(P, 3.4, 2.2, T, 2.0, 0.6)],
+    [7.8, 0, ROMAN_TOOLS.perpendiculum(P, 5.6, 2.2, T)],
+    [9.0, 0, ROMAN_TOOLS.dioptre(P, 5.0, 4.0, T)],
+    [5.4, 0, ROMAN_TOOLS.cadran(P, 0.6, 3.0, T)],
+    [8.6, 0, ROMAN_TOOLS.odometre(P, 1.6, 4.3, T)],
+    [6.3, 0, ROMAN_TOOLS.agrimensor(P, 4.0, 2.3, T, '#c0392b', false)],
+    [9.5, 0, ROMAN_TOOLS.agrimensor(P, 4.2, 5.3, T, '#2f6fc9', true, true)],
+  ].sort((a, b) => a[0] - b[0]);
+  return `<svg class="roman-scene" viewBox="0 0 ${width} ${height}" role="img" aria-label="Arpenteurs romains et leurs instruments">${g}${items.map(x => x[2]).join('')}</svg>`;
+}
+
+/** Emblème Metator : médaillon bleu cerclé d'or, couronne de laurier, groma au centre */
+function metatorEmblem(cls = 'metator-emblem') {
+  const leaf = (x, y, r) => `<ellipse cx="${x}" cy="${y}" rx="1.9" ry="4.2" transform="rotate(${r} ${x} ${y})" fill="#7cc35a"/>`;
+  let laurel = '';
+  for (let k = 0; k < 6; k++) { const a = 160 + k * 17, t = a * Math.PI / 180, x = 32 + 23.5 * Math.cos(t), y = 32 - 23.5 * Math.sin(t); laurel += leaf(x.toFixed(1), y.toFixed(1), (180 - a).toFixed(0)) + leaf((64 - x).toFixed(1), y.toFixed(1), (a - 180).toFixed(0)); }
+  return `<svg class="${cls}" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="31" fill="#1d4f9c"/><circle cx="32" cy="32" r="28" fill="none" stroke="#f2c14e" stroke-width="2.2"/>${laurel}
+<path d="M31 21v29" stroke="#c98b45" stroke-width="3.4" stroke-linecap="round"/><path d="M28 50h6l-3 6z" fill="#f2c14e"/>
+<g class="rt-swing" style="transform-origin:17px 20px"><path d="M17 20v14" stroke="#e8eef8" stroke-width="1"/><path d="M15 34h4l-2 4z" fill="#e63946"/></g>
+<g class="rt-swing" style="transform-origin:47px 15px;animation-delay:-.7s"><path d="M47 15v14" stroke="#e8eef8" stroke-width="1"/><path d="M45 29h4l-2 4z" fill="#e63946"/></g>
+<g class="rt-swing" style="transform-origin:33px 11px;animation-delay:-1.2s"><path d="M33 11v12" stroke="#e8eef8" stroke-width="1"/><path d="M31 23h4l-2 4z" fill="#e63946"/></g>
+<path d="M17 20L47 15" stroke="#f2a019" stroke-width="3.4" stroke-linecap="round"/><path d="M33 11l-2 14" stroke="#ffc94a" stroke-width="3" stroke-linecap="round"/><circle cx="32" cy="17.6" r="2.6" fill="#b8740a"/></svg>`;
+}
+
+// animations : une feuille de style pour toute la page
+if (typeof document !== 'undefined' && !document.getElementById('rt-css')) { const st = document.createElement('style'); st.id = 'rt-css'; st.textContent = ROMAN_CSS; document.head.append(st); }
+
+/* ---------- Utilitaires ---------- */
+const $ = s => document.querySelector(s);
+function el(tag, attrs = {}, ...children) {
+  const node = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v == null || v === false) continue;
+    if (k === 'class') node.className = v;
+    else if (k === 'html') node.innerHTML = v;
+    else if (k.startsWith('on')) node.addEventListener(k.slice(2), v);
+    else if (k === 'value') node.value = v;
+    else node.setAttribute(k, v === true ? '' : v);
+  }
+  node.append(...children.flat().filter(c => c != null && c !== false));
+  return node;
+}
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+let toastTimer;
+function toast(message, error = false) {
+  const t = $('#toast'); t.textContent = message; t.className = 'toast' + (error ? ' error' : '');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.add('hidden'), error ? 6000 : 2500);
+}
+function busy(message) { $('#busy').textContent = message || ''; }
+function pickFile(input) {
+  return new Promise(resolve => { input.value = ''; input.onchange = () => resolve(input.files[0] || null); input.oncancel = () => resolve(null); input.click(); });
+}
+
+/* ======================================================================
+   METATOR VR — visite immersive d'un pack « .metator-vr » créé dans Metator PC (bouton « 🥽 Pack VR »)
+   • Outil à part, à héberger sur sa propre adresse https (les capteurs de mouvement l'exigent).
+   • Le pack est choisi sur le téléphone à chaque visite : rien n'est conservé (il reste en mémoire le temps de la visite).
+   • Téléphone dans un casque type Cardboard : vue stéréo, suivi de la tête (capteurs du téléphone).
+   • Se déplacer : regarder un endroit au sol, la cible se remplit (1,5 s) → on y est. Un appui sur l'écran
+     (ou le bouton du casque) valide tout de suite. Les murs bloquent la visée.
+   • Bulles des repères (notes, photos, audio, objets métier), portes, photos 360° avec leurs liens.
+   • Baisser la tête : menu aux pieds (Départ, Vue drone, Plan suivant, Quitter).
+   • « Visite sans casque » : une seule vue, on glisse le doigt pour regarder (pour essayer ou montrer).
+   Repère monde : Y vers le haut ; un point du plan (x, y) à la hauteur h est en (x, h, y).
+   ====================================================================== */
+
+/* ---------- Lecture d'un ZIP (stocké ou compressé) ---------- */
+async function unzipBlob(blob) {
+  const tailStart = Math.max(0, blob.size - 65557), tail = new DataView(await blob.slice(tailStart).arrayBuffer());
+  let eocd = -1;
+  for (let i = tail.byteLength - 22; i >= 0; i--) if (tail.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  if (eocd < 0) throw new Error('ce fichier n’est pas un pack VR');
+  const count = tail.getUint16(eocd + 10, true), dirSize = tail.getUint32(eocd + 12, true), dirOff = tail.getUint32(eocd + 16, true);
+  const dir = new DataView(await blob.slice(dirOff, dirOff + dirSize).arrayBuffer()), dec = new TextDecoder(), out = new Map();
+  for (let i = 0, p = 0; i < count; i++) {
+    if (dir.getUint32(p, true) !== 0x02014b50) throw new Error('ZIP abîmé');
+    const method = dir.getUint16(p + 10, true), csize = dir.getUint32(p + 20, true), nlen = dir.getUint16(p + 28, true), xlen = dir.getUint16(p + 30, true), clen = dir.getUint16(p + 32, true), loc = dir.getUint32(p + 42, true);
+    const name = dec.decode(new Uint8Array(dir.buffer, p + 46, nlen));
+    p += 46 + nlen + xlen + clen;
+    if (name.endsWith('/')) continue;
+    const lh = new DataView(await blob.slice(loc, loc + 30).arrayBuffer()), start = loc + 30 + lh.getUint16(26, true) + lh.getUint16(28, true);
+    let data = blob.slice(start, start + csize);
+    if (method === 8) {
+      if (!window.DecompressionStream) throw new Error('ZIP compressé non pris en charge par ce navigateur');
+      data = await new Response(data.stream().pipeThrough(new DecompressionStream('deflate-raw'))).blob();
+    } else if (method !== 0) throw new Error('compression ZIP inconnue');
+    out.set(name, data);
+  }
+  return out;
+}
+
+/* ---------- Accueil : ouvrir un pack (à chaque visite) ---------- */
+let current = null;   // { name, size, pack, files }
+async function openPackFile() {
+  const file = await pickFile($('#packInput'));
+  if (!file) return;
+  busy('Ouverture du pack…');
+  try {
+    let files = await unzipBlob(file);
+    const key = [...files.keys()].find(k => k === 'pack.json' || k.endsWith('/pack.json'));
+    if (!key) throw new Error('pack.json absent : est-ce bien un fichier « .metator-vr » ?');
+    const prefix = key.slice(0, -'pack.json'.length);
+    if (prefix) files = new Map([...files].filter(([k]) => k.startsWith(prefix)).map(([k, v]) => [k.slice(prefix.length), v]));
+    const pack = JSON.parse(await files.get('pack.json').text());
+    if (pack.format !== 'metator-vr' || !Array.isArray(pack.plans) || !pack.plans.length) throw new Error('format de pack inconnu');
+    files.delete('pack.json');
+    current = { name: file.name, size: file.size, pack, files };
+    busy(); showPack();
+  } catch (e) { console.error(e); busy(); toast('Pack illisible : ' + e.message, true); }
+}
+function showPack() {
+  const P = current.pack, nPins = P.plans.reduce((s, p) => s + (p.pins || []).length, 0), nPanos = Object.keys(P.panos || {}).length;
+  let lens = true;
+  try { lens = localStorage.getItem('metator-vr-lens') !== '0'; } catch { }
+  const sel = P.plans.length > 1 ? el('select', { id: 'vrPlanSel' }, P.plans.map((p, i) => el('option', { value: i }, p.nom))) : null;
+  const go = stereo => { const lensBox = $('#vrLens'); lens = lensBox ? lensBox.checked : lens; try { localStorage.setItem('metator-vr-lens', lens ? '1' : '0'); } catch { } startVr(current, { stereo, plan: sel ? +sel.value : 0, lens }); };
+  $('#packCard').replaceChildren(
+    el('div', { class: 'pk-head' }, el('b', {}, P.nom || current.name), el('span', {}, [P.auteur, P.date].filter(Boolean).join(' · ') || current.name)),
+    el('div', { class: 'pk-chips' }, el('span', {}, `🗺️ ${P.plans.length} plan${P.plans.length > 1 ? 's' : ''}`), el('span', {}, `🫧 ${nPins} repère${nPins > 1 ? 's' : ''}`), nPanos ? el('span', {}, `🌐 ${nPanos} photo${nPanos > 1 ? 's' : ''} 360°`) : null, el('span', {}, `${(current.size / 1048576).toFixed(1).replace('.', ',')} Mo`)),
+    sel ? el('label', { class: 'vr-field' }, 'Commencer par', sel) : null,
+    el('button', { class: 'big go', id: 'btnGo', onclick: () => go(true) }, '🥽 Lancer dans le casque'),
+    el('button', { class: 'big', id: 'btnMono', onclick: () => go(false) }, '📱 Visite sans casque'),
+    el('label', { class: 'vr-check' }, el('input', { type: 'checkbox', id: 'vrLens', checked: lens }), 'Corriger la courbure des lentilles du casque'),
+    el('button', { class: 'lnk', onclick: () => { current = null; $('#packCard').replaceChildren(); $('#home').classList.remove('loaded'); } }, 'Choisir un autre pack'));
+  $('#home').classList.add('loaded');
+}
+
+/* ---------- Petites maths 3D ---------- */
+const V3 = {
+  add: (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]], sub: (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]],
+  mul: (a, k) => [a[0] * k, a[1] * k, a[2] * k], dot: (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2],
+  cross: (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]],
+  len: a => Math.hypot(a[0], a[1], a[2]), norm: a => { const l = Math.hypot(a[0], a[1], a[2]) || 1; return [a[0] / l, a[1] / l, a[2] / l]; },
+};
+const Q = {
+  mul(a, b) { return [a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1], a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0], a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3], a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2]]; },
+  axis(ax, ang) { const s = Math.sin(ang / 2); return [ax[0] * s, ax[1] * s, ax[2] * s, Math.cos(ang / 2)]; },
+  rot(q, v) { const [x, y, z, w] = q, ix = w * v[0] + y * v[2] - z * v[1], iy = w * v[1] + z * v[0] - x * v[2], iz = w * v[2] + x * v[1] - y * v[0], iw = -x * v[0] - y * v[1] - z * v[2];
+    return [ix * w + iw * -x + iy * -z - iz * -y, iy * w + iw * -y + iz * -x - ix * -z, iz * w + iw * -z + ix * -y - iy * -x]; },
+  /** Orientation du téléphone (même calcul que DeviceOrientationControls de three.js), repère Y vers le haut. */
+  device(alpha, beta, gamma, orient) {
+    const x = beta * DEG2, y = alpha * DEG2, z = -gamma * DEG2, c1 = Math.cos(x / 2), c2 = Math.cos(y / 2), c3 = Math.cos(z / 2), s1 = Math.sin(x / 2), s2 = Math.sin(y / 2), s3 = Math.sin(z / 2);
+    let q = [s1 * c2 * c3 + c1 * s2 * s3, c1 * s2 * c3 - s1 * c2 * s3, c1 * c2 * s3 - s1 * s2 * c3, c1 * c2 * c3 + s1 * s2 * s3];
+    q = Q.mul(q, [-Math.SQRT1_2, 0, 0, Math.SQRT1_2]);
+    return Q.mul(q, Q.axis([0, 0, 1], -orient * DEG2));
+  },
+};
+const DEG2 = Math.PI / 180;
+const M4 = {
+  persp(fovy, asp, n, f) { const t = 1 / Math.tan(fovy / 2); return [t / asp, 0, 0, 0, 0, t, 0, 0, 0, 0, (f + n) / (n - f), -1, 0, 0, 2 * f * n / (n - f), 0]; },
+  mul(a, b) { const o = new Array(16); for (let c = 0; c < 4; c++) for (let r = 0; r < 4; r++) { let s = 0; for (let k = 0; k < 4; k++) s += a[k * 4 + r] * b[c * 4 + k]; o[c * 4 + r] = s; } return o; },
+  /** Vue d'une caméra placée en p, tournée par le quaternion q. */
+  view(q, p) {
+    const [x, y, z, w] = q, r = [1 - 2 * (y * y + z * z), 2 * (x * y + z * w), 2 * (x * z - y * w), 2 * (x * y - z * w), 1 - 2 * (x * x + z * z), 2 * (y * z + x * w), 2 * (x * z + y * w), 2 * (y * z - x * w), 1 - 2 * (x * x + y * y)];
+    // r = colonnes de la rotation ; vue = transposée, puis translation
+    const m = [r[0], r[3], r[6], 0, r[1], r[4], r[7], 0, r[2], r[5], r[8], 0, 0, 0, 0, 1];
+    m[12] = -(m[0] * p[0] + m[4] * p[1] + m[8] * p[2]); m[13] = -(m[1] * p[0] + m[5] * p[1] + m[9] * p[2]); m[14] = -(m[2] * p[0] + m[6] * p[1] + m[10] * p[2]);
+    return m;
+  },
+  inv(m) {
+    const [a00, a01, a02, a03, a10, a11, a12, a13, a20, a21, a22, a23, a30, a31, a32, a33] = m;
+    const b00 = a00 * a11 - a01 * a10, b01 = a00 * a12 - a02 * a10, b02 = a00 * a13 - a03 * a10, b03 = a01 * a12 - a02 * a11, b04 = a01 * a13 - a03 * a11, b05 = a02 * a13 - a03 * a12;
+    const b06 = a20 * a31 - a21 * a30, b07 = a20 * a32 - a22 * a30, b08 = a20 * a33 - a23 * a30, b09 = a21 * a32 - a22 * a31, b10 = a21 * a33 - a23 * a31, b11 = a22 * a33 - a23 * a32;
+    const d = 1 / (b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06);
+    return [(a11 * b11 - a12 * b10 + a13 * b09) * d, (a02 * b10 - a01 * b11 - a03 * b09) * d, (a31 * b05 - a32 * b04 + a33 * b03) * d, (a22 * b04 - a21 * b05 - a23 * b03) * d,
+      (a12 * b08 - a10 * b11 - a13 * b07) * d, (a00 * b11 - a02 * b08 + a03 * b07) * d, (a32 * b02 - a30 * b05 - a33 * b01) * d, (a20 * b05 - a22 * b02 + a23 * b01) * d,
+      (a10 * b10 - a11 * b08 + a13 * b06) * d, (a01 * b08 - a00 * b10 - a03 * b06) * d, (a30 * b04 - a31 * b02 + a33 * b00) * d, (a21 * b02 - a20 * b04 - a23 * b00) * d,
+      (a11 * b07 - a10 * b09 - a12 * b06) * d, (a00 * b09 - a01 * b07 + a02 * b06) * d, (a31 * b01 - a30 * b03 - a32 * b00) * d, (a20 * b03 - a21 * b01 + a22 * b00) * d];
+  },
+};
+const yawOf = f => Math.atan2(-f[0], -f[2]);
+const dirYaw = yaw => [-Math.sin(yaw), 0, -Math.cos(yaw)];
+
+/* ---------- Moteur ---------- */
+const VR = { on: false };
+const VR_EYE = 1.6, VR_IPD = 0.064, VR_DWELL = 1.4, VR_WALK_DWELL = 1.5;
+const VR_SKY = [0.80, 0.90, 0.97];
+const TYPE_EMOJI = { photo: '📷', note: '📝', audio: '🎧', panorama: '🌐', intrusion: '🚨', video: '📹', acces: '🔑', informatique: '💻', visiophonie: '📞' };
+
+const VR_SHADERS = {
+  mesh: ['attribute vec3 p;attribute vec4 c;uniform mat4 vp;uniform vec3 eye;uniform float fogd;varying vec4 vc;varying float vf;' +
+    'void main(){vec3 w=vec3(p.x,p.z,-p.y);gl_Position=vp*vec4(w,1.);vc=c;float d=length(w-eye);vf=clamp((d-fogd*.35)/(fogd*.65),0.,1.)*.8;}',
+    'precision mediump float;uniform vec3 fogc;varying vec4 vc;varying float vf;void main(){gl_FragColor=vec4(mix(vc.rgb,fogc,vf),vc.a);}'],
+  tex: ['attribute vec3 p;attribute vec2 uv;uniform mat4 vp;uniform vec3 eye;uniform float fogd;varying vec2 vu;varying float vf;' +
+    'void main(){gl_Position=vp*vec4(p,1.);vu=uv;vf=fogd>0.?clamp((length(p-eye)-fogd*.35)/(fogd*.65),0.,1.)*.8:0.;}',
+    'precision mediump float;uniform sampler2D t;uniform vec4 tint;uniform vec3 fogc;varying vec2 vu;varying float vf;' +
+    'void main(){vec4 c=texture2D(t,vu)*tint;if(c.a<.02)discard;gl_FragColor=vec4(mix(c.rgb,fogc,vf),c.a);}'],
+  // ciel ou photo 360° : un triangle plein écran, la direction de chaque pixel donne la couleur
+  sphere: ['attribute vec2 p;varying vec2 vp;void main(){vp=p;gl_Position=vec4(p,.99999,1.);}',
+    'precision highp float;uniform mat4 inv;uniform sampler2D t;uniform float sky;varying vec2 vp;' +
+    'void main(){vec4 w=inv*vec4(vp,1.,1.);vec3 d=normalize(w.xyz/w.w);' +
+    'if(sky>.5){float h=d.y;vec3 c=h>0.?mix(vec3(.86,.93,.98),vec3(.42,.68,.93),pow(h,.6)):mix(vec3(.80,.90,.97),vec3(.72,.76,.70),clamp(-h*6.,0.,1.));gl_FragColor=vec4(c,1.);return;}' +
+    'float u=.5+atan(d.x,-d.z)/6.2831853;float v=.5-asin(clamp(d.y,-1.,1.))/3.1415927;gl_FragColor=texture2D(t,vec2(u,v));}'],
+  // correction des lentilles : distorsion en barillet de chaque œil
+  lens: ['attribute vec2 p;varying vec2 vp;void main(){vp=p;gl_Position=vec4(p,0.,1.);}',
+    'precision mediump float;uniform sampler2D t;uniform float off;uniform float asp;uniform vec2 k;varying vec2 vp;' +
+    'void main(){vec2 q=vec2(vp.x*asp,vp.y)/length(vec2(asp,1.));float r2=dot(q,q);float f=(1.+k.x*r2+k.y*r2*r2)/(1.+k.x+k.y);vec2 s=vp*f;' +
+    'if(abs(s.x)>1.||abs(s.y)>1.){gl_FragColor=vec4(0.,0.,0.,1.);return;}vec2 uv=s*.5+.5;gl_FragColor=texture2D(t,vec2(off+uv.x*.5,uv.y));}'],
+};
+
+function vrProgram(gl, [vs, fs]) {
+  const mk = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; };
+  const p = gl.createProgram(); gl.attachShader(p, mk(gl.VERTEX_SHADER, vs)); gl.attachShader(p, mk(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(p);
+  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+  const u = {}, a = {};
+  for (let i = 0; i < gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS); i++) { const n = gl.getActiveUniform(p, i).name; u[n] = gl.getUniformLocation(p, n); }
+  for (let i = 0; i < gl.getProgramParameter(p, gl.ACTIVE_ATTRIBUTES); i++) { const n = gl.getActiveAttrib(p, i).name; a[n] = gl.getAttribLocation(p, n); }
+  return { p, u, a };
+}
+function vrTexture(src, { repeat = false, mip = true } = {}) {
+  const gl = VR.gl, t = gl.createTexture(), pot = n => (n & (n - 1)) === 0;
+  gl.bindTexture(gl.TEXTURE_2D, t);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);
+  const canMip = mip && (VR.gl2 || (pot(src.width) && pot(src.height)));
+  if (canMip) gl.generateMipmap(gl.TEXTURE_2D);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, canMip ? gl.LINEAR_MIPMAP_LINEAR : gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  const wrap = repeat && (VR.gl2 || (pot(src.width) && pot(src.height))) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap);
+  if (canMip && VR.aniso) gl.texParameterf(gl.TEXTURE_2D, VR.aniso.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(8, gl.getParameter(VR.aniso.MAX_TEXTURE_MAX_ANISOTROPY_EXT)));
+  return t;
+}
+async function vrBitmap(blob, max) {
+  const bm = await createImageBitmap(blob);
+  const lim = Math.min(max || 1e9, VR.maxTex || 4096);
+  if (Math.max(bm.width, bm.height) <= lim) return bm;
+  const k = lim / Math.max(bm.width, bm.height), c = el('canvas', { width: Math.round(bm.width * k), height: Math.round(bm.height * k) });
+  c.getContext('2d').drawImage(bm, 0, 0, c.width, c.height); bm.close?.();
+  return c;
+}
+
+/* ---------- Textures dessinées (bulles, panneaux, menu) ---------- */
+function vrCanvas(w, h) { const c = el('canvas', { width: w, height: h }); return [c, c.getContext('2d')]; }
+function roundRect(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+function fitText(g, text, max) { if (g.measureText(text).width <= max) return text; let s = text; while (s.length > 1 && g.measureText(s + '…').width > max) s = s.slice(0, -1); return s + '…'; }
+function wrapText(g, text, max, lines) {
+  const out = [];
+  for (const para of String(text || '').split('\n')) {
+    let line = '';
+    for (const word of para.split(/\s+/)) { const t = line ? line + ' ' + word : word; if (g.measureText(t).width > max && line) { out.push(line); line = word; } else line = t; }
+    out.push(line);
+    if (out.length >= lines) break;
+  }
+  if (out.length > lines) out.length = lines;
+  if (out.length === lines) out[lines - 1] = fitText(g, out[lines - 1], max);
+  return out;
+}
+const VR_FONT = '"Nunito", "Segoe UI", system-ui, Roboto, sans-serif';
+function bubbleTexture(pin) {
+  const [c, g] = vrCanvas(512, 400);
+  // halo d'état (objets métier)
+  if (pin.etatColor) { g.fillStyle = pin.etatColor; g.globalAlpha = .35; g.beginPath(); g.arc(256, 140, 132, 0, 7); g.fill(); g.globalAlpha = 1; }
+  g.fillStyle = 'rgba(0,0,0,.18)'; g.beginPath(); g.ellipse(256, 262, 70, 14, 0, 0, 7); g.fill();
+  g.fillStyle = '#fff'; g.beginPath(); g.arc(256, 140, 112, 0, 7); g.fill();
+  g.fillStyle = pin.color || '#2f7fdc'; g.beginPath(); g.arc(256, 140, 98, 0, 7); g.fill();
+  g.fillStyle = 'rgba(255,255,255,.25)'; g.beginPath(); g.ellipse(226, 100, 50, 30, -.5, 0, 7); g.fill();
+  g.font = `110px ${VR_FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(TYPE_EMOJI[pin.type] || '📍', 256, 148);
+  if (pin.etatColor) { g.fillStyle = pin.etatColor; g.strokeStyle = '#fff'; g.lineWidth = 8; g.beginPath(); g.arc(340, 64, 30, 0, 7); g.fill(); g.stroke(); }
+  const title = pin.titre || (pin.metier || ({ photo: 'Photo', note: 'Note', audio: 'Audio', panorama: 'Photo 360°' })[pin.type] || 'Repère');
+  g.font = `800 50px ${VR_FONT}`; const t = fitText(g, title, 470), w = Math.max(140, g.measureText(t).width + 50);
+  g.fillStyle = '#16233d'; roundRect(g, 256 - w / 2, 300, w, 80, 40); g.fill();
+  g.fillStyle = '#fff'; g.fillText(t, 256, 342);
+  return c;
+}
+function iconTexture(emoji, label, bg = '#2f7fdc') {
+  const [c, g] = vrCanvas(256, 300);
+  g.fillStyle = 'rgba(255,255,255,.95)'; g.beginPath(); g.arc(128, 116, 108, 0, 7); g.fill();
+  g.fillStyle = bg; g.beginPath(); g.arc(128, 116, 94, 0, 7); g.fill();
+  g.font = `96px ${VR_FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#fff'; g.fillText(emoji, 128, 122);
+  if (label) { g.font = `800 38px ${VR_FONT}`; const t = fitText(g, label, 250), w = g.measureText(t).width + 30; g.fillStyle = 'rgba(22,35,61,.9)'; roundRect(g, 128 - w / 2, 236, w, 56, 28); g.fill(); g.fillStyle = '#fff'; g.fillText(t, 128, 265); }
+  return c;
+}
+function groundTexture() {
+  const [c, g] = vrCanvas(256, 256);
+  g.fillStyle = '#d3dcc7'; g.fillRect(0, 0, 256, 256);
+  for (let i = 0; i < 900; i++) { g.fillStyle = Math.random() < .5 ? 'rgba(120,150,100,.08)' : 'rgba(255,255,255,.12)'; g.fillRect(Math.random() * 256, Math.random() * 256, 3, 3); }
+  g.strokeStyle = 'rgba(90,110,80,.28)'; g.lineWidth = 3; g.strokeRect(0, 0, 256, 256);
+  return c;
+}
+function ringTexture() {
+  const [c, g] = vrCanvas(256, 256);
+  g.strokeStyle = '#fff'; g.lineWidth = 18; g.beginPath(); g.arc(128, 128, 100, 0, 7); g.stroke();
+  g.fillStyle = 'rgba(255,255,255,.35)'; g.beginPath(); g.arc(128, 128, 60, 0, 7); g.fill();
+  return c;
+}
+
+/* ---------- Démarrage / arrêt ---------- */
+async function startVr(cur, opts) {
+  if (VR.on) return;
+  const stereo = !!opts.stereo;
+  // plein écran et paysage : à demander tout de suite (geste de l'utilisateur)
+  const fs = document.documentElement.requestFullscreen?.({ navigationUI: 'hide' });
+  Object.assign(VR, { on: true, files: cur.files, pack: cur.pack, stereo, lens: stereo && opts.lens !== false, planIdx: opts.plan || 0, scene: 'maquette',
+    head: [0, VR_EYE, 0], yawOffset: 0, wantYaw: 0, dragYaw: 0, dragPitch: 0, sensor: false, devQ: null, fade: 1, fadeTo: 0, target: null, dwell: 0, cooldown: 0,
+    panel: null, menuYaw: 0, drone: false, quads: [], audio: null, hint: null, last: performance.now(), loading: true, urls: [],
+    meshBuf: null, levelTex: [], pano: null, fbo: null, maquetteHead: null, padDown: false, walk: null, walkAnchor: null, walkAnchorPrev: null, onBlack: null, trash: [], t0: performance.now(), saidNoSensor: false });
+  const screenEl = el('section', { id: 'vrScreen', class: 'vr-screen' + (stereo ? ' stereo' : '') },
+    el('canvas', { id: 'vrGl' }), el('canvas', { id: 'vrHud' }),
+    el('button', { class: 'vr-quit', 'aria-label': 'Quitter', onclick: () => stopVr() }, '✕'),
+    stereo ? el('div', { class: 'vr-divider' }) : el('div', { class: 'vr-mono-hint' }, 'Glissez pour regarder · touchez pour valider'));
+  document.body.append(screenEl);
+  history.pushState({ vr: true }, '');
+  if (fs) fs.then(() => stereo && screen.orientation?.lock?.('landscape').catch(() => { })).catch(() => { });
+  // capteurs (iPhone : autorisation explicite)
+  if (stereo) {
+    try { if (typeof DeviceOrientationEvent !== 'undefined' && DeviceOrientationEvent.requestPermission) await DeviceOrientationEvent.requestPermission(); } catch { }
+    addEventListener('deviceorientation', vrOnOrient);
+  }
+  try { VR.wake = await navigator.wakeLock?.request('screen'); } catch { }
+  vrBindInput(screenEl);
+  try {
+    vrInitGl($('#vrGl'));
+    await vrLoadPlan(VR.planIdx, true);
+  } catch (e) { console.error(e); stopVr(); toast('Visite VR impossible : ' + e.message, true); return; }
+  VR.loading = false;
+  vrWelcome();
+  VR.raf = requestAnimationFrame(vrFrame);
+}
+function stopVr(fromHistory) {
+  if (!VR.on) return;
+  VR.on = false;
+  cancelAnimationFrame(VR.raf);
+  removeEventListener('deviceorientation', vrOnOrient);
+  removeEventListener('keydown', vrOnKey);
+  if (VR.audio) { VR.audio.pause(); VR.audio = null; }
+  VR.urls.forEach(u => URL.revokeObjectURL(u));
+  try { VR.wake?.release(); } catch { }
+  try { screen.orientation?.unlock?.(); } catch { }
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => { });
+  try { VR.gl?.getExtension('WEBGL_lose_context')?.loseContext(); } catch { }
+  $('#vrScreen')?.remove();
+  VR.gl = null;
+  if (!fromHistory && history.state?.vr) history.back();
+}
+addEventListener('popstate', () => { if (VR.on) stopVr(true); });
+
+function vrInitGl(canvas) {
+  let gl = canvas.getContext('webgl2', { antialias: true, alpha: false }); VR.gl2 = !!gl;
+  if (!gl) gl = canvas.getContext('webgl', { antialias: true, alpha: false });
+  if (!gl) throw new Error('WebGL indisponible sur ce téléphone');
+  VR.gl = gl;
+  VR.aniso = gl.getExtension('EXT_texture_filter_anisotropic');
+  VR.maxTex = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+  if (!VR.gl2) gl.getExtension('OES_element_index_uint');
+  VR.prog = { mesh: vrProgram(gl, VR_SHADERS.mesh), tex: vrProgram(gl, VR_SHADERS.tex), sphere: vrProgram(gl, VR_SHADERS.sphere), lens: vrProgram(gl, VR_SHADERS.lens) };
+  VR.full = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, VR.full); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  VR.quadBuf = gl.createBuffer();
+  VR.texGround = vrTexture(groundTexture(), { repeat: true });
+  VR.texRing = vrTexture(ringTexture());
+  const [w1] = vrCanvas(2, 2); w1.getContext('2d').fillStyle = '#fff'; w1.getContext('2d').fillRect(0, 0, 2, 2); VR.texWhite = vrTexture(w1, { mip: false });
+  VR.menuTex = {};
+  for (const [k, e, l, bg] of [['start', '🏁', 'Départ', '#3fb04a'], ['drone', '🚁', 'Vue drone', '#2f7fdc'], ['ground', '🧍', 'Au sol', '#2f7fdc'], ['plan', '🗺️', 'Plan suivant', '#f2a019'],
+    ['quit', '🚪', 'Quitter', '#dc2626'], ['back', '↩️', 'Maquette', '#3fb04a'], ['door', '🚪', '', '#8a5a2b']]) VR.menuTex[k] = vrTexture(iconTexture(e, l, bg));
+}
+
+async function vrFile(name) { const b = VR.files.get(name); if (!b) throw new Error('fichier absent du pack : ' + name); return b; }
+
+/** Charge un plan du pack : maquette 3D, image du plan, bulles et portes. */
+async function vrLoadPlan(idx, first) {
+  const gl = VR.gl, P = VR.pack.plans[idx];
+  VR.planIdx = idx; VR.plan = P; VR.scene = 'maquette'; VR.panel = null; VR.drone = false;
+  for (const t of VR.levelTex || []) vrFree(t);
+  VR.levelTex = [];
+  // maquette
+  let data = new Float32Array(0);
+  if (P.mesh && (P.nO + P.nA)) { try { data = new Float32Array(await (await vrFile(P.mesh)).arrayBuffer()); } catch (e) { console.warn(e); } }
+  if (!VR.meshBuf) VR.meshBuf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, VR.meshBuf); gl.bufferData(gl.ARRAY_BUFFER, data.length ? data : new Float32Array(7), gl.STATIC_DRAW);
+  VR.nO = Math.min(P.nO || 0, data.length / 7); VR.nA = Math.max(0, Math.min(P.nA || 0, data.length / 7 - VR.nO));
+  // triangles opaques en coordonnées monde, pour la visée (les murs bloquent)
+  const nt = Math.floor(VR.nO / 3), T = new Float32Array(nt * 9), N = new Float32Array(nt);
+  for (let i = 0; i < nt; i++) {
+    for (let k = 0; k < 3; k++) { const s = (i * 3 + k) * 7; T[i * 9 + k * 3] = data[s]; T[i * 9 + k * 3 + 1] = data[s + 2]; T[i * 9 + k * 3 + 2] = -data[s + 1]; }
+    const e1 = [T[i * 9 + 3] - T[i * 9], T[i * 9 + 4] - T[i * 9 + 1], T[i * 9 + 5] - T[i * 9 + 2]], e2 = [T[i * 9 + 6] - T[i * 9], T[i * 9 + 7] - T[i * 9 + 1], T[i * 9 + 8] - T[i * 9 + 2]];
+    N[i] = Math.abs(V3.norm(V3.cross(e1, e2))[1]);
+  }
+  VR.tris = T; VR.triUp = N;
+  // image du plan au sol
+  VR.planTex = null;
+  if (P.img && P.rect) {
+    try { VR.planTex = vrTexture(await vrBitmap(await vrFile(P.img), 4096)); VR.levelTex.push(VR.planTex); } catch (e) { console.warn(e); }
+  }
+  // bulles
+  VR.pins = (P.pins || []).map(pin => ({ pin, tex: null, pos: [pin.x, Math.max(1.5, (pin.z || 0) + 0.7), pin.y] }));
+  for (const b of VR.pins) { b.tex = vrTexture(bubbleTexture(b.pin)); VR.levelTex.push(b.tex); }
+  VR.doors = (P.doors || []).map(d => ({ ...d, pos: [d.x, (d.z || 0) + Math.min(d.h || 2.1, 2.2) * 0.55, d.y] }));
+  const B = P.bounds || { x0: -10, y0: -10, x1: 10, y1: 10, hmax: 3 };
+  VR.center = [(B.x0 + B.x1) / 2, 0, (B.y0 + B.y1) / 2]; VR.extent = Math.max(10, B.x1 - B.x0, B.y1 - B.y0); VR.hmax = B.hmax || 3;
+  vrGoStart(first);
+}
+function vrGoStart() {
+  const S = VR.plan.start || { x: VR.center[0], y: VR.center[2] + 10 };
+  VR.head = [S.x, VR_EYE, S.y]; VR.drone = false;
+  vrFace(VR.center);
+}
+/** Tourne la vue (sans bouger la tête de l'utilisateur) pour regarder vers un point. */
+function vrFace(p) { const d = V3.sub(p, VR.head); VR.wantYaw = yawOf([d[0], 0, d[2]]); if (!VR.sensor) { VR.dragYaw = VR.wantYaw; VR.wantYaw = null; } }
+
+/* ---------- Tête : capteurs ou doigt ---------- */
+function vrOnOrient(e) {
+  if (e.alpha == null && e.beta == null) return;
+  if (!VR.sensor && VR.wantYaw == null) VR.wantYaw = VR.dragYaw;   // premier signal des capteurs : on garde le cap
+  VR.sensor = true;
+  VR.devQ = Q.device(e.alpha || 0, e.beta || 0, e.gamma || 0, screen.orientation?.angle ?? window.orientation ?? 0);
+}
+function vrHeadQ() {
+  let q;
+  if (VR.sensor && VR.devQ) {
+    if (VR.wantYaw != null) { VR.yawOffset = VR.wantYaw - yawOf(Q.rot(VR.devQ, [0, 0, -1])); VR.wantYaw = null; }
+    q = Q.mul(Q.axis([0, 1, 0], VR.yawOffset), VR.devQ);
+  } else {
+    if (VR.wantYaw != null) { VR.dragYaw = VR.wantYaw; VR.wantYaw = null; }
+    q = Q.mul(Q.axis([0, 1, 0], VR.dragYaw), Q.axis([1, 0, 0], VR.dragPitch));
+  }
+  return q;
+}
+function vrBindInput(root) {
+  let down = null;
+  root.addEventListener('pointerdown', e => { if (e.target.closest('.vr-quit')) return; down = { x: e.clientX, y: e.clientY, yaw: VR.dragYaw, pitch: VR.dragPitch, moved: false }; root.setPointerCapture?.(e.pointerId); });
+  root.addEventListener('pointermove', e => {
+    if (!down) return;
+    const dx = e.clientX - down.x, dy = e.clientY - down.y;
+    if (Math.hypot(dx, dy) > 8) down.moved = true;
+    if (!VR.sensor && down.moved) { const k = 1.6 / Math.max(innerWidth, innerHeight) * Math.PI; VR.dragYaw = down.yaw + dx * k; VR.dragPitch = clamp(down.pitch + dy * k, -1.45, 1.45); }
+  });
+  const up = () => { if (down && !down.moved) vrActivate(); down = null; };
+  root.addEventListener('pointerup', up); root.addEventListener('pointercancel', () => { down = null; });
+  addEventListener('keydown', vrOnKey);
+}
+function vrOnKey(e) {
+  if (!VR.on) return;
+  if (e.key === 'Escape') { e.preventDefault(); stopVr(); }
+  else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); vrActivate(); }
+  else if (e.key.startsWith('Arrow') && !VR.sensor) {
+    e.preventDefault();
+    if (e.key === 'ArrowLeft') VR.dragYaw += 0.25; if (e.key === 'ArrowRight') VR.dragYaw -= 0.25;
+    if (e.key === 'ArrowUp') VR.dragPitch = clamp(VR.dragPitch + 0.2, -1.45, 1.45); if (e.key === 'ArrowDown') VR.dragPitch = clamp(VR.dragPitch - 0.2, -1.45, 1.45);
+  }
+}
+
+/* ---------- Ce que l'on peut viser ---------- */
+/** Quad face à la caméra : centre c, axes r (droite) et u (haut), taille w × h. */
+function billboard(c, w, h, eye, spherical, headQ) {
+  let r, u;
+  if (spherical) { r = Q.rot(headQ, [1, 0, 0]); u = Q.rot(headQ, [0, 1, 0]); }
+  else { const t = V3.sub(eye, c); t[1] = 0; const f = V3.norm(V3.mul(t, -1)); r = V3.norm(V3.cross(f, [0, 1, 0])); u = [0, 1, 0]; }
+  return { c, r, u, w, h };
+}
+function quadHit(q, o, d) {
+  const n = V3.cross(q.r, q.u), den = V3.dot(d, n);
+  if (Math.abs(den) < 1e-6) return null;
+  const t = V3.dot(V3.sub(q.c, o), n) / den;
+  if (t <= 0.05) return null;
+  const p = V3.add(o, V3.mul(d, t)), rel = V3.sub(p, q.c), x = V3.dot(rel, q.r), y = V3.dot(rel, q.u), m = q.pad || 1.15;
+  if (Math.abs(x) > q.w / 2 * m || Math.abs(y) > q.h / 2 * m) return null;
+  return { t, u: x / q.w + 0.5, v: 0.5 - y / q.h };
+}
+/** Premier mur touché par le rayon (null si aucun) : distance et « sol praticable ». */
+function vrRayMesh(o, d, tmax) {
+  const T = VR.tris, U = VR.triUp; let best = tmax, up = 0;
+  for (let i = 0, n = U.length; i < n; i++) {
+    const j = i * 9, ax = T[j], ay = T[j + 1], az = T[j + 2];
+    const e1x = T[j + 3] - ax, e1y = T[j + 4] - ay, e1z = T[j + 5] - az, e2x = T[j + 6] - ax, e2y = T[j + 7] - ay, e2z = T[j + 8] - az;
+    const px = d[1] * e2z - d[2] * e2y, py = d[2] * e2x - d[0] * e2z, pz = d[0] * e2y - d[1] * e2x, det = e1x * px + e1y * py + e1z * pz;
+    if (det > -1e-9 && det < 1e-9) continue;
+    const inv = 1 / det, sx = o[0] - ax, sy = o[1] - ay, sz = o[2] - az, uu = (sx * px + sy * py + sz * pz) * inv;
+    if (uu < 0 || uu > 1) continue;
+    const qx = sy * e1z - sz * e1y, qy = sz * e1x - sx * e1z, qz = sx * e1y - sy * e1x, vv = (d[0] * qx + d[1] * qy + d[2] * qz) * inv;
+    if (vv < 0 || uu + vv > 1) continue;
+    const t = (e2x * qx + e2y * qy + e2z * qz) * inv;
+    if (t > 1e-3 && t < best) { best = t; up = U[i]; }
+  }
+  return best < tmax ? { t: best, up } : null;
+}
+function vrBuildTargets(headQ) {
+  const eye = VR.head, list = [], fwd = Q.rot(headQ, [0, 0, -1]), pitch = Math.asin(clamp(fwd[1], -1, 1));
+  if (pitch > -0.55) VR.menuYaw = yawOf(fwd);
+  if (VR.scene === 'maquette') {
+    for (const b of VR.pins) {
+      const dist = V3.len(V3.sub(b.pos, eye)), k = clamp(dist / 5, 1, VR.drone ? 9 : 4);
+      list.push({ ...billboard(b.pos, 0.62 * k, 0.48 * k, eye), key: 'pin:' + b.pin.id, tex: b.tex, label: b.pin.titre || b.pin.metier || 'Repère', act: () => vrOpenPin(b.pin), depth: true, stalk: !VR.drone });
+    }
+    if (!VR.drone) VR.doors.forEach((d, i) => {
+      const dist = V3.len(V3.sub(d.pos, eye));
+      if (dist > 14 || dist < 0.6) return;
+      list.push({ ...billboard(d.pos, 0.34, 0.4, eye), key: 'door:' + i, tex: VR.menuTex.door, label: 'Passer la porte', act: () => vrDoor(d), depth: true, alpha: clamp((14 - dist) / 4, 0, 1) });
+    });
+  } else if (VR.scene === 'pano') {
+    VR.pano.links.forEach((L, i) => {
+      const a = L.yaw * DEG2, b = (L.pitch || 0) * DEG2, dir = [Math.cos(b) * Math.sin(a), Math.sin(b), -Math.cos(b) * Math.cos(a)];
+      const c = V3.add(eye, V3.mul(dir, 3.2));
+      list.push({ ...billboard(c, 0.62, 0.48, eye, true, headQ), key: 'link:' + i, tex: L.tex, label: L.titre, act: () => vrPanoLink(L) });
+    });
+  }
+  if (VR.panel) {
+    const P = VR.panel;
+    list.push({ c: P.c, r: P.r, u: P.u, w: P.w, h: P.h, tex: P.tex, panel: true, pad: 1.0, label: '', act: null, top: true });
+  }
+  // menu aux pieds
+  const show = clamp((-pitch - 0.62) / 0.2, 0, 1);
+  if (show > 0) {
+    const items = VR.scene === 'pano' ? ['back', 'quit'] : ['start', VR.drone ? 'ground' : 'drone', ...(VR.pack.plans.length > 1 ? ['plan'] : []), 'quit'];
+    const fw = dirYaw(VR.menuYaw), right = [-fw[2], 0, fw[0]], n = items.length;
+    items.forEach((k, i) => {
+      const off = (i - (n - 1) / 2) * 0.36, c = V3.add(V3.add(eye, V3.mul(fw, 0.62)), V3.add(V3.mul(right, off), [0, -1.05, 0]));
+      list.push({ ...billboard(c, 0.3, 0.35, eye, true, headQ), key: 'menu:' + k, tex: VR.menuTex[k], label: { start: 'Retour au départ', drone: 'Vue drone', ground: 'Redescendre au sol', plan: 'Plan suivant', quit: 'Quitter la visite', back: 'Retour à la maquette' }[k],
+        act: () => vrMenu(k), top: true, alpha: show });
+    });
+  }
+  VR.quads = list;
+  return { fwd, pitch };
+}
+
+/* ---------- Image par image ---------- */
+function vrFrame(now) {
+  if (!VR.on) return;
+  VR.raf = requestAnimationFrame(vrFrame);
+  const dt = Math.min(0.1, (now - VR.last) / 1000); VR.last = now;
+  const gl = VR.gl, cv = gl.canvas, dpr = Math.min(devicePixelRatio || 1, VR.stereo ? 2 : 1.75);
+  const W = Math.round(innerWidth * dpr), H = Math.round(innerHeight * dpr);
+  if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; const hud = $('#vrHud'); hud.width = W; hud.height = H; VR.fbo = null; }
+  // fondu
+  VR.fade += Math.sign(VR.fadeTo - VR.fade) * Math.min(Math.abs(VR.fadeTo - VR.fade), dt * 5);
+  if (VR.fade >= 0.999 && VR.onBlack) { const f = VR.onBlack; VR.onBlack = null; Promise.resolve(f()).finally(() => { VR.fadeTo = 0; }); }
+  // manette Bluetooth : bouton A = valider
+  const pad = navigator.getGamepads?.().find(p => p);
+  if (pad) { const pr = pad.buttons[0]?.pressed; if (pr && !VR.padDown) vrActivate(); VR.padDown = pr; }
+  for (const t of VR.trash.splice(0)) gl.deleteTexture(t);
+  const headQ = vrHeadQ(), { fwd } = vrBuildTargets(headQ);
+  vrGaze(fwd, dt);
+  if (VR.stereo && !VR.sensor && !VR.saidNoSensor && now - VR.t0 > 2500) { VR.saidNoSensor = true; vrSay('Capteurs de mouvement indisponibles : glissez le doigt pour regarder'); }
+  // rendu
+  const eyes = VR.stereo ? [-1, 1] : [0], vw = VR.stereo ? W / 2 : W;
+  const fov = (VR.stereo ? (VR.lens ? 96 : 86) : 72) * DEG2, asp = vw / H;
+  const proj = M4.persp(fov, asp, 0.05, 900);
+  let target = null;
+  if (VR.lens) {
+    if (!VR.fbo || VR.fbo.w !== W || VR.fbo.h !== H) VR.fbo = vrMakeFbo(W, H);
+    target = VR.fbo.fb;
+  }
+  gl.bindFramebuffer(gl.FRAMEBUFFER, target);
+  gl.viewport(0, 0, W, H); gl.clearColor(0, 0, 0, 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  eyes.forEach((e, i) => {
+    const pos = V3.add(VR.head, Q.rot(headQ, [e * VR_IPD / 2, 0, 0]));
+    gl.viewport(i * vw, 0, vw, H);
+    vrDrawEye(proj, M4.view(headQ, pos), headQ, pos);
+  });
+  if (VR.lens) {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.viewport(0, 0, W, H); gl.clear(gl.COLOR_BUFFER_BIT);
+    const P = VR.prog.lens; gl.useProgram(P.p); gl.disable(gl.DEPTH_TEST); gl.disable(gl.BLEND);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, VR.fbo.tex); gl.uniform1i(P.u.t, 0);
+    gl.uniform1f(P.u.asp, asp); gl.uniform2f(P.u.k, 0.26, 0.12);
+    vrBindFull(P);
+    for (let i = 0; i < 2; i++) { gl.viewport(i * vw, 0, vw, H); gl.uniform1f(P.u.off, i * 0.5); gl.drawArrays(gl.TRIANGLES, 0, 3); }
+  }
+  vrHud(W, H, vw, dpr);
+}
+function vrMakeFbo(w, h) {
+  const gl = VR.gl, fb = gl.createFramebuffer(), tex = gl.createTexture(), rb = gl.createRenderbuffer();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.bindRenderbuffer(gl.RENDERBUFFER, rb); gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, w, h);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+  gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, rb);
+  const ok = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  if (!ok) { VR.lens = false; return null; }
+  return { fb, tex, w, h };
+}
+function vrBindFull(P) {
+  const gl = VR.gl;
+  gl.bindBuffer(gl.ARRAY_BUFFER, VR.full);
+  gl.enableVertexAttribArray(P.a.p); gl.vertexAttribPointer(P.a.p, 2, gl.FLOAT, false, 0, 0);
+}
+function vrDrawEye(proj, view, headQ, eye) {
+  const gl = VR.gl, vp = M4.mul(proj, view);
+  // ciel ou photo 360°
+  const S = VR.prog.sphere, rotOnly = view.slice(); rotOnly[12] = rotOnly[13] = rotOnly[14] = 0;
+  gl.useProgram(S.p); gl.disable(gl.DEPTH_TEST); gl.disable(gl.BLEND); gl.depthMask(false);
+  gl.uniformMatrix4fv(S.u.inv, false, M4.inv(M4.mul(proj, rotOnly)));
+  const pano = VR.scene === 'pano' && VR.pano.tex;
+  gl.uniform1f(S.u.sky, pano ? 0 : 1);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, pano || VR.texWhite); gl.uniform1i(S.u.t, 0);
+  vrBindFull(S); gl.drawArrays(gl.TRIANGLES, 0, 3);
+  gl.enable(gl.DEPTH_TEST); gl.depthMask(true); gl.depthFunc(gl.LEQUAL);
+  const fogd = VR.drone ? 2600 : Math.max(160, VR.extent * 2.5);
+  if (VR.scene === 'maquette') {
+    // sol puis image du plan
+    const R = 800, gx = Math.round(eye[0] / 2) * 2, gz = Math.round(eye[2] / 2) * 2;
+    vrQuadDraw(vp, eye, VR.texGround, [gx - R, -0.025, gz - R, gx + R, -0.025, gz - R, gx + R, -0.025, gz + R, gx - R, -0.025, gz + R], [(gx - R) / 2, (gz - R) / 2, (gx + R) / 2, (gz - R) / 2, (gx + R) / 2, (gz + R) / 2, (gx - R) / 2, (gz + R) / 2], [1, 1, 1, 1], fogd);
+    if (VR.planTex) { const r = VR.plan.rect; vrQuadDraw(vp, eye, VR.planTex, [r.x, 0.004, r.y, r.x + r.w, 0.004, r.y, r.x + r.w, 0.004, r.y + r.h, r.x, 0.004, r.y + r.h], [0, 0, 1, 0, 1, 1, 0, 1], [1, 1, 1, 1], fogd); }
+    // maquette opaque
+    const M = VR.prog.mesh;
+    gl.useProgram(M.p); gl.uniformMatrix4fv(M.u.vp, false, vp); gl.uniform3fv(M.u.eye, eye); gl.uniform1f(M.u.fogd, fogd); gl.uniform3fv(M.u.fogc, VR_SKY);
+    gl.bindBuffer(gl.ARRAY_BUFFER, VR.meshBuf);
+    gl.enableVertexAttribArray(M.a.p); gl.vertexAttribPointer(M.a.p, 3, gl.FLOAT, false, 28, 0);
+    gl.enableVertexAttribArray(M.a.c); gl.vertexAttribPointer(M.a.c, 4, gl.FLOAT, false, 28, 12);
+    if (VR.nO) gl.drawArrays(gl.TRIANGLES, 0, VR.nO);
+    // cible de déplacement au sol
+    if (VR.walk && VR.walk.ok) {
+      const p = VR.walk.p, s = 0.35 + Math.min(1.2, VR.walk.dist * 0.03), y = p[1] + 0.02;
+      vrQuadDraw(vp, eye, VR.texRing, [p[0] - s, y, p[2] - s, p[0] + s, y, p[2] - s, p[0] + s, y, p[2] + s, p[0] - s, y, p[2] + s], [0, 0, 1, 0, 1, 1, 0, 1], [0.3 + 0.7 * VR.walk.k, 0.85, 1, 0.9], 0);
+    }
+    // vitres et volumes transparents
+    if (VR.nA) {
+      gl.useProgram(M.p); gl.bindBuffer(gl.ARRAY_BUFFER, VR.meshBuf);
+      gl.vertexAttribPointer(M.a.p, 3, gl.FLOAT, false, 28, 0); gl.vertexAttribPointer(M.a.c, 4, gl.FLOAT, false, 28, 12);
+      gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false);
+      gl.drawArrays(gl.TRIANGLES, VR.nO, VR.nA);
+      gl.depthMask(true);
+    }
+  }
+  // bulles, portes, liens, panneau, menu
+  gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  for (const q of VR.quads) {
+    if (q.top) continue;
+    if (q.stalk) { const b = q.c, y0 = b[1] - q.h / 2, w = 0.025; vrQuadDraw(vp, eye, VR.texWhite, [b[0] - w, 0, b[2], b[0] + w, 0, b[2], b[0] + w, y0, b[2], b[0] - w, y0, b[2]], [0, 0, 1, 0, 1, 1, 0, 1], [0.13, 0.2, 0.33, 0.55], 0); }
+    vrQuadOf(vp, eye, q, VR.target && q.key && q.key === VR.target.key ? 1.12 : 1);
+  }
+  gl.disable(gl.DEPTH_TEST);
+  for (const q of VR.quads) if (q.top) vrQuadOf(vp, eye, q, VR.target && q.key && q.key === VR.target.key ? 1.12 : 1);
+  gl.enable(gl.DEPTH_TEST);
+}
+function vrQuadOf(vp, eye, q, s) {
+  const hw = q.w / 2 * s, hh = q.h / 2 * s, c = q.c, r = q.r, u = q.u, P = [];
+  for (const [a, b] of [[-1, 1], [1, 1], [1, -1], [-1, -1]]) P.push(c[0] + r[0] * a * hw + u[0] * b * hh, c[1] + r[1] * a * hw + u[1] * b * hh, c[2] + r[2] * a * hw + u[2] * b * hh);
+  vrQuadDraw(vp, eye, q.tex, P, [0, 0, 1, 0, 1, 1, 0, 1], [1, 1, 1, q.alpha ?? 1], 0);
+}
+function vrQuadDraw(vp, eye, tex, P, UV, tint, fogd) {
+  const gl = VR.gl, T = VR.prog.tex, d = new Float32Array(30), idx = [0, 1, 2, 0, 2, 3];
+  idx.forEach((k, i) => { d[i * 5] = P[k * 3]; d[i * 5 + 1] = P[k * 3 + 1]; d[i * 5 + 2] = P[k * 3 + 2]; d[i * 5 + 3] = UV[k * 2]; d[i * 5 + 4] = UV[k * 2 + 1]; });
+  gl.useProgram(T.p);
+  gl.uniformMatrix4fv(T.u.vp, false, vp); gl.uniform3fv(T.u.eye, eye); gl.uniform1f(T.u.fogd, fogd || 0); gl.uniform3fv(T.u.fogc, VR_SKY); gl.uniform4fv(T.u.tint, tint);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex); gl.uniform1i(T.u.t, 0);
+  gl.bindBuffer(gl.ARRAY_BUFFER, VR.quadBuf); gl.bufferData(gl.ARRAY_BUFFER, d, gl.DYNAMIC_DRAW);
+  gl.enableVertexAttribArray(T.a.p); gl.vertexAttribPointer(T.a.p, 3, gl.FLOAT, false, 20, 0);
+  gl.enableVertexAttribArray(T.a.uv); gl.vertexAttribPointer(T.a.uv, 2, gl.FLOAT, false, 20, 12);
+  gl.drawArrays(gl.TRIANGLES, 0, 6);
+}
+
+/* ---------- Le regard : viser, remplir, valider ---------- */
+function vrGaze(fwd, dt) {
+  const o = VR.head;
+  VR.cooldown = Math.max(0, VR.cooldown - dt);
+  let best = null, bestT = 1e9, panelHit = null;
+  for (const q of VR.quads) {
+    if (q.alpha === 0) continue;
+    const h = quadHit(q, o, fwd);
+    if (!h) continue;
+    if (q.panel) { if (h.t < bestT) { panelHit = { q, h }; } continue; }
+    // les éléments « au-dessus » (menu) passent devant tout
+    const t = q.top ? h.t * 0.001 : h.t;
+    if (t < bestT) { bestT = t; best = q; }
+  }
+  // une bulle cachée derrière un mur ne se vise pas
+  if (best && !best.top && VR.scene === 'maquette' && vrRayMesh(o, fwd, bestT - 0.1)) best = null;
+  // un bouton du panneau ?
+  if (panelHit && (!best || !best.top)) {
+    const P = VR.panel, px = panelHit.h.u * P.cw, py = panelHit.h.v * P.ch, btn = P.buttons.find(b => px >= b.x && px <= b.x + b.w && py >= b.y && py <= b.y + b.h);
+    best = btn ? { label: btn.label, act: btn.act, key: 'panel:' + btn.id, panelBtn: btn } : { label: '', act: null, key: 'panel' };
+  }
+  // sinon : un endroit au sol
+  VR.walk = null;
+  if (!best && VR.scene === 'maquette' && fwd[1] < -0.04) {
+    const tg = (0 - o[1]) / fwd[1], tmax = VR.drone ? 600 : 45;
+    const hit = vrRayMesh(o, fwd, Math.min(tg, tmax));
+    let p = null, ok = false;
+    if (!hit && tg <= tmax) { p = V3.add(o, V3.mul(fwd, tg)); ok = true; }
+    else if (hit) { p = V3.add(o, V3.mul(fwd, hit.t)); ok = hit.up > 0.85 && p[1] < 0.7; }
+    if (p) {
+      const dist = Math.hypot(p[0] - o[0], p[2] - o[2]);
+      if (ok && dist < 0.5 && !VR.drone) ok = false;
+      const prev = VR.walkAnchor, tol = Math.max(0.35, dist * 0.07);
+      if (!ok || !prev || Math.hypot(prev[0] - p[0], prev[2] - p[2]) > tol) VR.walkAnchor = ok ? p : null;
+      VR.walk = { p, ok, dist, k: 0 };
+      if (ok) best = { label: VR.drone ? 'Descendre ici' : `Aller ici · ${dist < 10 ? dist.toFixed(1).replace('.', ',') : Math.round(dist)} m`, act: () => vrTeleport(p), key: 'walk', walk: true };
+      else best = { label: '', act: null, key: 'blocked' };
+    } else VR.walkAnchor = null;
+  } else VR.walkAnchor = null;
+  const key = best ? best.key : null, prevKey = VR.target ? VR.target.key : null;
+  if (key !== prevKey || (best && best.walk && VR.walkAnchor !== VR.walkAnchorPrev)) VR.dwell = 0;
+  const panelHot = k => k && k.startsWith('panel:');
+  VR.walkAnchorPrev = VR.walkAnchor;
+  VR.target = best;
+  if (VR.panel && key !== prevKey && (panelHot(key) || panelHot(prevKey))) VR.panel.draw();
+  if (best && best.act && VR.cooldown === 0 && VR.fade < 0.05) {
+    VR.dwell += dt;
+    const need = best.walk ? VR_WALK_DWELL : VR_DWELL;
+    if (VR.walk) VR.walk.k = Math.min(1, VR.dwell / need);
+    if (VR.dwell >= need) vrActivate();
+  } else VR.dwell = 0;
+}
+function vrActivate() {
+  const t = VR.target;
+  if (!VR.on || VR.loading || !t || !t.act || VR.fade > 0.3) return;
+  VR.dwell = 0; VR.cooldown = 0.9; VR.walkAnchor = null;
+  if (navigator.vibrate) try { navigator.vibrate(12); } catch { }
+  t.act();
+}
+/** Libère une texture à l'image suivante (elle peut encore être dessinée dans celle-ci). */
+function vrFree(t) { if (t) VR.trash.push(t); }
+/** Écran noir le temps d'une action (déplacement, changement de scène). */
+function vrBlack(fn) { VR.fadeTo = 1; VR.onBlack = fn; }
+function vrTeleport(p) {
+  vrBlack(() => { VR.head = [p[0], (VR.drone ? 0 : p[1]) + VR_EYE, p[2]]; VR.drone = false; VR.panel = null; });
+}
+function vrDoor(d) {
+  const r = (d.rot || 0) * DEG2, n = [-Math.sin(r), 0, Math.cos(r)], rel = V3.sub(VR.head, [d.x, VR.head[1], d.y]), side = Math.sign(V3.dot(rel, n)) || 1;
+  vrBlack(() => { VR.head = [d.x - n[0] * side * 1.1, VR_EYE + (d.z || 0), d.y - n[2] * side * 1.1]; VR.panel = null; });
+}
+function vrMenu(k) {
+  if (k === 'quit') return stopVr();
+  if (k === 'start') return vrBlack(() => { VR.scene = 'maquette'; VR.panel = null; vrGoStart(); });
+  if (k === 'back') return vrBlack(() => vrLeavePano());
+  if (k === 'plan') return vrBlack(() => vrLoadPlan((VR.planIdx + 1) % VR.pack.plans.length).then(() => vrSay('🗺️ ' + VR.plan.nom)));
+  if (k === 'drone') return vrBlack(() => {
+    const c = VR.center, e = VR.extent;
+    VR.head = [c[0], VR.hmax + e * 0.55 + 6, c[2] + e * 0.62]; VR.drone = true; VR.panel = null;
+    vrFace(c); vrSay('🚁 Vue drone · regardez un endroit pour y descendre');
+  });
+  if (k === 'ground') return vrBlack(() => { VR.drone = false; vrGoStart(); });
+}
+function vrSay(text) { VR.hint = { text, until: performance.now() + 3500 }; }
+
+/* ---------- Panneaux d'information ---------- */
+function vrPanel(build, opts = {}) {
+  const cw = 1024, [c, g] = vrCanvas(cw, opts.height || 720), buttons = [];
+  const draw = () => {
+    g.clearRect(0, 0, c.width, c.height); buttons.length = 0;
+    build(g, c, buttons);
+    if (panel.tex) { const gl = VR.gl; gl.bindTexture(gl.TEXTURE_2D, panel.tex); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c); gl.generateMipmap && VR.gl2 && gl.generateMipmap(gl.TEXTURE_2D); }
+  };
+  const headQ = vrHeadQ(), fwd = Q.rot(headQ, [0, 0, -1]), fh = V3.norm([fwd[0], 0, fwd[2]]), dist = 1.5;
+  const panel = { cw, ch: c.height, w: 1.25, h: 1.25 * c.height / cw, buttons, draw, canvas: c };
+  panel.c = V3.add(V3.add(VR.head, V3.mul(fh, dist)), [0, -0.12 + clamp(fwd[1], -0.4, 0.4) * dist * 0.5, 0]);
+  panel.r = V3.norm(V3.cross(fh, [0, 1, 0])); panel.u = [0, 1, 0];
+  draw();
+  panel.tex = vrTexture(c, { mip: false });
+  if (VR.panel?.tex) vrFree(VR.panel.tex);
+  VR.panel = panel;
+  return panel;
+}
+function vrClosePanel() { if (VR.audio) { VR.audio.pause(); VR.audio = null; } if (VR.panel?.tex) vrFree(VR.panel.tex); VR.panel = null; }
+function panelFrame(g, c, color) {
+  g.fillStyle = 'rgba(10,20,40,.35)'; roundRect(g, 10, 18, c.width - 20, c.height - 24, 46); g.fill();
+  g.fillStyle = '#fff'; roundRect(g, 4, 4, c.width - 20, c.height - 24, 44); g.fill();
+  g.fillStyle = color; roundRect(g, 4, 4, c.width - 20, 22, 44); g.fill(); g.fillRect(4, 16, c.width - 20, 10);
+}
+function panelButton(g, buttons, id, x, y, w, h, text, bg, act, label) {
+  const hot = VR.target && VR.target.key === 'panel:' + id;
+  g.fillStyle = bg; roundRect(g, x, y, w, h, h / 2); g.fill();
+  if (hot) { g.strokeStyle = '#ffc94a'; g.lineWidth = 8; roundRect(g, x, y, w, h, h / 2); g.stroke(); }
+  g.fillStyle = '#fff'; g.font = `800 ${Math.round(h * 0.44)}px ${VR_FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, x + w / 2, y + h / 2 + 2);
+  buttons.push({ id, x, y, w, h, act, label: label || text });
+}
+function vrWelcome() {
+  vrPanel((g, c, buttons) => {
+    panelFrame(g, c, '#2f7fdc');
+    g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.fillStyle = '#16233d';
+    g.font = `900 64px ${VR_FONT}`; g.fillText(fitText(g, VR.pack.nom || 'Visite', 900), c.width / 2, 120);
+    g.font = `700 36px ${VR_FONT}`; g.fillStyle = '#61708c'; g.fillText(fitText(g, VR.plan.nom || '', 900), c.width / 2, 172);
+    g.textAlign = 'left'; g.fillStyle = '#16233d'; g.font = `700 40px ${VR_FONT}`;
+    [['👀', 'Regardez le sol pour vous déplacer'], ['🫧', 'Fixez une bulle pour l’ouvrir'], ['⬇️', 'Baissez la tête : le menu']].forEach(([e, t], i) => { g.fillText(e, 90, 268 + i * 82); g.fillText(t, 170, 268 + i * 82); });
+    panelButton(g, buttons, 'go', c.width / 2 - 230, c.height - 150, 460, 100, 'C’est parti !', '#3fb04a', () => vrClosePanel(), 'C’est parti !');
+  }, { height: 640 });
+}
+async function vrOpenPin(pin) {
+  if (pin.pano && VR.pack.panos[pin.pano]) return vrBlack(() => vrEnterPano(pin.pano));
+  let photo = null;
+  const P = vrPanel((g, c, buttons) => {
+    panelFrame(g, c, pin.color || '#2f7fdc');
+    g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+    g.font = `80px ${VR_FONT}`; g.fillText(TYPE_EMOJI[pin.type] || '📍', 50, 140);
+    g.fillStyle = '#16233d'; g.font = `900 54px ${VR_FONT}`; g.fillText(fitText(g, pin.titre || pin.metier || 'Repère', 780), 160, 112);
+    g.font = `700 32px ${VR_FONT}`; g.fillStyle = '#61708c';
+    g.fillText(fitText(g, [pin.metier, ({ photo: 'Photo', note: 'Note', audio: 'Note audio' })[pin.type]].filter(Boolean).join(' · ') || ' ', 780), 162, 156);
+    let y = 200;
+    if (pin.etat) { g.font = `800 34px ${VR_FONT}`; const w = g.measureText(pin.etat).width + 60; g.fillStyle = pin.etatColor || '#475569'; roundRect(g, 50, y, w, 56, 28); g.fill(); g.fillStyle = '#fff'; g.fillText(pin.etat, 80, y + 40); y += 80; }
+    if (photo) { const mh = 470, k = Math.min((c.width - 120) / photo.width, mh / photo.height), w = photo.width * k, h = photo.height * k; g.drawImage(photo, (c.width - 20 - w) / 2, y, w, h); y += h + 24; }
+    g.fillStyle = '#16233d'; g.font = `600 36px ${VR_FONT}`;
+    for (const l of wrapText(g, pin.note || (photo || pin.audio ? '' : 'Pas d’observation.'), c.width - 130, photo ? 3 : 8)) { g.fillText(l, 52, y + 36); y += 48; }
+    const by = c.height - 130;
+    if (pin.audio) {
+      const playing = VR.audio && !VR.audio.paused, a = VR.audio;
+      panelButton(g, buttons, 'play', 50, by, 400, 96, playing ? '⏸ Pause' : '▶ Écouter', '#db2777', () => vrToggleAudio(pin));
+      if (a && a.duration) { g.fillStyle = '#eef2f7'; roundRect(g, 480, by + 38, 260, 20, 10); g.fill(); g.fillStyle = '#db2777'; roundRect(g, 480, by + 38, 260 * (a.currentTime / a.duration), 20, 10); g.fill(); }
+    }
+    panelButton(g, buttons, 'close', c.width - 290, by, 240, 96, '✕ Fermer', '#475569', () => vrClosePanel());
+  }, { height: pin.photo ? (pin.note ? 900 : 800) : 640 });
+  if (pin.photo) {
+    try { photo = await vrBitmap(await vrFile(pin.photo), 1200); if (VR.panel === P) P.draw(); } catch (e) { console.warn(e); }
+  }
+}
+async function vrToggleAudio(pin) {
+  if (VR.audio && VR.audio.src && VR.audioPin === pin.id) { if (VR.audio.paused) VR.audio.play().catch(() => { }); else VR.audio.pause(); return; }
+  try {
+    const url = URL.createObjectURL(await vrFile(pin.audio)); VR.urls.push(url);
+    const a = new Audio(url); VR.audio = a; VR.audioPin = pin.id;
+    const P = VR.panel, tick = () => { if (VR.panel === P) P.draw(); };
+    a.ontimeupdate = tick; a.onplay = tick; a.onpause = tick; a.onended = tick;
+    await a.play();
+  } catch (e) { console.warn(e); vrSay('🔇 Lecture audio impossible'); }
+}
+
+/* ---------- Photos 360° ---------- */
+async function vrEnterPano(id) {
+  const P = VR.pack.panos[id];
+  vrClosePanel();
+  if (VR.pano?.tex) vrFree(VR.pano.tex);
+  for (const L of VR.pano?.links || []) vrFree(L.tex);
+  const tex = vrTexture(await vrBitmap(await vrFile(P.img), 4096), { mip: false });
+  const links = P.links.map(L => ({ ...L, tex: vrTexture(L.pano ? bubbleTexture({ type: 'panorama', titre: L.titre, color: '#0891b2' }) : L.plan ? iconTexture('🗺️', L.titre, '#f2a019') : bubbleTexture({ type: L.type, titre: L.titre, color: L.color })) }));
+  if (VR.scene !== 'pano') VR.maquetteHead = VR.head.slice();
+  VR.pano = { id, tex, links, data: P };
+  VR.scene = 'pano'; VR.head = [0, VR_EYE, 0];
+  vrSay('🌐 ' + P.titre + ' · baissez la tête pour revenir');
+}
+function vrLeavePano() {
+  if (VR.pano) { vrFree(VR.pano.tex); for (const L of VR.pano.links) vrFree(L.tex); }
+  VR.pano = null; VR.scene = 'maquette'; VR.panel = null;
+  VR.head = VR.maquetteHead || VR.head;
+}
+function vrPanoLink(L) {
+  if (L.pano && VR.pack.panos[L.pano]) return vrBlack(() => vrEnterPano(L.pano));
+  if (L.plan) {
+    const i = VR.pack.plans.findIndex(p => p.id === L.plan);
+    if (i >= 0) return vrBlack(async () => { vrLeavePano(); await vrLoadPlan(i); vrSay('🗺️ ' + VR.plan.nom); });
+    return vrSay('Ce plan n’est pas dans le pack');
+  }
+  vrOpenPin({ type: L.type, titre: L.titre, note: L.note, color: L.color });
+}
+
+/* ---------- Viseur et messages (par-dessus la 3D) ---------- */
+function vrHud(W, H, vw, dpr) {
+  const g = $('#vrHud').getContext('2d'), t = VR.target, now = performance.now();
+  g.clearRect(0, 0, W, H);
+  const centers = VR.stereo ? [vw / 2, vw * 1.5] : [W / 2];
+  const need = t && t.walk ? VR_WALK_DWELL : VR_DWELL, k = t && t.act ? Math.min(1, VR.dwell / need) : 0;
+  const R = 11 * dpr * (VR.stereo ? 1 : 1.2);
+  for (const cx of centers) {
+    const cy = H / 2;
+    g.lineWidth = 3 * dpr; g.strokeStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.arc(cx, cy, R + 1.5 * dpr, 0, 7); g.stroke();
+    g.strokeStyle = t && t.act ? '#ffc94a' : 'rgba(255,255,255,.9)'; g.beginPath(); g.arc(cx, cy, t && t.act ? R : R * 0.55, 0, 7); g.stroke();
+    if (k > 0) { g.lineWidth = 5 * dpr; g.strokeStyle = '#3fb04a'; g.beginPath(); g.arc(cx, cy, R, -Math.PI / 2, -Math.PI / 2 + k * Math.PI * 2); g.stroke(); }
+    g.fillStyle = '#fff'; g.beginPath(); g.arc(cx, cy, 2 * dpr, 0, 7); g.fill();
+    const label = t && t.label;
+    if (label) vrHudPill(g, label, cx, cy + R + 22 * dpr, dpr, t.act ? 'rgba(22,35,61,.82)' : 'rgba(185,28,28,.82)');
+    if (VR.hint && now < VR.hint.until) vrHudPill(g, VR.hint.text, cx, H * 0.2, dpr, 'rgba(47,127,220,.9)');
+  }
+  if (VR.fade > 0.001) { g.fillStyle = `rgba(0,0,0,${VR.fade})`; g.fillRect(0, 0, W, H); }
+}
+function vrHudPill(g, text, cx, cy, dpr, bg) {
+  g.font = `800 ${13 * dpr}px ${VR_FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle';
+  const w = g.measureText(text).width + 22 * dpr, h = 26 * dpr;
+  g.fillStyle = bg; roundRect(g, cx - w / 2, cy - h / 2, w, h, h / 2); g.fill();
+  g.fillStyle = '#fff'; g.fillText(text, cx, cy + dpr);
+}
+
+/* points d'entrée pour les essais automatiques */
+window.METATOR_VR = { state: VR, start: startVr, stop: stopVr, current: () => current, activate: vrActivate };
+
+/* ---------- Démarrage ---------- */
+$('#emblem').innerHTML = metatorEmblem('emblem');
+$('#scene').innerHTML = romanScene(440, 250);
+$('#btnOpen').addEventListener('click', openPackFile);
+if (/^https?:$/.test(location.protocol)) {
+  document.head.append(el('link', { rel: 'manifest', href: 'metator-vr.webmanifest' }), el('link', { rel: 'apple-touch-icon', href: 'metator-vr-icon-192.png' }));
+  navigator.serviceWorker?.register('metator-vr-sw.js').catch(() => { });
+}
+</script>
+</body>
+</html>
