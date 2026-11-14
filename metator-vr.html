@@ -71,6 +71,18 @@ select { font: inherit; width: 100%; padding: 12px 14px; border: 2px solid var(-
 .vr-screen.stereo .vr-quit { top: 6px; right: auto; left: 50%; transform: translateX(-50%); width: 34px; height: 34px; font-size: 15px; opacity: .55; }
 .vr-divider { position: absolute; top: 46px; bottom: 0; left: 50%; width: 2px; margin-left: -1px; background: rgba(255,255,255,.12); pointer-events: none; }
 .vr-mono-hint { position: absolute; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom)); transform: translateX(-50%); padding: 8px 16px; border-radius: 18px; background: rgba(0,0,0,.45); color: #fff; font-size: 13.5px; font-weight: 700; white-space: nowrap; pointer-events: none; animation: fade 4s 6s forwards reverse; }
+/* Réglages du casque et télécommande */
+.vr-set { margin: 4px 0 10px; padding: 10px 14px; border-radius: 16px; background: var(--bg); }
+.vr-set summary { cursor: pointer; font-weight: 900; font-size: 15px; padding: 4px 0; }
+.vr-set label { display: block; margin: 10px 0 2px; font-weight: 800; font-size: 13.5px; color: var(--muted); }
+.vr-set label select { margin-top: 4px; padding: 9px 12px; font-size: 14.5px; }
+.vr-set input[type=range] { width: calc(100% - 70px); vertical-align: middle; accent-color: var(--accent); margin-top: 6px; }
+.vr-set output { display: inline-block; width: 64px; text-align: right; font-weight: 900; color: var(--ink); }
+.vr-set .hint { margin: 4px 0 0; font-size: 12.5px; color: var(--muted); line-height: 1.4; }
+.remote-test { margin: 10px 0; padding: 14px; border-radius: 14px; background: #16233d; color: #fff; font-weight: 800; text-align: center; min-height: 22px; }
+.remote-test.flash { animation: flash .5s; }
+@keyframes flash { from { background: #3fb04a; } }
+.remote-map { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.6; }
 </style>
 </head>
 <body>
@@ -89,6 +101,7 @@ select { font: inherit; width: 100%; padding: 12px 14px; border: 2px solid var(-
       <li><b>2.</b> Touchez « Ouvrir un pack VR » et choisissez-le (souvent dans Téléchargements).</li>
       <li><b>3.</b> « Lancer dans le casque », puis placez le téléphone dans le casque.</li>
       <li><b>👀 Avancer :</b> regardez le sol, la cible se remplit… vous y êtes. <b>⬇ Menu :</b> baissez la tête.</li>
+      <li><b>🎮 Télécommande Bluetooth :</b> OK pour valider, ↑ ↓ pour avancer, ← → pour tourner (essai dans « Réglages » une fois le pack ouvert).</li>
     </ul>
     <p class="note">Le pack n’est pas conservé : il est relu à chaque visite. Rien ne quitte le téléphone.</p>
   </main>
@@ -277,6 +290,9 @@ function pickFile(input) {
    • Bulles des repères (notes, photos, audio, objets métier), portes, photos 360° avec leurs liens.
    • Baisser la tête : menu aux pieds (Départ, Vue drone, Plan suivant, Quitter).
    • « Visite sans casque » : une seule vue, on glisse le doigt pour regarder (pour essayer ou montrer).
+   • Télécommande Bluetooth (clavier, multimédia, souris ou manette) : valider, retour, avancer, tourner, menu.
+   • WebXR (Meta Quest, Pico, téléphones compatibles) : le casque gère la tête, les lentilles et les manettes.
+   • Réglages du casque mémorisés sur le téléphone : lentilles, champ de vision, écart des yeux, centrage, lissage.
    Repère monde : Y vers le haut ; un point du plan (x, y) à la hauteur h est en (x, h, y).
    ====================================================================== */
 
@@ -324,20 +340,53 @@ async function openPackFile() {
     busy(); showPack();
   } catch (e) { console.error(e); busy(); toast('Pack illisible : ' + e.message, true); }
 }
+/* ---------- Réglages du casque (mémorisés sur le téléphone) ---------- */
+const VR_SET_DEF = { lens: 'moyenne', fov: 96, ipd: 64, shift: 0, smooth: 1, dwell: 1.4, quality: 'standard' };
+/** Correction des lentilles : coefficients de distorsion en barillet (k1, k2) par intensité. */
+const VR_LENS = { aucune: null, legere: [0.15, 0.05], moyenne: [0.26, 0.12], forte: [0.42, 0.24] };
+const VR_QUALITY = { economie: 1.25, standard: 2, haute: 3 };
+function vrSettings() {
+  let s = {};
+  try { s = JSON.parse(localStorage.getItem('metator-vr-reglages') || '{}'); if (localStorage.getItem('metator-vr-lens') === '0' && !s.lens) s.lens = 'aucune'; } catch { }
+  return { ...VR_SET_DEF, ...s };
+}
+function vrSaveSettings(s) { try { localStorage.setItem('metator-vr-reglages', JSON.stringify(s)); } catch { } }
+
 function showPack() {
   const P = current.pack, nPins = P.plans.reduce((s, p) => s + (p.pins || []).length, 0), nPanos = Object.keys(P.panos || {}).length;
-  let lens = true;
-  try { lens = localStorage.getItem('metator-vr-lens') !== '0'; } catch { }
+  const set = vrSettings();
   const sel = P.plans.length > 1 ? el('select', { id: 'vrPlanSel' }, P.plans.map((p, i) => el('option', { value: i }, p.nom))) : null;
-  const go = stereo => { const lensBox = $('#vrLens'); lens = lensBox ? lensBox.checked : lens; try { localStorage.setItem('metator-vr-lens', lens ? '1' : '0'); } catch { } startVr(current, { stereo, plan: sel ? +sel.value : 0, lens }); };
-  $('#packCard').replaceChildren(
+  const go = mode => { vrSaveSettings(set); startVr(current, { stereo: mode !== 'mono', xr: mode === 'xr', plan: sel ? +sel.value : 0 }); };
+  const opt = (k, list) => el('select', { id: 'set-' + k, onchange: e => { set[k] = isNaN(+e.target.value) ? e.target.value : +e.target.value; vrSaveSettings(set); } },
+    list.map(([v, t]) => { const o = el('option', { value: v }, t); if (String(set[k]) === String(v)) o.selected = true; return o; }));
+  const range = (k, min, max, step, fmt) => {
+    const out = el('output', {}, fmt(set[k]));
+    return [el('input', { type: 'range', id: 'set-' + k, min, max, step, value: set[k], oninput: e => { set[k] = +e.target.value; out.textContent = fmt(set[k]); vrSaveSettings(set); } }), out];
+  };
+  const xrBtn = el('button', { class: 'big go hidden', id: 'btnXr', onclick: () => go('xr') }, '🥽 Casque WebXR (Quest, Pico…)');
+  navigator.xr?.isSessionSupported?.('immersive-vr').then(ok => { if (ok) xrBtn.classList.remove('hidden'); }).catch(() => { });
+  $('#packCard').replaceChildren(...[
     el('div', { class: 'pk-head' }, el('b', {}, P.nom || current.name), el('span', {}, [P.auteur, P.date].filter(Boolean).join(' · ') || current.name)),
     el('div', { class: 'pk-chips' }, el('span', {}, `🗺️ ${P.plans.length} plan${P.plans.length > 1 ? 's' : ''}`), el('span', {}, `🫧 ${nPins} repère${nPins > 1 ? 's' : ''}`), nPanos ? el('span', {}, `🌐 ${nPanos} photo${nPanos > 1 ? 's' : ''} 360°`) : null, el('span', {}, `${(current.size / 1048576).toFixed(1).replace('.', ',')} Mo`)),
     sel ? el('label', { class: 'vr-field' }, 'Commencer par', sel) : null,
-    el('button', { class: 'big go', id: 'btnGo', onclick: () => go(true) }, '🥽 Lancer dans le casque'),
-    el('button', { class: 'big', id: 'btnMono', onclick: () => go(false) }, '📱 Visite sans casque'),
-    el('label', { class: 'vr-check' }, el('input', { type: 'checkbox', id: 'vrLens', checked: lens }), 'Corriger la courbure des lentilles du casque'),
-    el('button', { class: 'lnk', onclick: () => { current = null; $('#packCard').replaceChildren(); $('#home').classList.remove('loaded'); } }, 'Choisir un autre pack'));
+    xrBtn,
+    el('button', { class: 'big go', id: 'btnGo', onclick: () => go('stereo') }, '🥽 Lancer dans le casque'),
+    el('button', { class: 'big', id: 'btnMono', onclick: () => go('mono') }, '📱 Visite sans casque'),
+    el('details', { class: 'vr-set', id: 'vrSet' }, el('summary', {}, '⚙️ Réglages du casque'),
+      el('label', {}, 'Correction des lentilles', opt('lens', [['aucune', 'Aucune'], ['legere', 'Légère'], ['moyenne', 'Moyenne (Cardboard, VR Box)'], ['forte', 'Forte (grandes lentilles)']])),
+      el('p', { class: 'hint' }, 'Choisissez celle où les murs restent droits jusqu’au bord de l’image.'),
+      el('label', {}, 'Champ de vision', ...range('fov', 70, 110, 2, v => v + '°')),
+      el('label', {}, 'Écart des yeux', ...range('ipd', 54, 74, 1, v => v + ' mm')),
+      el('label', {}, 'Centrage des images', ...range('shift', -15, 15, 1, v => (v > 0 ? '+' : '') + v + ' %')),
+      el('p', { class: 'hint' }, 'Si l’image se dédouble ou fatigue les yeux : réglez le centrage pour que chaque image soit en face de sa lentille.'),
+      el('label', {}, 'Lissage des mouvements de tête', opt('smooth', [[0, 'Aucun (le plus réactif)'], [1, 'Léger (conseillé)'], [2, 'Fort (téléphone qui tremble)']])),
+      el('label', {}, 'Valider en fixant du regard', opt('dwell', [[1, '1 seconde'], [1.4, '1,4 seconde'], [2.2, '2,2 secondes'], [0, 'Non : télécommande ou écran']])),
+      el('label', {}, 'Qualité d’image', opt('quality', [['economie', 'Économie (vieux téléphone)'], ['standard', 'Standard'], ['haute', 'Haute définition']]))),
+    el('details', { class: 'vr-set', id: 'vrRemote' }, el('summary', {}, '🎮 Télécommande Bluetooth'),
+      el('p', { class: 'hint' }, 'Associez la télécommande dans les réglages Bluetooth du téléphone, puis appuyez sur ses boutons : ils s’affichent ici.'),
+      el('div', { id: 'remoteTest', class: 'remote-test' }, 'En attente d’une touche…'),
+      el('ul', { class: 'remote-map' }, ...VR_REMOTE_HELP.map(([k, t]) => el('li', {}, el('b', {}, k), ' ', t)))),
+    el('button', { class: 'lnk', onclick: () => { current = null; $('#packCard').replaceChildren(); $('#home').classList.remove('loaded'); } }, 'Choisir un autre pack')].filter(Boolean));
   $('#home').classList.add('loaded');
 }
 
@@ -353,6 +402,13 @@ const Q = {
   axis(ax, ang) { const s = Math.sin(ang / 2); return [ax[0] * s, ax[1] * s, ax[2] * s, Math.cos(ang / 2)]; },
   rot(q, v) { const [x, y, z, w] = q, ix = w * v[0] + y * v[2] - z * v[1], iy = w * v[1] + z * v[0] - x * v[2], iz = w * v[2] + x * v[1] - y * v[0], iw = -x * v[0] - y * v[1] - z * v[2];
     return [ix * w + iw * -x + iy * -z - iz * -y, iy * w + iw * -y + iz * -x - ix * -z, iz * w + iw * -z + ix * -y - iy * -x]; },
+  dot: (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3],
+  slerp(a, b, t) {
+    let d = a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3]; if (d < 0) { b = b.map(v => -v); d = -d; }
+    if (d > 0.9995) { const r = a.map((v, i) => v + (b[i] - v) * t), l = Math.hypot(...r); return r.map(v => v / l); }
+    const th = Math.acos(d), s0 = Math.sin((1 - t) * th) / Math.sin(th), s1 = Math.sin(t * th) / Math.sin(th);
+    return a.map((v, i) => v * s0 + b[i] * s1);
+  },
   /** Orientation du téléphone (même calcul que DeviceOrientationControls de three.js), repère Y vers le haut. */
   device(alpha, beta, gamma, orient) {
     const x = beta * DEG2, y = alpha * DEG2, z = -gamma * DEG2, c1 = Math.cos(x / 2), c2 = Math.cos(y / 2), c3 = Math.cos(z / 2), s1 = Math.sin(x / 2), s2 = Math.sin(y / 2), s3 = Math.sin(z / 2);
@@ -389,7 +445,7 @@ const dirYaw = yaw => [-Math.sin(yaw), 0, -Math.cos(yaw)];
 
 /* ---------- Moteur ---------- */
 const VR = { on: false };
-const VR_EYE = 1.6, VR_IPD = 0.064, VR_DWELL = 1.4, VR_WALK_DWELL = 1.5;
+const VR_EYE = 1.6, VR_WALK_SPEED = 1.4, VR_TURN = Math.PI / 6;
 const VR_SKY = [0.80, 0.90, 0.97];
 const TYPE_EMOJI = { photo: '📷', note: '📝', audio: '🎧', panorama: '🌐', intrusion: '🚨', video: '📹', acces: '🔑', informatique: '💻', visiophonie: '📞' };
 
@@ -400,6 +456,13 @@ const VR_SHADERS = {
     'void main(){vec3 w=vec3(p.x,p.z,-p.y);gl_Position=vp*vec4(w,1.);vc=c;vw=w;}',
     VR_PREC + 'uniform vec3 fogc;uniform vec3 eye;uniform float fogd;varying vec4 vc;varying vec3 vw;' +
     'void main(){float f=clamp((length(vw-eye)-fogd*.45)/(fogd*.55),0.,1.)*.6;gl_FragColor=vec4(mix(vc.rgb,fogc,f),vc.a);}'],
+  // WebGL 2 : même chose + ombre de contact au pied des murs et des objets (normale de la face calculée par pixel)
+  mesh3: ['#version 300 es\nin vec3 p;in vec4 c;uniform mat4 vp;out vec4 vc;out vec3 vw;' +
+    'void main(){vec3 w=vec3(p.x,p.z,-p.y);gl_Position=vp*vec4(w,1.);vc=c;vw=w;}',
+    '#version 300 es\nprecision highp float;uniform vec3 fogc;uniform vec3 eye;uniform float fogd;in vec4 vc;in vec3 vw;out vec4 o;' +
+    'void main(){vec3 n=normalize(cross(dFdx(vw),dFdy(vw)));float side=1.-abs(n.y);' +
+    'float ao=mix(1.,mix(.76,1.,smoothstep(0.,.9,vw.y)),side);' +
+    'float f=clamp((length(vw-eye)-fogd*.45)/(fogd*.55),0.,1.)*.6;o=vec4(mix(vc.rgb*ao,fogc,f),vc.a);}'],
   tex: ['attribute vec3 p;attribute vec2 uv;uniform mat4 vp;varying vec2 vu;varying vec3 vw;' +
     'void main(){gl_Position=vp*vec4(p,1.);vu=uv;vw=p;}',
     VR_PREC + 'uniform sampler2D t;uniform vec4 tint;uniform vec3 fogc;uniform vec3 eye;uniform float fogd;varying vec2 vu;varying vec3 vw;' +
@@ -507,13 +570,15 @@ function ringTexture() {
 /* ---------- Démarrage / arrêt ---------- */
 async function startVr(cur, opts) {
   if (VR.on) return;
-  const stereo = !!opts.stereo;
-  // plein écran et paysage : à demander tout de suite (geste de l'utilisateur)
-  const fs = document.documentElement.requestFullscreen?.({ navigationUI: 'hide' });
-  Object.assign(VR, { on: true, files: cur.files, pack: cur.pack, stereo, lens: stereo && opts.lens !== false, planIdx: opts.plan || 0, scene: 'maquette',
-    head: [0, VR_EYE, 0], yawOffset: 0, wantYaw: 0, dragYaw: 0, dragPitch: 0, sensor: false, devQ: null, fade: 1, fadeTo: 0, target: null, dwell: 0, cooldown: 0,
-    panel: null, menuYaw: 0, drone: false, quads: [], audio: null, hint: null, last: performance.now(), loading: true, urls: [],
-    meshBuf: null, levelTex: [], pano: null, fbo: null, maquetteHead: null, padDown: false, walk: null, walkAnchor: null, walkAnchorPrev: null, onBlack: null, trash: [], t0: performance.now(), saidNoSensor: false });
+  const xr = !!opts.xr, stereo = !!opts.stereo || xr, set = vrSettings();
+  // WebXR : la session se demande tout de suite (geste de l'utilisateur) ; sinon plein écran et paysage
+  const xrAsk = xr ? navigator.xr.requestSession('immersive-vr', { optionalFeatures: ['local-floor'] }) : null;
+  const fs = xr ? null : document.documentElement.requestFullscreen?.({ navigationUI: 'hide' });
+  Object.assign(VR, { on: true, files: cur.files, pack: cur.pack, stereo, set, lens: stereo && !xr ? VR_LENS[set.lens] || null : null, planIdx: opts.plan || 0, scene: 'maquette',
+    ipd: (set.ipd || 64) / 1000, dwellT: +set.dwell, smooth: +set.smooth, xr: null,
+    head: [0, VR_EYE, 0], yawOffset: 0, wantYaw: 0, dragYaw: 0, dragPitch: 0, sensor: false, devQ: null, headS: null, fade: 1, fadeTo: 0, target: null, dwell: 0, cooldown: 0,
+    panel: null, menuYaw: 0, drone: false, quads: [], audio: null, hint: null, last: performance.now(), loading: true, urls: [], move: 0, keyMove: 0, moving: 0, aim: null,
+    meshBuf: null, levelTex: [], pano: null, fbo: null, maquetteHead: null, padPrev: {}, walk: null, walkAnchor: null, walkAnchorPrev: null, onBlack: null, trash: [], t0: performance.now(), saidNoSensor: false });
   const screenEl = el('section', { id: 'vrScreen', class: 'vr-screen' + (stereo ? ' stereo' : '') },
     el('canvas', { id: 'vrGl' }), el('canvas', { id: 'vrHud' }),
     el('button', { class: 'vr-quit', 'aria-label': 'Quitter', onclick: () => stopVr() }, '✕'),
@@ -522,26 +587,29 @@ async function startVr(cur, opts) {
   history.pushState({ vr: true }, '');
   if (fs) fs.then(() => stereo && screen.orientation?.lock?.('landscape').catch(() => { })).catch(() => { });
   // capteurs (iPhone : autorisation explicite)
-  if (stereo) {
+  if (stereo && !xr) {
     try { if (typeof DeviceOrientationEvent !== 'undefined' && DeviceOrientationEvent.requestPermission) await DeviceOrientationEvent.requestPermission(); } catch { }
     addEventListener('deviceorientation', vrOnOrient);
   }
   try { VR.wake = await navigator.wakeLock?.request('screen'); } catch { }
   vrBindInput(screenEl);
   try {
-    vrInitGl($('#vrGl'));
+    vrInitGl($('#vrGl'), xr);
+    if (xr) await vrStartXr(xrAsk);
     await vrLoadPlan(VR.planIdx, true);
   } catch (e) { console.error(e); stopVr(); toast('Visite VR impossible : ' + e.message, true); return; }
   VR.loading = false;
   vrWelcome();
-  VR.raf = requestAnimationFrame(vrFrame);
+  if (VR.xr) VR.raf = VR.xr.session.requestAnimationFrame(vrXrFrame);
+  else VR.raf = requestAnimationFrame(vrFrame);
 }
 function stopVr(fromHistory) {
   if (!VR.on) return;
   VR.on = false;
-  cancelAnimationFrame(VR.raf);
+  if (VR.xr) { try { VR.xr.session.cancelAnimationFrame(VR.raf); } catch { } const ses = VR.xr.session; VR.xr = null; ses.end().catch(() => { }); }
+  else cancelAnimationFrame(VR.raf);
   removeEventListener('deviceorientation', vrOnOrient);
-  removeEventListener('keydown', vrOnKey);
+  removeEventListener('keydown', vrOnKey); removeEventListener('keyup', vrOnKeyUp);
   if (VR.audio) { VR.audio.pause(); VR.audio = null; }
   VR.urls.forEach(u => URL.revokeObjectURL(u));
   try { VR.wake?.release(); } catch { }
@@ -554,21 +622,25 @@ function stopVr(fromHistory) {
 }
 addEventListener('popstate', () => { if (VR.on) stopVr(true); });
 
-function vrInitGl(canvas) {
-  let gl = canvas.getContext('webgl2', { antialias: true, alpha: false }); VR.gl2 = !!gl;
-  if (!gl) gl = canvas.getContext('webgl', { antialias: true, alpha: false });
+function vrInitGl(canvas, xr) {
+  const attrs = { antialias: true, alpha: false, xrCompatible: !!xr };
+  let gl = canvas.getContext('webgl2', attrs); VR.gl2 = !!gl;
+  if (!gl) gl = canvas.getContext('webgl', attrs);
   if (!gl) throw new Error('WebGL indisponible sur ce téléphone');
   VR.gl = gl;
   VR.aniso = gl.getExtension('EXT_texture_filter_anisotropic');
   VR.maxTex = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+  VR.samples = VR.gl2 ? Math.min(4, gl.getParameter(gl.MAX_SAMPLES) || 0) : 0;
   if (!VR.gl2) gl.getExtension('OES_element_index_uint');
-  VR.prog = { mesh: vrProgram(gl, VR_SHADERS.mesh), tex: vrProgram(gl, VR_SHADERS.tex), sphere: vrProgram(gl, VR_SHADERS.sphere), lens: vrProgram(gl, VR_SHADERS.lens) };
+  let mesh = null;
+  if (VR.gl2) try { mesh = vrProgram(gl, VR_SHADERS.mesh3); } catch (e) { console.warn('ombrage simplifié', e); }
+  VR.prog = { mesh: mesh || vrProgram(gl, VR_SHADERS.mesh), tex: vrProgram(gl, VR_SHADERS.tex), sphere: vrProgram(gl, VR_SHADERS.sphere), lens: vrProgram(gl, VR_SHADERS.lens) };
   VR.full = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, VR.full); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
   VR.quadBuf = gl.createBuffer();
   VR.texGround = vrTexture(groundTexture(), { repeat: true });
   VR.texRing = vrTexture(ringTexture());
   const [w1] = vrCanvas(2, 2); w1.getContext('2d').fillStyle = '#fff'; w1.getContext('2d').fillRect(0, 0, 2, 2); VR.texWhite = vrTexture(w1, { mip: false });
-  VR.menuTex = {};
+  VR.menuTex = {}; VR.doorTex = {};
   for (const [k, e, l, bg] of [['start', '🏁', 'Départ', '#3fb04a'], ['drone', '🚁', 'Vue drone', '#2f7fdc'], ['ground', '🧍', 'Au sol', '#2f7fdc'], ['plan', '🗺️', 'Plan suivant', '#f2a019'],
     ['quit', '🚪', 'Quitter', '#dc2626'], ['back', '↩️', 'Maquette', '#3fb04a'], ['door', '🚪', '', '#8a5a2b']]) VR.menuTex[k] = vrTexture(iconTexture(e, l, bg));
 }
@@ -603,10 +675,39 @@ async function vrLoadPlan(idx, first) {
   // bulles
   VR.pins = (P.pins || []).map(pin => ({ pin, tex: null, pos: [pin.x, Math.max(1.5, (pin.z || 0) + 0.7), pin.y] }));
   for (const b of VR.pins) { b.tex = vrTexture(bubbleTexture(b.pin)); VR.levelTex.push(b.tex); }
-  VR.doors = (P.doors || []).map(d => ({ ...d, pos: [d.x, (d.z || 0) + Math.min(d.h || 2.1, 2.2) * 0.55, d.y] }));
+  VR.doors = (P.doors || []).map(vrDoorPrep);
   const B = P.bounds || { x0: -10, y0: -10, x1: 10, y1: 10, hmax: 3 };
   VR.center = [(B.x0 + B.x1) / 2, 0, (B.y0 + B.y1) / 2]; VR.extent = Math.max(10, B.x1 - B.x0, B.y1 - B.y0); VR.hmax = B.hmax || 3;
   vrGoStart(first);
+}
+/** Porte du pack : faces du mur de part et d'autre (mesurées dans la maquette), vantail dessiné de chaque côté. */
+function vrDoorPrep(d) {
+  const r = (d.rot || 0) * DEG2, n = [-Math.sin(r), 0, Math.cos(r)], h = d.h || 2.1, z = d.z || 0, c = [d.x, z + Math.min(h, 2.2) * 0.5, d.y];
+  const face = s => { const hit = vrRayMesh(c, V3.mul(n, s), 0.8); return hit ? hit.t : null; };
+  const fp = face(1), fm = face(-1), mur = d.mur ?? (fp != null && fm != null);
+  const half = s => (s > 0 ? fp : fm) ?? (d.d ? d.d / 2 : 0.05);
+  const tex = mur && d.kind !== 'portail' ? vrDoorTexture(d.kind, d.color) : null;
+  return { ...d, n, c: [d.x, z + h / 2, d.y], half, tex, pos: [d.x, z + Math.min(h, 2.2) * 0.55, d.y] };
+}
+/** Vantail de porte (texture) : bois à panneaux, double porte, porte sectionnelle ; mis en cache par type et couleur. */
+function vrDoorTexture(kind, color) {
+  const key = (kind || 'porte') + (color || '');
+  if (VR.doorTex[key]) return VR.doorTex[key];
+  const col = color || (kind === 'garage' ? '#9aa3ad' : '#8a5a2b'), wide = kind === 'porte2' || kind === 'garage';
+  const [c, g] = vrCanvas(wide ? 512 : 256, 512), W = c.width, H = c.height;
+  const shade = (hex, k) => { const n = parseInt(hex.slice(1), 16), f = v => Math.max(0, Math.min(255, Math.round(v * k))); return `rgb(${f(n >> 16)},${f((n >> 8) & 255)},${f(n & 255)})`; };
+  g.fillStyle = shade(col, 0.62); g.fillRect(0, 0, W, H);                                     // chambranle
+  const leaf = (x0, x1, handle) => {
+    g.fillStyle = col; g.fillRect(x0, 14, x1 - x0, H - 14);
+    if (kind === 'garage') { g.fillStyle = shade(col, 0.8); for (let k = 1; k < 7; k++) g.fillRect(x0 + 6, 14 + k * (H - 14) / 7 - 3, x1 - x0 - 12, 6); return; }
+    g.strokeStyle = shade(col, 0.72); g.lineWidth = 6;
+    const m = (x1 - x0) * 0.16; g.strokeRect(x0 + m, 50, x1 - x0 - 2 * m, H * 0.36); g.strokeRect(x0 + m, 70 + H * 0.36, x1 - x0 - 2 * m, H * 0.46);
+    g.fillStyle = 'rgba(255,255,255,.08)'; g.fillRect(x0, 14, (x1 - x0) * 0.25, H - 14);
+    g.fillStyle = '#d9b84a'; g.beginPath(); g.arc(handle, H * 0.52, 9, 0, 7); g.fill(); g.fillRect(handle - (handle > (x0 + x1) / 2 ? 26 : 0), H * 0.52 - 4, 26, 8);
+  };
+  if (kind === 'porte2') { leaf(14, W / 2 - 2, W / 2 - 34); leaf(W / 2 + 2, W - 14, W / 2 + 34); }
+  else leaf(14, W - 14, kind === 'garage' ? 0 : W - 42);
+  return (VR.doorTex[key] = vrTexture(c));
 }
 function vrGoStart() {
   const S = VR.plan.start || { x: VR.center[0], y: VR.center[2] + 10 };
@@ -623,16 +724,31 @@ function vrOnOrient(e) {
   VR.sensor = true;
   VR.devQ = Q.device(e.alpha || 0, e.beta || 0, e.gamma || 0, screen.orientation?.angle ?? window.orientation ?? 0);
 }
-function vrHeadQ() {
+/** Orientation de la tête. Capteurs lissés à chaque image : les petits tremblements sont filtrés,
+    les vrais mouvements passent tout de suite (le filtre s'ouvre quand l'écart grandit). */
+function vrHeadQ(dt = 1 / 60) {
   let q;
+  if (VR.xr) return VR.xr.headQ || [0, 0, 0, 1];
   if (VR.sensor && VR.devQ) {
     if (VR.wantYaw != null) { VR.yawOffset = VR.wantYaw - yawOf(Q.rot(VR.devQ, [0, 0, -1])); VR.wantYaw = null; }
-    q = Q.mul(Q.axis([0, 1, 0], VR.yawOffset), VR.devQ);
+    let d = VR.devQ;
+    if (VR.smooth > 0 && VR.headS) {
+      const ang = 2 * Math.acos(Math.min(1, Math.abs(Q.dot(VR.headS, d)))), base = VR.smooth > 1 ? 9 : 22, rate = base + ang * (VR.smooth > 1 ? 160 : 420);
+      d = Q.slerp(VR.headS, d, 1 - Math.exp(-rate * dt));
+    }
+    VR.headS = d;
+    q = Q.mul(Q.axis([0, 1, 0], VR.yawOffset), d);
   } else {
     if (VR.wantYaw != null) { VR.dragYaw = VR.wantYaw; VR.wantYaw = null; }
     q = Q.mul(Q.axis([0, 1, 0], VR.dragYaw), Q.axis([1, 0, 0], VR.dragPitch));
   }
   return q;
+}
+/** Tourner sur place (télécommande, manette) : par pas, quel que soit le mode. */
+function vrTurn(a) {
+  if (VR.xr) { VR.xr.yaw += a; VR.xr.rebase = true; }
+  else if (VR.sensor) VR.yawOffset += a;
+  else VR.dragYaw += a;
 }
 function vrBindInput(root) {
   let down = null;
@@ -645,18 +761,96 @@ function vrBindInput(root) {
   });
   const up = () => { if (down && !down.moved) vrActivate(); down = null; };
   root.addEventListener('pointerup', up); root.addEventListener('pointercancel', () => { down = null; });
-  addEventListener('keydown', vrOnKey);
+  // télécommande « souris » : la molette fait avancer ou reculer d'un pas
+  root.addEventListener('wheel', e => { e.preventDefault(); vrStep(e.deltaY < 0 ? 1 : -1); }, { passive: false });
+  root.addEventListener('contextmenu', e => { e.preventDefault(); vrRemote('back'); });
+  addEventListener('keydown', vrOnKey); addEventListener('keyup', vrOnKeyUp);
 }
+
+/* ---------- Télécommande Bluetooth : clavier, multimédia, souris ou manette ---------- */
+// Touches envoyées par les télécommandes courantes (VR Box et compatibles en mode clavier, télécommandes de
+// présentation, télécommandes multimédia) et par un clavier Bluetooth.
+const VR_KEYMAP = {
+  ok: ['Enter', ' ', 'NumpadEnter', 'MediaPlayPause', 'MediaPlay', 'AudioVolumeUp', 'PageDown', 'Select', 'Accept'],
+  back: ['Escape', 'Backspace', 'BrowserBack', 'GoBack', 'AudioVolumeDown', 'PageUp', 'MediaStop'],
+  fwd: ['ArrowUp', 'w', 'z', 'W', 'Z'], rev: ['ArrowDown', 's', 'S'],
+  left: ['ArrowLeft', 'a', 'q', 'A', 'Q', 'MediaTrackPrevious', 'MediaRewind'], right: ['ArrowRight', 'd', 'D', 'MediaTrackNext', 'MediaFastForward'],
+  menu: ['m', 'M', 'ContextMenu', 'Tab', 'F1'],
+};
+const VR_REMOTE_HELP = [['OK / A / Entrée', 'valider (ce que vise le point)'], ['Retour / B / Échap', 'fermer, revenir, sortir'], ['↑ ↓ / joystick', 'avancer, reculer'],
+  ['← → / LB RB', 'tourner de 30°'], ['Menu / X', 'menu de la visite'], ['Y', 'vue drone'], ['Molette (souris)', 'un pas en avant ou en arrière']];
+const VR_ACT_LABEL = { ok: 'Valider', back: 'Retour', fwd: 'Avancer', rev: 'Reculer', left: 'Tourner à gauche', right: 'Tourner à droite', menu: 'Menu', drone: 'Vue drone' };
+const vrKeyAction = e => Object.keys(VR_KEYMAP).find(a => VR_KEYMAP[a].includes(e.key) || VR_KEYMAP[a].includes(e.code));
 function vrOnKey(e) {
   if (!VR.on) return;
-  if (e.key === 'Escape') { e.preventDefault(); stopVr(); }
-  else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); vrActivate(); }
-  else if (e.key.startsWith('Arrow') && !VR.sensor) {
-    e.preventDefault();
-    if (e.key === 'ArrowLeft') VR.dragYaw += 0.25; if (e.key === 'ArrowRight') VR.dragYaw -= 0.25;
-    if (e.key === 'ArrowUp') VR.dragPitch = clamp(VR.dragPitch + 0.2, -1.45, 1.45); if (e.key === 'ArrowDown') VR.dragPitch = clamp(VR.dragPitch - 0.2, -1.45, 1.45);
+  const a = vrKeyAction(e); if (!a) return;
+  e.preventDefault();
+  if (a === 'fwd' || a === 'rev') { VR.keyMove = a === 'fwd' ? 1 : -1; return; }
+  if (e.repeat) return;
+  vrRemote(a);
+}
+function vrOnKeyUp(e) { const a = vrKeyAction(e); if (a === 'fwd' || a === 'rev') VR.keyMove = 0; }
+/** Une action de la télécommande ou de la manette. */
+function vrRemote(a) {
+  if (!VR.on || VR.loading) return;
+  if (a === 'ok') return vrActivate();
+  if (a === 'left') return vrTurn(VR_TURN);
+  if (a === 'right') return vrTurn(-VR_TURN);
+  if (a === 'menu') return VR.panel?.menu ? vrClosePanel() : vrMenuPanel();
+  if (a === 'drone') return vrMenu(VR.drone ? 'ground' : 'drone');
+  if (a === 'back') {
+    if (VR.panel) return vrClosePanel();
+    if (VR.scene === 'pano') return vrMenu('back');
+    if (VR.drone) return vrMenu('ground');
+    return stopVr();
   }
 }
+/** Manettes et télécommandes en mode « manette » (lues à chaque image). */
+function vrPollPads(dt) {
+  let move = 0;
+  for (const pad of navigator.getGamepads?.() || []) {
+    if (!pad || !pad.connected) continue;
+    const prev = VR.padPrev[pad.index] || {}, now = {}, b = i => !!pad.buttons[i]?.pressed;
+    const press = (k, on) => { now[k] = on; if (on && !prev[k]) return true; return false; };
+    const std = pad.mapping === 'standard';
+    if (press('ok', b(0) || (std && (b(6) || b(7))))) vrRemote('ok');
+    if (press('back', b(1) || (std && b(8)))) vrRemote('back');
+    if (press('menu', std ? b(2) || b(9) : b(2))) vrRemote('menu');
+    if (press('drone', b(3))) vrRemote('drone');
+    const ax = pad.axes || [], lx = ax[0] || 0, ly = ax[1] || 0, rx = ax[2] || 0;
+    const turnL = (std && (b(4) || b(14))) || lx < -0.7 || rx < -0.7, turnR = (std && (b(5) || b(15))) || lx > 0.7 || rx > 0.7;
+    if (press('tl', turnL)) vrRemote('left');
+    if (press('tr', turnR)) vrRemote('right');
+    let m = Math.abs(ly) > 0.2 ? -ly : 0;
+    if (std && b(12)) m = 1; if (std && b(13)) m = -1;
+    if (Math.abs(m) > Math.abs(move)) move = m;
+    VR.padPrev[pad.index] = now;
+  }
+  VR.move = move || VR.xrMove || VR.keyMove;
+}
+/** Avancer en continu (manette, flèches) : on glisse le long du regard, arrêté par les murs. */
+function vrWalk(dt, fwd) {
+  const m = VR.scene === 'maquette' && !VR.panel ? VR.move : 0;
+  VR.moving += ((Math.abs(m) > 0.1 ? 1 : 0) - VR.moving) * Math.min(1, dt * 8);
+  if (Math.abs(m) < 0.1) return;
+  const f = V3.norm([fwd[0], 0, fwd[2]]), dir = m > 0 ? f : V3.mul(f, -1), step = Math.abs(m) * (VR.drone ? 14 : VR_WALK_SPEED) * dt;
+  if (!VR.drone && vrBlocked(dir, step + 0.35)) return;
+  vrShift(V3.mul(dir, step));
+}
+/** Un mur ou un obstacle devant, à hauteur de genou ou de poitrine ? */
+function vrBlocked(dir, dist) {
+  const g = VR.head[1] - VR_EYE;
+  for (const h of [0.45, 1.2]) { const hit = vrRayMesh([VR.head[0], g + h, VR.head[2]], dir, dist); if (hit && hit.up < 0.7) return true; }
+  return false;
+}
+/** Un pas (molette) : 1 m, sans traverser les murs. */
+function vrStep(sgn) {
+  if (!VR.on || VR.scene !== 'maquette' || VR.fade > 0.3) return;
+  const fwd = Q.rot(vrHeadQ(), [0, 0, -1]), f = V3.norm([fwd[0], 0, fwd[2]]), dir = sgn > 0 ? f : V3.mul(f, -1);
+  if (!VR.drone && vrBlocked(dir, 1.35)) return vrSay('🧱 Un mur bloque le passage');
+  vrShift(V3.mul(dir, VR.drone ? 8 : 1));
+}
+function vrShift(v) { VR.head = V3.add(VR.head, v); }
 
 /* ---------- Ce que l'on peut viser ---------- */
 /** Quad face à la caméra : centre c, axes r (droite) et u (haut), taille w × h. */
@@ -701,9 +895,14 @@ function vrBuildTargets(headQ) {
       list.push({ ...billboard(b.pos, 0.62 * k, 0.48 * k, eye), key: 'pin:' + b.pin.id, tex: b.tex, label: b.pin.titre || b.pin.metier || 'Repère', act: () => vrOpenPin(b.pin), depth: true, stalk: !VR.drone });
     }
     if (!VR.drone) VR.doors.forEach((d, i) => {
-      const dist = V3.len(V3.sub(d.pos, eye));
-      if (dist > 14 || dist < 0.6) return;
-      list.push({ ...billboard(d.pos, 0.34, 0.4, eye), key: 'door:' + i, tex: VR.menuTex.door, label: 'Passer la porte', act: () => vrDoor(d), depth: true, alpha: clamp((14 - dist) / 4, 0, 1) });
+      if (!d.n) Object.assign(d, vrDoorPrep(d));
+      const dist = V3.len(V3.sub(d.c, eye));
+      if (dist > 30) return;
+      // côté de l'observateur : vantail posé contre la face du mur, pictogramme juste devant (jamais dans le mur)
+      const side = Math.sign(V3.dot(V3.sub(eye, d.c), d.n)) || 1, f = V3.mul(d.n, side), off = d.half(side);
+      const act = () => vrDoor(d, side), key = 'door:' + i, near = dist <= 14 && dist >= 0.6;
+      if (d.tex) list.push({ c: V3.add(d.c, V3.mul(f, off + 0.06)), r: V3.cross([0, 1, 0], f), u: [0, 1, 0], w: d.w, h: d.h || 2.1, tex: d.tex, key, label: near ? 'Passer la porte' : '', act: near ? act : null, depth: true, door: true, pad: 1 });
+      if (near) list.push({ ...billboard(V3.add(V3.add(d.pos, V3.mul(f, off + 0.32)), [0, 0.15, 0]), 0.3, 0.35, eye), key, tex: VR.menuTex.door, label: 'Passer la porte', act, depth: true, alpha: clamp((14 - dist) / 4, 0, 1) });
     });
   } else if (VR.scene === 'pano') {
     VR.pano.links.forEach((L, i) => {
@@ -732,64 +931,177 @@ function vrBuildTargets(headQ) {
 }
 
 /* ---------- Image par image ---------- */
-function vrFrame(now) {
-  if (!VR.on) return;
-  VR.raf = requestAnimationFrame(vrFrame);
-  const dt = Math.min(0.1, (now - VR.last) / 1000); VR.last = now;
-  const gl = VR.gl, cv = gl.canvas, dpr = Math.min(devicePixelRatio || 1, VR.stereo ? 2 : 1.75);
-  const W = Math.round(innerWidth * dpr), H = Math.round(innerHeight * dpr);
-  if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; const hud = $('#vrHud'); hud.width = W; hud.height = H; VR.fbo = null; }
-  // fondu
+/** Ce qui ne dépend pas de l'affichage : fondu, entrées, déplacement, cibles, regard. */
+function vrUpdate(now, dt, headQ) {
   VR.fade += Math.sign(VR.fadeTo - VR.fade) * Math.min(Math.abs(VR.fadeTo - VR.fade), dt * 5);
   if (VR.fade >= 0.999 && VR.onBlack) { const f = VR.onBlack; VR.onBlack = null; Promise.resolve(f()).finally(() => { VR.fadeTo = 0; }); }
-  // manette Bluetooth : bouton A = valider
-  const pad = navigator.getGamepads?.().find(p => p);
-  if (pad) { const pr = pad.buttons[0]?.pressed; if (pr && !VR.padDown) vrActivate(); VR.padDown = pr; }
-  for (const t of VR.trash.splice(0)) gl.deleteTexture(t);
-  const headQ = vrHeadQ(), { fwd } = vrBuildTargets(headQ);
-  vrGaze(fwd, dt);
-  if (VR.stereo && !VR.sensor && !VR.saidNoSensor && now - VR.t0 > 2500) { VR.saidNoSensor = true; vrSay('Capteurs de mouvement indisponibles : glissez le doigt pour regarder'); }
+  for (const t of VR.trash.splice(0)) VR.gl.deleteTexture(t);
+  vrPollPads(dt);
+  const fwd0 = Q.rot(headQ, [0, 0, -1]);
+  vrWalk(dt, fwd0);
+  const { fwd } = vrBuildTargets(headQ);
+  vrGaze(VR.aim ? VR.aim.d : fwd, dt, VR.aim ? VR.aim.o : VR.head);
+  if (VR.stereo && !VR.xr && !VR.sensor && !VR.saidNoSensor && now - VR.t0 > 2500) { VR.saidNoSensor = true; vrSay('Capteurs de mouvement indisponibles : glissez le doigt pour regarder'); }
+}
+/** Profondeur : assez de précision pour que deux faces proches ne scintillent pas. */
+const vrNearFar = () => [0.1, VR.drone ? 4000 : Math.max(400, VR.extent * 4)];
+function vrFrame(now) {
+  if (!VR.on || VR.xr) return;
+  VR.raf = requestAnimationFrame(vrFrame);
+  const dt = Math.min(0.1, (now - VR.last) / 1000); VR.last = now;
+  const gl = VR.gl, cv = gl.canvas, dpr = Math.min(devicePixelRatio || 1, VR.stereo ? VR_QUALITY[VR.set.quality] || 2 : 1.75);
+  const W = Math.round(innerWidth * dpr), H = Math.round(innerHeight * dpr);
+  if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; const hud = $('#vrHud'); hud.width = W; hud.height = H; VR.fbo = null; }
+  const headQ = vrHeadQ(dt);
+  vrUpdate(now, dt, headQ);
   // rendu
-  const eyes = VR.stereo ? [-1, 1] : [0], vw = VR.stereo ? W / 2 : W;
-  const fov = (VR.stereo ? (VR.lens ? 96 : 86) : 72) * DEG2, asp = vw / H;
-  const proj = M4.persp(fov, asp, 0.05, 900);
-  let target = null;
-  if (VR.lens) {
-    if (!VR.fbo || VR.fbo.w !== W || VR.fbo.h !== H) VR.fbo = vrMakeFbo(W, H);
-    target = VR.fbo.fb;
-  }
-  gl.bindFramebuffer(gl.FRAMEBUFFER, target);
+  const eyes = VR.stereo ? [-1, 1] : [0], vw = VR.stereo ? Math.floor(W / 2) : W;
+  const fov = (VR.fovOverride || (VR.stereo ? VR.set.fov : 72)) * DEG2, asp = vw / H;   // fovOverride : captures (photos, 360°)
+  const [near, far] = vrNearFar(), proj = M4.persp(fov, asp, near, far);
+  const sh = VR.stereo ? Math.round((VR.set.shift || 0) / 100 * vw) : 0;   // centrage : chaque image en face de sa lentille
+  if (VR.lens && (!VR.fbo || VR.fbo.w !== W || VR.fbo.h !== H)) VR.fbo = vrMakeFbo(W, H);
+  const fbo = VR.lens && VR.fbo;
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fbo ? fbo.msaa || fbo.fb : null);
+  gl.disable(gl.SCISSOR_TEST);
   gl.viewport(0, 0, W, H); gl.clearColor(0, 0, 0, 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   eyes.forEach((e, i) => {
-    const pos = V3.add(VR.head, Q.rot(headQ, [e * VR_IPD / 2, 0, 0]));
-    gl.viewport(i * vw, 0, vw, H);
+    const pos = V3.add(VR.head, Q.rot(headQ, [e * VR.ipd / 2, 0, 0]));
+    gl.viewport(i * vw + (fbo ? 0 : e * sh), 0, vw, H);
+    if (!fbo && sh) { gl.enable(gl.SCISSOR_TEST); gl.scissor(i * vw, 0, vw, H); }
     vrDrawEye(proj, M4.view(headQ, pos), headQ, pos);
   });
-  if (VR.lens) {
+  gl.disable(gl.SCISSOR_TEST);
+  if (fbo) {
+    if (fbo.msaa) {   // anticrénelage : l'image multi-échantillonnée est résolue dans la texture
+      gl.bindFramebuffer(gl.READ_FRAMEBUFFER, fbo.msaa); gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, fbo.fb);
+      gl.blitFramebuffer(0, 0, W, H, 0, 0, W, H, gl.COLOR_BUFFER_BIT, gl.NEAREST);
+    }
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.viewport(0, 0, W, H); gl.clear(gl.COLOR_BUFFER_BIT);
     const P = VR.prog.lens; gl.useProgram(P.p); gl.disable(gl.DEPTH_TEST); gl.disable(gl.BLEND);
-    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, VR.fbo.tex); gl.uniform1i(P.u.t, 0);
-    gl.uniform1f(P.u.asp, asp); gl.uniform2f(P.u.k, 0.26, 0.12);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, fbo.tex); gl.uniform1i(P.u.t, 0);
+    gl.uniform1f(P.u.asp, asp); gl.uniform2f(P.u.k, VR.lens[0], VR.lens[1]);
     vrBindFull(P);
-    for (let i = 0; i < 2; i++) { gl.viewport(i * vw, 0, vw, H); gl.uniform1f(P.u.off, i * 0.5); gl.drawArrays(gl.TRIANGLES, 0, 3); }
+    gl.enable(gl.SCISSOR_TEST);
+    for (let i = 0; i < 2; i++) { const e = i ? 1 : -1; gl.scissor(i * vw, 0, vw, H); gl.viewport(i * vw + e * sh, 0, vw, H); gl.uniform1f(P.u.off, i * 0.5); gl.drawArrays(gl.TRIANGLES, 0, 3); }
+    gl.disable(gl.SCISSOR_TEST);
   }
-  vrHud(W, H, vw, dpr);
+  vrHud(W, H, vw, dpr, sh);
 }
+/** Image intermédiaire pour la correction des lentilles : texture + profondeur 24 bits, et en WebGL 2 un tampon
+    multi-échantillonné (anticrénelage 4×) résolu dans la texture à chaque image. */
 function vrMakeFbo(w, h) {
-  const gl = VR.gl, fb = gl.createFramebuffer(), tex = gl.createTexture(), rb = gl.createRenderbuffer();
+  const gl = VR.gl, fb = gl.createFramebuffer(), tex = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, tex);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-  gl.bindRenderbuffer(gl.RENDERBUFFER, rb); gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, w, h);
   gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
-  gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, rb);
+  let msaa = null;
+  if (VR.gl2 && VR.samples > 1) {
+    msaa = gl.createFramebuffer(); const cb = gl.createRenderbuffer(), db = gl.createRenderbuffer();
+    gl.bindRenderbuffer(gl.RENDERBUFFER, cb); gl.renderbufferStorageMultisample(gl.RENDERBUFFER, VR.samples, gl.RGBA8, w, h);
+    gl.bindRenderbuffer(gl.RENDERBUFFER, db); gl.renderbufferStorageMultisample(gl.RENDERBUFFER, VR.samples, gl.DEPTH_COMPONENT24, w, h);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, msaa);
+    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, cb);
+    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, db);
+    if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) msaa = null;
+  }
+  if (!msaa) {   // sans multi-échantillonnage : profondeur sur la texture elle-même (24 bits avec le stencil en WebGL 1)
+    const rb = gl.createRenderbuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.bindRenderbuffer(gl.RENDERBUFFER, rb);
+    if (VR.gl2) { gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT24, w, h); gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, rb); }
+    else { gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, w, h); gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, rb); }
+  }
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
   const ok = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-  if (!ok) { VR.lens = false; return null; }
-  return { fb, tex, w, h };
+  if (!ok) { VR.lens = null; return null; }
+  return { fb, tex, w, h, msaa };
+}
+
+/* ---------- WebXR : casque autonome (Quest, Pico…) ou téléphone compatible ---------- */
+// Le casque fournit la position de la tête, les images de chaque œil, la correction des lentilles et les manettes.
+// Repère : la zone de jeu du casque est posée à VR.xr.base et tournée de VR.xr.yaw ; quand l'application déplace
+// VR.head (téléportation, porte, drone…), la zone de jeu est recalée pour que la tête arrive à cet endroit.
+async function vrStartXr(ask) {
+  const gl = VR.gl;
+  await gl.makeXRCompatible?.();
+  const session = await ask;
+  session.updateRenderState({ baseLayer: new XRWebGLLayer(session, gl, { antialias: true }), depthNear: 0.1, depthFar: 4000 });
+  let ref, floor = true;
+  try { ref = await session.requestReferenceSpace('local-floor'); } catch { ref = await session.requestReferenceSpace('local'); floor = false; }
+  VR.xr = { session, ref, floor, yaw: 0, base: [0, 0, 0], headQ: null, lastHead: null, rebase: true, padPrev: {} };
+  session.addEventListener('select', () => vrActivate());
+  session.addEventListener('squeeze', () => vrRemote('back'));
+  session.addEventListener('end', () => { if (VR.on) { VR.xr = null; stopVr(); } });
+}
+function vrXrFrame(now, frame) {
+  if (!VR.on || !VR.xr) return;
+  const X = VR.xr, session = frame.session;
+  VR.raf = session.requestAnimationFrame(vrXrFrame);
+  const dt = Math.min(0.1, (now - VR.last) / 1000); VR.last = now;
+  const pose = frame.getViewerPose(X.ref); if (!pose) return;
+  const Ry = Q.axis([0, 1, 0], X.yaw), t = pose.transform, o = t.orientation;
+  // l'application a déplacé la tête (téléportation, porte…) ou tourné la vue : on recale la zone de jeu
+  if (VR.wantYaw != null) { X.yaw += VR.wantYaw - yawOf(Q.rot(Q.mul(Ry, [o.x, o.y, o.z, o.w]), [0, 0, -1])); VR.wantYaw = null; X.rebase = true; }
+  const Ry2 = Q.axis([0, 1, 0], X.yaw), local = Q.rot(Ry2, [t.position.x, t.position.y + (X.floor ? 0 : VR_EYE), t.position.z]);
+  if (X.rebase || VR.head !== X.lastHead) { X.base = V3.sub(VR.head, local); X.rebase = false; }
+  const W = p => V3.add(X.base, Q.rot(Ry2, [p.x, p.y + (X.floor ? 0 : VR_EYE), p.z]));
+  VR.head = W(t.position); X.lastHead = VR.head;
+  X.headQ = Q.mul(Ry2, [o.x, o.y, o.z, o.w]);
+  // manettes : rayon de visée, boutons, joystick
+  VR.aim = null; VR.xrMove = 0;
+  for (const src of session.inputSources) {
+    if (src.targetRayMode === 'tracked-pointer' && (!VR.aim || src.handedness === 'right')) {
+      const rp = frame.getPose(src.targetRaySpace, X.ref);
+      if (rp) { const ro = rp.transform.orientation; VR.aim = { o: W(rp.transform.position), d: V3.norm(Q.rot(Q.mul(Ry2, [ro.x, ro.y, ro.z, ro.w]), [0, 0, -1])) }; }
+    }
+    const gp = src.gamepad; if (!gp) continue;
+    const prev = X.padPrev[src.handedness] || {}, cur = {}, b = i => !!gp.buttons[i]?.pressed, edge = (k, on) => { cur[k] = on; return on && !prev[k]; };
+    if (edge('a', b(4))) vrRemote('ok');
+    if (edge('b', b(5))) vrRemote(src.handedness === 'left' ? 'menu' : 'back');
+    const ax = gp.axes[2] || 0, ay = gp.axes[3] || 0;
+    if (edge('tl', ax < -0.7)) vrRemote('left');
+    if (edge('tr', ax > 0.7)) vrRemote('right');
+    if (Math.abs(ay) > 0.25 && Math.abs(ay) > Math.abs(VR.xrMove)) VR.xrMove = -ay;
+    X.padPrev[src.handedness] = cur;
+  }
+  vrUpdate(now, dt, X.headQ);
+  if (VR.xr !== X) return;
+  // rendu : une image par œil, dans la couche du casque
+  const gl = VR.gl, layer = session.renderState.baseLayer;
+  gl.bindFramebuffer(gl.FRAMEBUFFER, layer.framebuffer);
+  gl.clearColor(0, 0, 0, 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  vrXrOverlay(X.headQ);
+  for (const view of pose.views) {
+    const vp = layer.getViewport(view), vt = view.transform, vo = vt.orientation, q = Q.mul(Ry2, [vo.x, vo.y, vo.z, vo.w]), pos = W(vt.position);
+    gl.viewport(vp.x, vp.y, vp.width, vp.height);
+    vrDrawEye(Array.from(view.projectionMatrix), M4.view(q, pos), q, pos);
+  }
+}
+/** Dans le casque WebXR il n'y a pas de calque 2D : viseur, message et fondu deviennent des panneaux 3D. */
+function vrXrOverlay(headQ) {
+  const t = VR.target, need = t && t.walk ? 1.5 : VR.dwellT || 1.4, k = t && t.act && VR.dwellT ? Math.min(1, VR.dwell / need) : 0;
+  const hint = VR.hint && performance.now() < VR.hint.until ? VR.hint.text : '', label = (t && t.label) || '';
+  const sig = [Math.round(k * 24), label, !!(t && t.act), hint].join('|');
+  if (sig !== VR.xrSig) {
+    VR.xrSig = sig;
+    const [c, g] = VR.xrCanvas || (VR.xrCanvas = vrCanvas(512, 384));
+    g.clearRect(0, 0, 512, 384);
+    const cx = 256, cy = 150, R = 26;
+    g.lineWidth = 7; g.strokeStyle = 'rgba(0,0,0,.4)'; g.beginPath(); g.arc(cx, cy, R + 3, 0, 7); g.stroke();
+    g.strokeStyle = t && t.act ? '#ffc94a' : 'rgba(255,255,255,.95)'; g.beginPath(); g.arc(cx, cy, t && t.act ? R : R * 0.55, 0, 7); g.stroke();
+    if (k > 0) { g.lineWidth = 10; g.strokeStyle = '#3fb04a'; g.beginPath(); g.arc(cx, cy, R, -Math.PI / 2, -Math.PI / 2 + k * Math.PI * 2); g.stroke(); }
+    const pill = (text, y, bg) => { g.font = `800 30px ${VR_FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle'; const w = Math.min(500, g.measureText(text).width + 40); g.fillStyle = bg; roundRect(g, cx - w / 2, y - 24, w, 48, 24); g.fill(); g.fillStyle = '#fff'; g.fillText(fitText(g, text, 470), cx, y + 2); };
+    if (label) pill(label, cy + R + 50, t && t.act ? 'rgba(22,35,61,.85)' : 'rgba(185,28,28,.85)');
+    if (hint) pill(hint, 40, 'rgba(47,127,220,.92)');
+    if (!VR.xrTex) VR.xrTex = vrTexture(c, { mip: false });
+    else { const gl = VR.gl; gl.bindTexture(gl.TEXTURE_2D, VR.xrTex); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c); }
+  }
+  const fwd = Q.rot(headQ, [0, 0, -1]), o = VR.aim ? VR.aim.o : VR.head, d = VR.aim ? VR.aim.d : fwd, dist = 1.6;
+  VR.quads.push({ ...billboard(V3.add(o, V3.mul(d, dist)), 0.56, 0.42, VR.head, true, headQ), tex: VR.xrTex, top: true, overlay: true });
+  if (VR.fade > 0.001) VR.quads.push({ ...billboard(V3.add(VR.head, V3.mul(fwd, 0.25)), 3, 3, VR.head, true, headQ), tex: VR.texWhite, top: true, overlay: true, tint: [0, 0, 0, VR.fade] });
 }
 function vrBindFull(P) {
   const gl = VR.gl;
@@ -839,16 +1151,18 @@ function vrDrawEye(proj, view, headQ, eye) {
   for (const q of VR.quads) {
     if (q.top) continue;
     if (q.stalk) { const b = q.c, y0 = b[1] - q.h / 2, w = 0.025; vrQuadDraw(vp, eye, VR.texWhite, [b[0] - w, 0, b[2], b[0] + w, 0, b[2], b[0] + w, y0, b[2], b[0] - w, y0, b[2]], [0, 0, 1, 0, 1, 1, 0, 1], [0.13, 0.2, 0.33, 0.55], 0); }
-    vrQuadOf(vp, eye, q, VR.target && q.key && q.key === VR.target.key ? 1.12 : 1);
+    const hot = VR.target && q.key && q.key === VR.target.key;
+    vrQuadOf(vp, eye, q, hot && !q.door ? 1.12 : 1, hot && q.door ? [1.2, 1.12, 0.9, 1] : null);
   }
   gl.disable(gl.DEPTH_TEST);
-  for (const q of VR.quads) if (q.top) vrQuadOf(vp, eye, q, VR.target && q.key && q.key === VR.target.key ? 1.12 : 1);
+  for (const q of VR.quads) if (q.top && !q.overlay) vrQuadOf(vp, eye, q, VR.target && q.key && q.key === VR.target.key ? 1.12 : 1);
+  for (const q of VR.quads) if (q.overlay) vrQuadOf(vp, eye, q, 1, q.tint);
   gl.enable(gl.DEPTH_TEST);
 }
-function vrQuadOf(vp, eye, q, s) {
+function vrQuadOf(vp, eye, q, s, tint) {
   const hw = q.w / 2 * s, hh = q.h / 2 * s, c = q.c, r = q.r, u = q.u, P = [];
   for (const [a, b] of [[-1, 1], [1, 1], [1, -1], [-1, -1]]) P.push(c[0] + r[0] * a * hw + u[0] * b * hh, c[1] + r[1] * a * hw + u[1] * b * hh, c[2] + r[2] * a * hw + u[2] * b * hh);
-  vrQuadDraw(vp, eye, q.tex, P, [0, 0, 1, 0, 1, 1, 0, 1], [1, 1, 1, q.alpha ?? 1], 0);
+  vrQuadDraw(vp, eye, q.tex, P, [0, 0, 1, 0, 1, 1, 0, 1], tint || [1, 1, 1, q.alpha ?? 1], 0);
 }
 function vrQuadDraw(vp, eye, tex, P, UV, tint, fogd) {
   const gl = VR.gl, T = VR.prog.tex, d = new Float32Array(30), idx = [0, 1, 2, 0, 2, 3];
@@ -863,8 +1177,7 @@ function vrQuadDraw(vp, eye, tex, P, UV, tint, fogd) {
 }
 
 /* ---------- Le regard : viser, remplir, valider ---------- */
-function vrGaze(fwd, dt) {
-  const o = VR.head;
+function vrGaze(fwd, dt, o = VR.head) {
   VR.cooldown = Math.max(0, VR.cooldown - dt);
   let best = null, bestT = 1e9, panelHit = null;
   for (const q of VR.quads) {
@@ -907,9 +1220,9 @@ function vrGaze(fwd, dt) {
   VR.walkAnchorPrev = VR.walkAnchor;
   VR.target = best;
   if (VR.panel && key !== prevKey && (panelHot(key) || panelHot(prevKey))) VR.panel.draw();
-  if (best && best.act && VR.cooldown === 0 && VR.fade < 0.05) {
+  if (best && best.act && VR.cooldown === 0 && VR.fade < 0.05 && VR.dwellT > 0 && !(best.walk && VR.moving > 0.05)) {
     VR.dwell += dt;
-    const need = best.walk ? VR_WALK_DWELL : VR_DWELL;
+    const need = best.walk ? VR.dwellT + 0.1 : VR.dwellT;
     if (VR.walk) VR.walk.k = Math.min(1, VR.dwell / need);
     if (VR.dwell >= need) vrActivate();
   } else VR.dwell = 0;
@@ -928,9 +1241,11 @@ function vrBlack(fn) { VR.fadeTo = 1; VR.onBlack = fn; }
 function vrTeleport(p) {
   vrBlack(() => { VR.head = [p[0], (VR.drone ? 0 : p[1]) + VR_EYE, p[2]]; VR.drone = false; VR.panel = null; });
 }
-function vrDoor(d) {
-  const r = (d.rot || 0) * DEG2, n = [-Math.sin(r), 0, Math.cos(r)], rel = V3.sub(VR.head, [d.x, VR.head[1], d.y]), side = Math.sign(V3.dot(rel, n)) || 1;
-  vrBlack(() => { VR.head = [d.x - n[0] * side * 1.1, VR_EYE + (d.z || 0), d.y - n[2] * side * 1.1]; VR.panel = null; });
+function vrDoor(d, side) {
+  const n = d.n || (r => [-Math.sin(r), 0, Math.cos(r)])((d.rot || 0) * DEG2);
+  side = side || Math.sign(V3.dot(V3.sub(VR.head, [d.x, VR.head[1], d.y]), n)) || 1;
+  const k = (d.half ? d.half(-side) : 0.1) + 0.9;   // de l'autre côté, à 90 cm de la face du mur
+  vrBlack(() => { VR.head = [d.x - n[0] * side * k, VR_EYE + (d.z || 0), d.y - n[2] * side * k]; VR.panel = null; });
 }
 function vrMenu(k) {
   if (k === 'quit') return stopVr();
@@ -984,9 +1299,23 @@ function vrWelcome() {
     g.font = `900 64px ${VR_FONT}`; g.fillText(fitText(g, VR.pack.nom || 'Visite', 900), c.width / 2, 120);
     g.font = `700 36px ${VR_FONT}`; g.fillStyle = '#61708c'; g.fillText(fitText(g, VR.plan.nom || '', 900), c.width / 2, 172);
     g.textAlign = 'left'; g.fillStyle = '#16233d'; g.font = `700 40px ${VR_FONT}`;
-    [['👀', 'Regardez le sol pour vous déplacer'], ['🫧', 'Fixez une bulle pour l’ouvrir'], ['⬇️', 'Baissez la tête : le menu']].forEach(([e, t], i) => { g.fillText(e, 90, 268 + i * 82); g.fillText(t, 170, 268 + i * 82); });
+    const pad = VR.xr || (navigator.getGamepads?.() || []).some(p => p);
+    [['👀', VR.dwellT ? 'Regardez le sol pour vous déplacer' : 'Visez le sol, validez pour y aller'], ['🫧', VR.dwellT ? 'Fixez une bulle pour l’ouvrir' : 'Visez une bulle, validez pour l’ouvrir'],
+      pad ? ['🎮', 'Joystick : avancer · ← → tourner · B : retour'] : ['⬇️', 'Baissez la tête : le menu']].forEach(([e, t], i) => { g.fillText(e, 90, 268 + i * 82); g.fillText(t, 170, 268 + i * 82); });
     panelButton(g, buttons, 'go', c.width / 2 - 230, c.height - 150, 460, 100, 'C’est parti !', '#3fb04a', () => vrClosePanel(), 'C’est parti !');
   }, { height: 640 });
+}
+/** Menu de la visite devant soi (bouton Menu de la télécommande) : on vise un bouton et on valide. */
+function vrMenuPanel() {
+  const items = VR.scene === 'pano' ? [['back', '↩️ Retour à la maquette', '#3fb04a']] :
+    [['start', '🏁 Retour au départ', '#3fb04a'], [VR.drone ? 'ground' : 'drone', VR.drone ? '🧍 Redescendre au sol' : '🚁 Vue drone', '#2f7fdc'], ...(VR.pack.plans.length > 1 ? [['plan', '🗺️ Plan suivant', '#f2a019']] : [])];
+  items.push(['quit', '🚪 Quitter la visite', '#dc2626']);
+  const P = vrPanel((g, c, buttons) => {
+    panelFrame(g, c, '#16233d');
+    g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.fillStyle = '#16233d'; g.font = `900 52px ${VR_FONT}`; g.fillText('Menu', c.width / 2, 92);
+    items.forEach(([k, t, bg], i) => panelButton(g, buttons, 'm-' + k, 120, 130 + i * 118, c.width - 260, 96, t, bg, () => { vrClosePanel(); vrMenu(k); }, t.replace(/^\S+ /, '')));
+  }, { height: 170 + items.length * 118 });
+  P.menu = true;
 }
 async function vrOpenPin(pin) {
   if (pin.pano && VR.pack.panos[pin.pano]) return vrBlack(() => vrEnterPano(pin.pano));
@@ -1055,11 +1384,17 @@ function vrPanoLink(L) {
 }
 
 /* ---------- Viseur et messages (par-dessus la 3D) ---------- */
-function vrHud(W, H, vw, dpr) {
+function vrHud(W, H, vw, dpr, sh = 0) {
   const g = $('#vrHud').getContext('2d'), t = VR.target, now = performance.now();
   g.clearRect(0, 0, W, H);
-  const centers = VR.stereo ? [vw / 2, vw * 1.5] : [W / 2];
-  const need = t && t.walk ? VR_WALK_DWELL : VR_DWELL, k = t && t.act ? Math.min(1, VR.dwell / need) : 0;
+  const centers = VR.stereo ? [vw / 2 - sh, vw * 1.5 + sh] : [W / 2];
+  // vignette de confort : on assombrit les bords quand on se déplace en continu (moins de mal des transports)
+  if (VR.moving > 0.02) for (const cx of centers) {
+    const r0 = Math.min(vw, H) * 0.32, r1 = Math.max(vw, H) * 0.62, gr = g.createRadialGradient(cx, H / 2, r0, cx, H / 2, r1);
+    gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, `rgba(0,0,0,${0.75 * VR.moving})`);
+    g.save(); if (VR.stereo) { g.beginPath(); g.rect(cx < vw ? 0 : vw, 0, vw, H); g.clip(); } g.fillStyle = gr; g.fillRect(0, 0, W, H); g.restore();
+  }
+  const need = t && t.walk ? VR.dwellT + 0.1 : VR.dwellT, k = t && t.act && need > 0 ? Math.min(1, VR.dwell / need) : 0;
   const R = 11 * dpr * (VR.stereo ? 1 : 1.2);
   for (const cx of centers) {
     const cy = H / 2;
@@ -1079,6 +1414,30 @@ function vrHudPill(g, text, cx, cy, dpr, bg) {
   g.fillStyle = bg; roundRect(g, cx - w / 2, cy - h / 2, w, h, h / 2); g.fill();
   g.fillStyle = '#fff'; g.fillText(text, cx, cy + dpr);
 }
+
+/* ---------- Accueil : essai de la télécommande (rien n'est envoyé nulle part) ---------- */
+function remoteShow(text) { const b = $('#remoteTest'); if (!b) return; b.textContent = text; b.classList.remove('flash'); void b.offsetWidth; b.classList.add('flash'); }
+addEventListener('keydown', e => {
+  if (VR.on || !$('#remoteTest') || /^(INPUT|SELECT)$/.test(e.target.tagName)) return;
+  const a = vrKeyAction(e); remoteShow(`Touche « ${e.key === ' ' ? 'Espace' : e.key} »${a ? ' → ' + VR_ACT_LABEL[a] : ' (non utilisée)'}`);
+});
+const VR_PAD_ACT = { 0: 'ok', 1: 'back', 2: 'menu', 3: 'drone', 4: 'left', 5: 'right', 6: 'ok', 7: 'ok', 8: 'back', 9: 'menu', 12: 'fwd', 13: 'rev', 14: 'left', 15: 'right' };
+let homePadLoop = 0, homePadPrev = {};
+function homePads() {
+  homePadLoop = 0;
+  if (VR.on) return;
+  let any = false;
+  for (const pad of navigator.getGamepads?.() || []) {
+    if (!pad) continue; any = true;
+    pad.buttons.forEach((bt, i) => { const k = pad.index + ':' + i; if (bt.pressed && !homePadPrev[k]) remoteShow(`🎮 Bouton ${i} → ${VR_ACT_LABEL[VR_PAD_ACT[i]] || 'non utilisé'}`); homePadPrev[k] = bt.pressed; });
+    (pad.axes || []).forEach((v, i) => { const k = pad.index + ':a' + i, on = Math.abs(v) > 0.7; if (on && !homePadPrev[k]) remoteShow(`🎮 Joystick ${i < 2 ? 'gauche' : 'droit'} ${i % 2 ? (v < 0 ? '↑ → Avancer' : '↓ → Reculer') : (v < 0 ? '← → Tourner à gauche' : '→ → Tourner à droite')}`); homePadPrev[k] = on; });
+  }
+  if (any) homePadLoop = requestAnimationFrame(homePads);
+}
+addEventListener('gamepadconnected', e => {
+  if (VR.on) vrSay('🎮 Manette connectée');
+  else { remoteShow('🎮 Reconnue : ' + (e.gamepad.id || 'manette').replace(/\s*\(.*$/, '')); if (!homePadLoop) homePadLoop = requestAnimationFrame(homePads); }
+});
 
 /* points d'entrée pour les essais automatiques */
 window.METATOR_VR = { state: VR, start: startVr, stop: stopVr, current: () => current, activate: vrActivate };
