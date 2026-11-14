@@ -101,6 +101,7 @@ select { font: inherit; width: 100%; padding: 12px 14px; border: 2px solid var(-
       <li><b>2.</b> Touchez « Ouvrir un pack VR » et choisissez-le (souvent dans Téléchargements).</li>
       <li><b>3.</b> « Lancer dans le casque », puis placez le téléphone dans le casque.</li>
       <li><b>👀 Avancer :</b> regardez le sol, la cible se remplit… vous y êtes. <b>⬇ Menu :</b> baissez la tête.</li>
+      <li><b>🎈 Montgolfière :</b> baissez la tête, « Montgolfière » : on s’envole et on dérive vers où l’on regarde.</li>
       <li><b>🎮 Télécommande Bluetooth :</b> OK pour valider, ↑ ↓ pour avancer, ← → pour tourner (essai dans « Réglages » une fois le pack ouvert).</li>
     </ul>
     <p class="note">Le pack n’est pas conservé : il est relu à chaque visite. Rien ne quitte le téléphone.</p>
@@ -290,6 +291,7 @@ function pickFile(input) {
    • Bulles des repères (notes, photos, audio, objets métier), portes, photos 360° avec leurs liens.
    • Baisser la tête : menu aux pieds (Départ, Vue drone, Plan suivant, Quitter).
    • « Visite sans casque » : une seule vue, on glisse le doigt pour regarder (pour essayer ou montrer).
+   • Balade en montgolfière (menu aux pieds) : on dérive vers où l'on regarde, commandes au fond de la nacelle.
    • Télécommande Bluetooth (clavier, multimédia, souris ou manette) : valider, retour, avancer, tourner, menu.
    • WebXR (Meta Quest, Pico, téléphones compatibles) : le casque gère la tête, les lentilles et les manettes.
    • Réglages du casque mémorisés sur le téléphone : lentilles, champ de vision, écart des yeux, centrage, lissage.
@@ -577,7 +579,7 @@ async function startVr(cur, opts) {
   Object.assign(VR, { on: true, files: cur.files, pack: cur.pack, stereo, set, lens: stereo && !xr ? VR_LENS[set.lens] || null : null, planIdx: opts.plan || 0, scene: 'maquette',
     ipd: (set.ipd || 64) / 1000, dwellT: +set.dwell, smooth: +set.smooth, xr: null,
     head: [0, VR_EYE, 0], yawOffset: 0, wantYaw: 0, dragYaw: 0, dragPitch: 0, sensor: false, devQ: null, headS: null, fade: 1, fadeTo: 0, target: null, dwell: 0, cooldown: 0,
-    panel: null, menuYaw: 0, drone: false, quads: [], audio: null, hint: null, last: performance.now(), loading: true, urls: [], move: 0, keyMove: 0, moving: 0, aim: null,
+    panel: null, menuYaw: 0, drone: false, quads: [], audio: null, hint: null, last: performance.now(), loading: true, urls: [], move: 0, keyMove: 0, moving: 0, aim: null, balloon: null, maquetteBalloon: null,
     meshBuf: null, levelTex: [], pano: null, fbo: null, maquetteHead: null, padPrev: {}, walk: null, walkAnchor: null, walkAnchorPrev: null, onBlack: null, trash: [], t0: performance.now(), saidNoSensor: false });
   const screenEl = el('section', { id: 'vrScreen', class: 'vr-screen' + (stereo ? ' stereo' : '') },
     el('canvas', { id: 'vrGl' }), el('canvas', { id: 'vrHud' }),
@@ -642,7 +644,10 @@ function vrInitGl(canvas, xr) {
   const [w1] = vrCanvas(2, 2); w1.getContext('2d').fillStyle = '#fff'; w1.getContext('2d').fillRect(0, 0, 2, 2); VR.texWhite = vrTexture(w1, { mip: false });
   VR.menuTex = {}; VR.doorTex = {};
   for (const [k, e, l, bg] of [['start', '🏁', 'Départ', '#3fb04a'], ['drone', '🚁', 'Vue drone', '#2f7fdc'], ['ground', '🧍', 'Au sol', '#2f7fdc'], ['plan', '🗺️', 'Plan suivant', '#f2a019'],
-    ['quit', '🚪', 'Quitter', '#dc2626'], ['back', '↩️', 'Maquette', '#3fb04a'], ['door', '🚪', '', '#8a5a2b']]) VR.menuTex[k] = vrTexture(iconTexture(e, l, bg));
+    ['quit', '🚪', 'Quitter', '#dc2626'], ['back', '↩️', 'Maquette', '#3fb04a'], ['door', '🚪', '', '#8a5a2b'],
+    ['ballon', '🎈', 'Montgolfière', '#d7263d'], ['up', '⬆️', 'Monter', '#f2a019'], ['down', '⬇️', 'Descendre', '#2f7fdc'], ['pause', '⏸️', 'Pause', '#475569'], ['go', '▶️', 'Avancer', '#3fb04a'],
+    ['land', '🪂', 'Atterrir', '#16a34a']]) VR.menuTex[k] = vrTexture(iconTexture(e, l, bg));
+  vrBalloonMesh();
 }
 
 async function vrFile(name) { const b = VR.files.get(name); if (!b) throw new Error('fichier absent du pack : ' + name); return b; }
@@ -650,7 +655,7 @@ async function vrFile(name) { const b = VR.files.get(name); if (!b) throw new Er
 /** Charge un plan du pack : maquette 3D, image du plan, bulles et portes. */
 async function vrLoadPlan(idx, first) {
   const gl = VR.gl, P = VR.pack.plans[idx];
-  VR.planIdx = idx; VR.plan = P; VR.scene = 'maquette'; VR.panel = null; VR.drone = false;
+  VR.planIdx = idx; VR.plan = P; VR.scene = 'maquette'; VR.panel = null; VR.drone = false; VR.balloon = null;
   for (const t of VR.levelTex || []) vrFree(t);
   VR.levelTex = [];
   // maquette
@@ -667,6 +672,16 @@ async function vrLoadPlan(idx, first) {
     N[i] = Math.abs(V3.norm(V3.cross(e1, e2))[1]);
   }
   VR.tris = T; VR.triUp = N;
+  // boîtes englobantes par paquets de 32 triangles (voisins dans le maillage) : un rayon saute les paquets qu'il ne touche pas
+  const nc = Math.ceil(nt / 32), BX = new Float32Array(nc * 6);
+  for (let c = 0; c < nc; c++) {
+    let x0 = 1e9, y0 = 1e9, z0 = 1e9, x1 = -1e9, y1 = -1e9, z1 = -1e9;
+    for (let i = c * 32, e = Math.min(nt, i + 32); i < e; i++) for (let k = 0; k < 3; k++) {
+      const j = i * 9 + k * 3; x0 = Math.min(x0, T[j]); x1 = Math.max(x1, T[j]); y0 = Math.min(y0, T[j + 1]); y1 = Math.max(y1, T[j + 1]); z0 = Math.min(z0, T[j + 2]); z1 = Math.max(z1, T[j + 2]);
+    }
+    BX.set([x0, y0, z0, x1, y1, z1], c * 6);
+  }
+  VR.triBox = BX;
   // image du plan au sol
   VR.planTex = null;
   if (P.img && P.rect) {
@@ -711,7 +726,7 @@ function vrDoorTexture(kind, color) {
 }
 function vrGoStart() {
   const S = VR.plan.start || { x: VR.center[0], y: VR.center[2] + 10 };
-  VR.head = [S.x, VR_EYE, S.y]; VR.drone = false;
+  VR.head = [S.x, VR_EYE, S.y]; VR.drone = false; VR.balloon = null;
   vrFace(VR.center);
 }
 /** Tourne la vue (sans bouger la tête de l'utilisateur) pour regarder vers un point. */
@@ -776,9 +791,10 @@ const VR_KEYMAP = {
   fwd: ['ArrowUp', 'w', 'z', 'W', 'Z'], rev: ['ArrowDown', 's', 'S'],
   left: ['ArrowLeft', 'a', 'q', 'A', 'Q', 'MediaTrackPrevious', 'MediaRewind'], right: ['ArrowRight', 'd', 'D', 'MediaTrackNext', 'MediaFastForward'],
   menu: ['m', 'M', 'ContextMenu', 'Tab', 'F1'],
+  drone: ['y', 'Y', 'v', 'V'],
 };
 const VR_REMOTE_HELP = [['OK / A / Entrée', 'valider (ce que vise le point)'], ['Retour / B / Échap', 'fermer, revenir, sortir'], ['↑ ↓ / joystick', 'avancer, reculer'],
-  ['← → / LB RB', 'tourner de 30°'], ['Menu / X', 'menu de la visite'], ['Y', 'vue drone'], ['Molette (souris)', 'un pas en avant ou en arrière']];
+  ['← → / LB RB', 'tourner de 30°'], ['Menu / X', 'menu de la visite'], ['Y', 'vue drone ; en montgolfière : atterrir'], ['Molette (souris)', 'un pas en avant ou en arrière']];
 const VR_ACT_LABEL = { ok: 'Valider', back: 'Retour', fwd: 'Avancer', rev: 'Reculer', left: 'Tourner à gauche', right: 'Tourner à droite', menu: 'Menu', drone: 'Vue drone' };
 const vrKeyAction = e => Object.keys(VR_KEYMAP).find(a => VR_KEYMAP[a].includes(e.key) || VR_KEYMAP[a].includes(e.code));
 function vrOnKey(e) {
@@ -797,7 +813,7 @@ function vrRemote(a) {
   if (a === 'left') return vrTurn(VR_TURN);
   if (a === 'right') return vrTurn(-VR_TURN);
   if (a === 'menu') return VR.panel?.menu ? vrClosePanel() : vrMenuPanel();
-  if (a === 'drone') return vrMenu(VR.drone ? 'ground' : 'drone');
+  if (a === 'drone') return VR.balloon ? vrBalloonLand() : vrMenu(VR.drone ? 'ground' : 'drone');
   if (a === 'back') {
     if (VR.panel) return vrClosePanel();
     if (VR.scene === 'pano') return vrMenu('back');
@@ -850,7 +866,7 @@ function vrStep(sgn) {
   if (!VR.drone && vrBlocked(dir, 1.35)) return vrSay('🧱 Un mur bloque le passage');
   vrShift(V3.mul(dir, VR.drone ? 8 : 1));
 }
-function vrShift(v) { VR.head = V3.add(VR.head, v); }
+function vrShift(v) { VR.head = V3.add(VR.head, v); if (VR.xr) { VR.xr.base = V3.add(VR.xr.base, v); VR.xr.lastHead = VR.head; } }
 
 /* ---------- Ce que l'on peut viser ---------- */
 /** Quad face à la caméra : centre c, axes r (droite) et u (haut), taille w × h. */
@@ -871,8 +887,19 @@ function quadHit(q, o, d) {
 }
 /** Premier mur touché par le rayon (null si aucun) : distance et « sol praticable ». */
 function vrRayMesh(o, d, tmax) {
-  const T = VR.tris, U = VR.triUp; let best = tmax, up = 0;
-  for (let i = 0, n = U.length; i < n; i++) {
+  const T = VR.tris, U = VR.triUp, BX = VR.triBox; let best = tmax, up = 0;
+  const ix = 1 / (d[0] || 1e-12), iy = 1 / (d[1] || 1e-12), iz = 1 / (d[2] || 1e-12);
+  for (let c = 0, nc = BX ? BX.length / 6 : 1; c < nc; c++) {
+   if (BX) {   // rayon contre la boîte du paquet
+    const b = c * 6;
+    let t0 = (BX[b] - o[0]) * ix, t1 = (BX[b + 3] - o[0]) * ix; if (t0 > t1) { const t = t0; t0 = t1; t1 = t; }
+    let u0 = (BX[b + 1] - o[1]) * iy, u1 = (BX[b + 4] - o[1]) * iy; if (u0 > u1) { const t = u0; u0 = u1; u1 = t; }
+    if (u0 > t0) t0 = u0; if (u1 < t1) t1 = u1;
+    let v0 = (BX[b + 2] - o[2]) * iz, v1 = (BX[b + 5] - o[2]) * iz; if (v0 > v1) { const t = v0; v0 = v1; v1 = t; }
+    if (v0 > t0) t0 = v0; if (v1 < t1) t1 = v1;
+    if (t0 > t1 + 1e-6 || t1 < 0 || t0 > best) continue;
+   }
+   for (let i = BX ? c * 32 : 0, n = BX ? Math.min(U.length, i + 32) : U.length; i < n; i++) {
     const j = i * 9, ax = T[j], ay = T[j + 1], az = T[j + 2];
     const e1x = T[j + 3] - ax, e1y = T[j + 4] - ay, e1z = T[j + 5] - az, e2x = T[j + 6] - ax, e2y = T[j + 7] - ay, e2z = T[j + 8] - az;
     const px = d[1] * e2z - d[2] * e2y, py = d[2] * e2x - d[0] * e2z, pz = d[0] * e2y - d[1] * e2x, det = e1x * px + e1y * py + e1z * pz;
@@ -883,6 +910,7 @@ function vrRayMesh(o, d, tmax) {
     if (vv < 0 || uu + vv > 1) continue;
     const t = (e2x * qx + e2y * qy + e2z * qz) * inv;
     if (t > 1e-3 && t < best) { best = t; up = U[i]; }
+   }
   }
   return best < tmax ? { t: best, up } : null;
 }
@@ -891,10 +919,10 @@ function vrBuildTargets(headQ) {
   if (pitch > -0.55) VR.menuYaw = yawOf(fwd);
   if (VR.scene === 'maquette') {
     for (const b of VR.pins) {
-      const dist = V3.len(V3.sub(b.pos, eye)), k = clamp(dist / 5, 1, VR.drone ? 9 : 4);
+      const dist = V3.len(V3.sub(b.pos, eye)), k = clamp(dist / 5, 1, VR.drone || VR.balloon ? 9 : 4);
       list.push({ ...billboard(b.pos, 0.62 * k, 0.48 * k, eye), key: 'pin:' + b.pin.id, tex: b.tex, label: b.pin.titre || b.pin.metier || 'Repère', act: () => vrOpenPin(b.pin), depth: true, stalk: !VR.drone });
     }
-    if (!VR.drone) VR.doors.forEach((d, i) => {
+    if (!VR.drone && !VR.balloon) VR.doors.forEach((d, i) => {
       if (!d.n) Object.assign(d, vrDoorPrep(d));
       const dist = V3.len(V3.sub(d.c, eye));
       if (dist > 30) return;
@@ -916,13 +944,16 @@ function vrBuildTargets(headQ) {
     list.push({ c: P.c, r: P.r, u: P.u, w: P.w, h: P.h, tex: P.tex, panel: true, pad: 1.0, label: '', act: null, top: true });
   }
   // menu aux pieds
-  const show = clamp((-pitch - 0.62) / 0.2, 0, 1);
+  // en montgolfière : les commandes sont au fond de la nacelle (on regarde par-dessus le bord sans les faire apparaître)
+  const B = VR.scene === 'maquette' && VR.balloon, show = B ? clamp((-pitch - 1.12) / 0.15, 0, 1) : clamp((-pitch - 0.62) / 0.2, 0, 1);
   if (show > 0) {
-    const items = VR.scene === 'pano' ? ['back', 'quit'] : ['start', VR.drone ? 'ground' : 'drone', ...(VR.pack.plans.length > 1 ? ['plan'] : []), 'quit'];
+    const items = VR.scene === 'pano' ? ['back', 'quit'] : B ? ['up', 'down', B.paused ? 'go' : 'pause', 'land', 'quit']
+      : ['start', VR.drone ? 'ground' : 'drone', 'ballon', ...(VR.pack.plans.length > 1 ? ['plan'] : []), 'quit'];
     const fw = dirYaw(VR.menuYaw), right = [-fw[2], 0, fw[0]], n = items.length;
     items.forEach((k, i) => {
-      const off = (i - (n - 1) / 2) * 0.36, c = V3.add(V3.add(eye, V3.mul(fw, 0.62)), V3.add(V3.mul(right, off), [0, -1.05, 0]));
-      list.push({ ...billboard(c, 0.3, 0.35, eye, true, headQ), key: 'menu:' + k, tex: VR.menuTex[k], label: { start: 'Retour au départ', drone: 'Vue drone', ground: 'Redescendre au sol', plan: 'Plan suivant', quit: 'Quitter la visite', back: 'Retour à la maquette' }[k],
+      const off = (i - (n - 1) / 2) * (B ? 0.27 : 0.36), c = V3.add(V3.add(eye, V3.mul(fw, B ? 0.3 : 0.62)), V3.add(V3.mul(right, off), [0, B ? -1.38 : -1.05, 0]));
+      list.push({ ...billboard(c, B ? 0.24 : 0.3, B ? 0.28 : 0.35, eye, true, headQ), key: 'menu:' + k, tex: VR.menuTex[k], label: { start: 'Retour au départ', drone: 'Vue drone', ground: 'Redescendre au sol', plan: 'Plan suivant', quit: 'Quitter la visite', back: 'Retour à la maquette',
+          ballon: 'Monter en montgolfière', up: 'Monter de 10 m', down: 'Descendre de 10 m', pause: 'Faire du surplace', go: 'Reprendre la balade', land: 'Atterrir ici' }[k],
         act: () => vrMenu(k), top: true, alpha: show });
     });
   }
@@ -938,13 +969,13 @@ function vrUpdate(now, dt, headQ) {
   for (const t of VR.trash.splice(0)) VR.gl.deleteTexture(t);
   vrPollPads(dt);
   const fwd0 = Q.rot(headQ, [0, 0, -1]);
-  vrWalk(dt, fwd0);
+  if (VR.balloon && VR.scene === 'maquette') vrBalloonUpdate(dt, fwd0); else vrWalk(dt, fwd0);
   const { fwd } = vrBuildTargets(headQ);
   vrGaze(VR.aim ? VR.aim.d : fwd, dt, VR.aim ? VR.aim.o : VR.head);
   if (VR.stereo && !VR.xr && !VR.sensor && !VR.saidNoSensor && now - VR.t0 > 2500) { VR.saidNoSensor = true; vrSay('Capteurs de mouvement indisponibles : glissez le doigt pour regarder'); }
 }
 /** Profondeur : assez de précision pour que deux faces proches ne scintillent pas. */
-const vrNearFar = () => [0.1, VR.drone ? 4000 : Math.max(400, VR.extent * 4)];
+const vrNearFar = () => [0.1, VR.drone || VR.balloon ? 4000 : Math.max(400, VR.extent * 4)];
 function vrFrame(now) {
   if (!VR.on || VR.xr) return;
   VR.raf = requestAnimationFrame(vrFrame);
@@ -1083,7 +1114,7 @@ function vrXrFrame(now, frame) {
 /** Dans le casque WebXR il n'y a pas de calque 2D : viseur, message et fondu deviennent des panneaux 3D. */
 function vrXrOverlay(headQ) {
   const t = VR.target, need = t && t.walk ? 1.5 : VR.dwellT || 1.4, k = t && t.act && VR.dwellT ? Math.min(1, VR.dwell / need) : 0;
-  const hint = VR.hint && performance.now() < VR.hint.until ? VR.hint.text : '', label = (t && t.label) || '';
+  const hint = VR.hint && performance.now() < VR.hint.until ? VR.hint.text : (VR.balloon && VR.scene === 'maquette' ? vrBalloonStatus() : ''), label = (t && t.label) || '';
   const sig = [Math.round(k * 24), label, !!(t && t.act), hint].join('|');
   if (sig !== VR.xrSig) {
     VR.xrSig = sig;
@@ -1119,7 +1150,7 @@ function vrDrawEye(proj, view, headQ, eye) {
   gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, pano || VR.texWhite); gl.uniform1i(S.u.t, 0);
   vrBindFull(S); gl.drawArrays(gl.TRIANGLES, 0, 3);
   gl.enable(gl.DEPTH_TEST); gl.depthMask(true); gl.depthFunc(gl.LEQUAL);
-  const fogd = VR.drone ? 2600 : Math.max(160, VR.extent * 2.5);
+  const fogd = VR.drone || VR.balloon ? 2600 : Math.max(160, VR.extent * 2.5);
   if (VR.scene === 'maquette') {
     // sol puis image du plan
     const R = 800, gx = Math.round(eye[0] / 2) * 2, gz = Math.round(eye[2] / 2) * 2;
@@ -1132,6 +1163,17 @@ function vrDrawEye(proj, view, headQ, eye) {
     gl.enableVertexAttribArray(M.a.p); gl.vertexAttribPointer(M.a.p, 3, gl.FLOAT, false, 28, 0);
     gl.enableVertexAttribArray(M.a.c); gl.vertexAttribPointer(M.a.c, 4, gl.FLOAT, false, 28, 12);
     if (VR.nO) gl.drawArrays(gl.TRIANGLES, 0, VR.nO);
+    // nacelle et ballon autour de soi (repère local, suit la tête)
+    if (VR.balloon && VR.balloonBuf) {
+      const h = VR.head, T = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, h[0], h[1], h[2], 1], n = VR.balloonN - (VR.balloon.burn > 0.1 ? 0 : VR.balloonFlame);
+      gl.uniformMatrix4fv(M.u.vp, false, M4.mul(vp, T)); gl.uniform1f(M.u.fogd, 1e7);
+      gl.bindBuffer(gl.ARRAY_BUFFER, VR.balloonBuf);
+      gl.vertexAttribPointer(M.a.p, 3, gl.FLOAT, false, 28, 0); gl.vertexAttribPointer(M.a.c, 4, gl.FLOAT, false, 28, 12);
+      gl.drawArrays(gl.TRIANGLES, 0, n);
+      gl.uniformMatrix4fv(M.u.vp, false, vp); gl.uniform1f(M.u.fogd, fogd);
+      gl.bindBuffer(gl.ARRAY_BUFFER, VR.meshBuf);
+      gl.vertexAttribPointer(M.a.p, 3, gl.FLOAT, false, 28, 0); gl.vertexAttribPointer(M.a.c, 4, gl.FLOAT, false, 28, 12);
+    }
     // cible de déplacement au sol
     if (VR.walk && VR.walk.ok) {
       const p = VR.walk.p, s = 0.35 + Math.min(1.2, VR.walk.dist * 0.03), y = p[1] + 0.02;
@@ -1198,7 +1240,7 @@ function vrGaze(fwd, dt, o = VR.head) {
   }
   // sinon : un endroit au sol
   VR.walk = null;
-  if (!best && VR.scene === 'maquette' && fwd[1] < -0.04) {
+  if (!best && VR.scene === 'maquette' && !VR.balloon && fwd[1] < -0.04) {
     const tg = (0 - o[1]) / fwd[1], tmax = VR.drone ? 600 : 45;
     const hit = vrRayMesh(o, fwd, Math.min(tg, tmax));
     let p = null, ok = false;
@@ -1249,6 +1291,12 @@ function vrDoor(d, side) {
 }
 function vrMenu(k) {
   if (k === 'quit') return stopVr();
+  const B = VR.balloon;
+  if (k === 'ballon') return vrBalloonStart();
+  if (B && k === 'up') { B.alt = Math.min(150, B.alt + 10); return vrSay(`⬆️ Cap sur ${Math.round(B.alt)} m`); }
+  if (B && k === 'down') { B.alt = Math.max(6, B.alt - 10); return vrSay(`⬇️ Cap sur ${Math.round(B.alt)} m`); }
+  if (B && (k === 'pause' || k === 'go')) { B.paused = k === 'pause'; return vrSay(B.paused ? '⏸️ Surplace' : '▶️ On repart : regardez où aller'); }
+  if (B && k === 'land') return vrBalloonLand();
   if (k === 'start') return vrBlack(() => { VR.scene = 'maquette'; VR.panel = null; vrGoStart(); });
   if (k === 'back') return vrBlack(() => vrLeavePano());
   if (k === 'plan') return vrBlack(() => vrLoadPlan((VR.planIdx + 1) % VR.pack.plans.length).then(() => vrSay('🗺️ ' + VR.plan.nom)));
@@ -1260,6 +1308,111 @@ function vrMenu(k) {
   if (k === 'ground') return vrBlack(() => { VR.drone = false; vrGoStart(); });
 }
 function vrSay(text) { VR.hint = { text, until: performance.now() + 3500 }; }
+
+/* ---------- Balade en montgolfière ----------
+   On monte doucement depuis l'endroit où l'on est, puis on dérive au gré du regard : la montgolfière part vers
+   où l'on regarde (à l'horizontale), plus vite quand elle est haute. Au fond de la nacelle : monter, descendre,
+   surplace, atterrir. Télécommande : ↑ ↓ monter / descendre, ← → tourner, Y atterrir.
+   Jamais plus bas que 4 m au-dessus des toits, jamais loin du site. */
+function vrBalloonStart() {
+  if (VR.scene !== 'maquette' || VR.balloon) return;
+  vrClosePanel();
+  const fwd = Q.rot(vrHeadQ(), [0, 0, -1]), dir = V3.norm([fwd[0], 0, fwd[2]]);
+  VR.drone = false;
+  VR.balloon = { alt: 30, vel: [0, 0, 0], vy: 0, dir, paused: false, landing: false, burn: 1, t: 0 };
+  vrSay('🎈 Décollage ! Regardez où aller · au fond de la nacelle : les commandes');
+}
+function vrBalloonGround() {
+  const h = VR.head, hit = vrRayMesh(h, [0, -1, 0], 2000);
+  return hit ? { y: h[1] - hit.t, roof: h[1] - hit.t > 0.4 } : { y: 0, roof: false };
+}
+function vrBalloonLand() {
+  const B = VR.balloon; if (!B) return;
+  if (vrBalloonGround().roof) return vrSay('🏢 Pas d’atterrissage sur un toit : avancez au-dessus du sol');
+  B.landing = true; B.paused = true; vrSay('🪂 Atterrissage…');
+}
+function vrBalloonStatus() {
+  const B = VR.balloon, g = B.g || { y: 0 }, v = Math.hypot(B.vel[0], B.vel[2]);
+  return B.landing ? '🪂 Atterrissage…' : `🎈 ${Math.round(VR.head[1] - g.y)} m · ${v < 0.2 ? 'surplace' : v.toFixed(1).replace('.', ',') + ' m/s'}`;
+}
+function vrBalloonUpdate(dt, fwd) {
+  const B = VR.balloon, h = VR.head;
+  B.t += dt;
+  const g = (B.tg = (B.tg || 0) - dt) > 0 && B.g ? B.g : (B.tg = 0.2, B.g = vrBalloonGround());   // sol sous la nacelle, 5 fois par seconde
+  // altitude visée : télécommande (↑ ↓ tenus) ou commandes de la nacelle ; plancher au-dessus des toits
+  if (Math.abs(VR.move) > 0.15 && !B.landing) B.alt = clamp(B.alt + VR.move * 4 * dt, 6, 150);
+  const floorY = g.y + (B.landing ? VR_EYE : 4 + VR_EYE);
+  const ty = B.landing ? floorY : Math.max(B.alt + VR_EYE, floorY);
+  const want = clamp((ty - h[1]) * 0.6, -2.2, 2.4);
+  B.vy += (want - B.vy) * Math.min(1, dt * 1.5);
+  B.burn = Math.max(0, B.vy - 0.2);
+  // dérive horizontale vers où l'on regarde (pas en regardant ses pieds ni le ciel), avec de l'inertie
+  const pitch = Math.asin(clamp(fwd[1], -1, 1));
+  if (pitch > -1.0 && pitch < 0.9) B.dir = V3.norm([fwd[0], 0, fwd[2]]);
+  const airborne = h[1] - g.y > 6, speed = B.paused || B.landing || VR.panel || !airborne ? 0 : 2.5 + clamp((h[1] - g.y) * 0.04, 0, 4);
+  let target = V3.mul(B.dir, speed);
+  const toC = V3.sub([VR.center[0], 0, VR.center[2]], [h[0], 0, h[2]]), far = V3.len(toC) - (VR.extent * 0.75 + 40);
+  if (far > 0) { target = V3.add(V3.mul(target, 0.3), V3.mul(V3.norm(toC), Math.min(6, 1.5 + far * 0.2))); if (!B.saidFar) { B.saidFar = true; vrSay('🌬️ Le vent vous ramène vers le site'); } } else B.saidFar = false;
+  B.vel = V3.add(B.vel, V3.mul(V3.sub(target, B.vel), Math.min(1, dt / 1.6)));
+  VR.moving = Math.min(0.6, Math.hypot(B.vel[0], B.vel[2]) / 8 + Math.abs(B.vy) / 6);
+  vrShift([B.vel[0] * dt, B.vy * dt, B.vel[2] * dt]);
+  if (B.landing && Math.abs(VR.head[1] - floorY) < 0.08) { VR.balloon = null; VR.moving = 0; VR.head = [VR.head[0], floorY, VR.head[2]]; vrSay('🧍 Posé en douceur !'); }
+}
+/** Nacelle en osier, câbles, brûleur et ballon à fuseaux de couleur, dans le repère de la tête (l'œil en 0).
+    Format du pack : [x, -z, y, r, g, b, a] par sommet ; la flamme du brûleur est à la fin (affichée en montée). */
+function vrBalloonMesh() {
+  const out = [], L = V3.norm([-0.4, 0.8, 0.45]);
+  const rgb = h => { const n = parseInt(h.slice(1), 16); return [(n >> 16) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255]; };
+  const tri = (a, b, c, col) => {
+    const n = V3.norm(V3.cross(V3.sub(b, a), V3.sub(c, a))), k = 0.62 + 0.38 * Math.abs(V3.dot(n, L)), [r, g, bb] = rgb(col);
+    for (const p of [a, b, c]) out.push(p[0], -p[2], p[1], Math.min(1, r * k), Math.min(1, g * k), Math.min(1, bb * k), 1);
+  };
+  const quad = (a, b, c, d, col) => { tri(a, b, c, col); tri(a, c, d, col); };
+  const box = (x0, x1, y0, y1, z0, z1, col) => {
+    const P = (x, y, z) => [x, y, z];
+    quad(P(x0, y0, z0), P(x1, y0, z0), P(x1, y1, z0), P(x0, y1, z0), col); quad(P(x0, y0, z1), P(x1, y0, z1), P(x1, y1, z1), P(x0, y1, z1), col);
+    quad(P(x0, y0, z0), P(x0, y0, z1), P(x0, y1, z1), P(x0, y1, z0), col); quad(P(x1, y0, z0), P(x1, y0, z1), P(x1, y1, z1), P(x1, y1, z0), col);
+    quad(P(x0, y1, z0), P(x1, y1, z0), P(x1, y1, z1), P(x0, y1, z1), col); quad(P(x0, y0, z0), P(x1, y0, z0), P(x1, y0, z1), P(x0, y0, z1), col);
+  };
+  const seg = (p, q, r, col) => {   // câble : prisme fin entre deux points
+    const d = V3.norm(V3.sub(q, p)), a = V3.norm(V3.cross(d, Math.abs(d[1]) < 0.9 ? [0, 1, 0] : [1, 0, 0])), b = V3.cross(d, a);
+    const c = [[1, 1], [-1, 1], [-1, -1], [1, -1]].map(([u, v]) => V3.add(V3.mul(a, u * r), V3.mul(b, v * r)));
+    for (let i = 0; i < 4; i++) { const j = (i + 1) % 4; quad(V3.add(p, c[i]), V3.add(p, c[j]), V3.add(q, c[j]), V3.add(q, c[i]), col); }
+  };
+  const s = 0.62, F = -VR_EYE, top = -0.95, t = 0.07;
+  box(-s, s, F - 0.04, F, -s, s, '#4a3220');                                                       // plancher
+  for (let i = 0; i < 6; i++) {                                                                     // parois d'osier tressé
+    const y0 = F + (top - F) * i / 6, y1 = F + (top - F) * (i + 1) / 6, col = i % 2 ? '#a0743f' : '#b8864b';
+    box(-s, s, y0, y1, -s, -s + t, col); box(-s, s, y0, y1, s - t, s, col); box(-s, -s + t, y0, y1, -s + t, s - t, col); box(s - t, s, y0, y1, -s + t, s - t, col);
+  }
+  box(-s - 0.03, s + 0.03, top, top + 0.07, -s - 0.03, -s + t + 0.03, '#3b2614'); box(-s - 0.03, s + 0.03, top, top + 0.07, s - t - 0.03, s + 0.03, '#3b2614');
+  box(-s - 0.03, -s + t + 0.03, top, top + 0.07, -s + t + 0.03, s - t - 0.03, '#3b2614'); box(s - t - 0.03, s + 0.03, top, top + 0.07, -s + t + 0.03, s - t - 0.03, '#3b2614');
+  // cadre du brûleur, câbles et brûleur
+  const fy = 2.1, fs = 0.42;
+  for (const [x, z] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) { seg([x * (s - 0.04), top + 0.07, z * (s - 0.04)], [x * fs, fy, z * fs], 0.015, '#2b2b2b'); seg([x * fs, fy, z * fs], [x * 1.05, 3.6, z * 1.05], 0.012, '#2b2b2b'); }
+  for (const [a, b] of [[[-fs, -fs], [fs, -fs]], [[fs, -fs], [fs, fs]], [[fs, fs], [-fs, fs]], [[-fs, fs], [-fs, -fs]]]) seg([a[0], fy, a[1]], [b[0], fy, b[1]], 0.025, '#6b7280');
+  box(-0.16, 0.16, fy - 0.12, fy + 0.22, -0.16, 0.16, '#9aa3ad');
+  // ballon : profil de révolution, 24 fuseaux de couleur, ouvert en bas
+  const prof = [[1.1, 3.6], [2.0, 4.6], [3.4, 5.6], [4.9, 6.6]];
+  for (let k = 1; k <= 9; k++) { const a = -0.85 + k / 9 * (Math.PI / 2 + 0.85); prof.push([Math.max(0.05, 8 * Math.cos(a)), 11.6 + 8 * Math.sin(a)]); }
+  const N = 24, cols = ['#d7263d', '#f4c430', '#2e86ab', '#f4c430'];
+  for (let i = 0; i < N; i++) {
+    const a0 = i / N * Math.PI * 2, a1 = (i + 1) / N * Math.PI * 2, col = cols[i % 4];
+    for (let j = 0; j < prof.length - 1; j++) {
+      const [r0, y0] = prof[j], [r1, y1] = prof[j + 1], P = (r, y, a) => [r * Math.cos(a), y, r * Math.sin(a)];
+      quad(P(r0, y0, a0), P(r0, y0, a1), P(r1, y1, a1), P(r1, y1, a0), j === prof.length - 2 ? '#f8fafc' : col);
+    }
+  }
+  const nBody = out.length / 7;
+  // flamme (seulement quand on monte)
+  for (const [w, y0, y1, col] of [[0.14, fy + 0.22, fy + 1.0, '#ff8c1a'], [0.07, fy + 0.22, fy + 1.3, '#ffd23f']]) {
+    const tip = [0, y1, 0], b = [[-w, -w], [w, -w], [w, w], [-w, w]].map(([x, z]) => [x, y0, z]);
+    for (let i = 0; i < 4; i++) tri(b[i], b[(i + 1) % 4], tip, col);
+  }
+  const gl = VR.gl, data = new Float32Array(out);
+  VR.balloonBuf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, VR.balloonBuf); gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+  VR.balloonN = out.length / 7; VR.balloonFlame = VR.balloonN - nBody;
+}
 
 /* ---------- Panneaux d'information ---------- */
 function vrPanel(build, opts = {}) {
@@ -1308,7 +1461,8 @@ function vrWelcome() {
 /** Menu de la visite devant soi (bouton Menu de la télécommande) : on vise un bouton et on valide. */
 function vrMenuPanel() {
   const items = VR.scene === 'pano' ? [['back', '↩️ Retour à la maquette', '#3fb04a']] :
-    [['start', '🏁 Retour au départ', '#3fb04a'], [VR.drone ? 'ground' : 'drone', VR.drone ? '🧍 Redescendre au sol' : '🚁 Vue drone', '#2f7fdc'], ...(VR.pack.plans.length > 1 ? [['plan', '🗺️ Plan suivant', '#f2a019']] : [])];
+    VR.balloon ? [['up', '⬆️ Monter de 10 m', '#f2a019'], ['down', '⬇️ Descendre de 10 m', '#2f7fdc'], [VR.balloon.paused ? 'go' : 'pause', VR.balloon.paused ? '▶️ Reprendre la balade' : '⏸️ Faire du surplace', '#475569'], ['land', '🪂 Atterrir ici', '#16a34a']] :
+    [['start', '🏁 Retour au départ', '#3fb04a'], [VR.drone ? 'ground' : 'drone', VR.drone ? '🧍 Redescendre au sol' : '🚁 Vue drone', '#2f7fdc'], ['ballon', '🎈 Montgolfière', '#d7263d'], ...(VR.pack.plans.length > 1 ? [['plan', '🗺️ Plan suivant', '#f2a019']] : [])];
   items.push(['quit', '🚪 Quitter la visite', '#dc2626']);
   const P = vrPanel((g, c, buttons) => {
     panelFrame(g, c, '#16233d');
@@ -1363,7 +1517,7 @@ async function vrEnterPano(id) {
   for (const L of VR.pano?.links || []) vrFree(L.tex);
   const tex = vrTexture(await vrBitmap(await vrFile(P.img), 4096), { mip: false });
   const links = P.links.map(L => ({ ...L, tex: vrTexture(L.pano ? bubbleTexture({ type: 'panorama', titre: L.titre, color: '#0891b2' }) : L.plan ? iconTexture('🗺️', L.titre, '#f2a019') : bubbleTexture({ type: L.type, titre: L.titre, color: L.color })) }));
-  if (VR.scene !== 'pano') VR.maquetteHead = VR.head.slice();
+  if (VR.scene !== 'pano') { VR.maquetteHead = VR.head.slice(); VR.maquetteBalloon = VR.balloon; VR.balloon = null; }
   VR.pano = { id, tex, links, data: P };
   VR.scene = 'pano'; VR.head = [0, VR_EYE, 0];
   vrSay('🌐 ' + P.titre + ' · baissez la tête pour revenir');
@@ -1371,7 +1525,7 @@ async function vrEnterPano(id) {
 function vrLeavePano() {
   if (VR.pano) { vrFree(VR.pano.tex); for (const L of VR.pano.links) vrFree(L.tex); }
   VR.pano = null; VR.scene = 'maquette'; VR.panel = null;
-  VR.head = VR.maquetteHead || VR.head;
+  VR.head = VR.maquetteHead || VR.head; VR.balloon = VR.maquetteBalloon; VR.maquetteBalloon = null;
 }
 function vrPanoLink(L) {
   if (L.pano && VR.pack.panos[L.pano]) return vrBlack(() => vrEnterPano(L.pano));
@@ -1406,6 +1560,7 @@ function vrHud(W, H, vw, dpr, sh = 0) {
     if (label) vrHudPill(g, label, cx, cy + R + 22 * dpr, dpr, t.act ? 'rgba(22,35,61,.82)' : 'rgba(185,28,28,.82)');
     if (VR.hint && now < VR.hint.until) vrHudPill(g, VR.hint.text, cx, H * 0.2, dpr, 'rgba(47,127,220,.9)');
   }
+  if (VR.balloon && VR.scene === 'maquette') for (const cx of centers) vrHudPill(g, vrBalloonStatus(), cx, H * 0.86, dpr, 'rgba(215,38,61,.85)');
   if (VR.fade > 0.001) { g.fillStyle = `rgba(0,0,0,${VR.fade})`; g.fillRect(0, 0, W, H); }
 }
 function vrHudPill(g, text, cx, cy, dpr, bg) {
