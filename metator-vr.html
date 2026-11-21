@@ -83,6 +83,11 @@ select { font: inherit; width: 100%; padding: 12px 14px; border: 2px solid var(-
 .remote-test.flash { animation: flash .5s; }
 @keyframes flash { from { background: #3fb04a; } }
 .remote-map { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.6; }
+/* Rendu graphique : options à cocher */
+.fx-list { margin-top: 8px; }
+.vr-set label.fx-row { display: flex; align-items: flex-start; gap: 10px; margin: 8px 0 0; color: var(--ink); font-size: 14px; font-weight: 800; }
+.fx-row input { width: 22px; height: 22px; flex: none; margin: 1px 0 0; accent-color: var(--green); }
+.fx-row small { display: block; font-weight: 600; font-size: 12px; color: var(--muted); line-height: 1.35; }
 </style>
 </head>
 <body>
@@ -293,7 +298,6 @@ function pickFile(input) {
    • « Visite sans casque » : une seule vue, on glisse le doigt pour regarder (pour essayer ou montrer).
    • Balade en montgolfière (menu aux pieds) : on dérive vers où l'on regarde, commandes au fond de la nacelle.
    • Télécommande Bluetooth (clavier, multimédia, souris ou manette) : valider, retour, avancer, tourner, menu.
-   • WebXR (Meta Quest, Pico, téléphones compatibles) : le casque gère la tête, les lentilles et les manettes.
    • Réglages du casque mémorisés sur le téléphone : lentilles, champ de vision, écart des yeux, centrage, lissage.
    Repère monde : Y vers le haut ; un point du plan (x, y) à la hauteur h est en (x, h, y).
    ====================================================================== */
@@ -343,10 +347,10 @@ async function openPackFile() {
   } catch (e) { console.error(e); busy(); toast('Pack illisible : ' + e.message, true); }
 }
 /* ---------- Réglages du casque (mémorisés sur le téléphone) ---------- */
-const VR_SET_DEF = { lens: 'moyenne', fov: 96, ipd: 64, shift: 0, smooth: 1, dwell: 1.4, quality: 'standard' };
+const VR_SET_DEF = { lens: 'moyenne', fov: 96, ipd: 64, shift: 0, smooth: 1, dwell: 1.4, quality: 'standard', rendu: 'equilibre', heure: 'apresmidi' };
 /** Correction des lentilles : coefficients de distorsion en barillet (k1, k2) par intensité. */
 const VR_LENS = { aucune: null, legere: [0.15, 0.05], moyenne: [0.26, 0.12], forte: [0.42, 0.24] };
-const VR_QUALITY = { economie: 1.25, standard: 2, haute: 3 };
+const VR_QUALITY = { economie: { dpr: 1.25, px: 1.6e6 }, standard: { dpr: 2, px: 3.2e6 }, haute: { dpr: 3, px: 6e6 } };
 function vrSettings() {
   let s = {};
   try { s = JSON.parse(localStorage.getItem('metator-vr-reglages') || '{}'); if (localStorage.getItem('metator-vr-lens') === '0' && !s.lens) s.lens = 'aucune'; } catch { }
@@ -358,20 +362,17 @@ function showPack() {
   const P = current.pack, nPins = P.plans.reduce((s, p) => s + (p.pins || []).length, 0), nPanos = Object.keys(P.panos || {}).length;
   const set = vrSettings();
   const sel = P.plans.length > 1 ? el('select', { id: 'vrPlanSel' }, P.plans.map((p, i) => el('option', { value: i }, p.nom))) : null;
-  const go = mode => { vrSaveSettings(set); startVr(current, { stereo: mode !== 'mono', xr: mode === 'xr', plan: sel ? +sel.value : 0 }); };
+  const go = mode => { vrSaveSettings(set); startVr(current, { stereo: mode !== 'mono', plan: sel ? +sel.value : 0 }); };
   const opt = (k, list) => el('select', { id: 'set-' + k, onchange: e => { set[k] = isNaN(+e.target.value) ? e.target.value : +e.target.value; vrSaveSettings(set); } },
     list.map(([v, t]) => { const o = el('option', { value: v }, t); if (String(set[k]) === String(v)) o.selected = true; return o; }));
   const range = (k, min, max, step, fmt) => {
     const out = el('output', {}, fmt(set[k]));
     return [el('input', { type: 'range', id: 'set-' + k, min, max, step, value: set[k], oninput: e => { set[k] = +e.target.value; out.textContent = fmt(set[k]); vrSaveSettings(set); } }), out];
   };
-  const xrBtn = el('button', { class: 'big go hidden', id: 'btnXr', onclick: () => go('xr') }, '🥽 Casque WebXR (Quest, Pico…)');
-  navigator.xr?.isSessionSupported?.('immersive-vr').then(ok => { if (ok) xrBtn.classList.remove('hidden'); }).catch(() => { });
   $('#packCard').replaceChildren(...[
     el('div', { class: 'pk-head' }, el('b', {}, P.nom || current.name), el('span', {}, [P.auteur, P.date].filter(Boolean).join(' · ') || current.name)),
     el('div', { class: 'pk-chips' }, el('span', {}, `🗺️ ${P.plans.length} plan${P.plans.length > 1 ? 's' : ''}`), el('span', {}, `🫧 ${nPins} repère${nPins > 1 ? 's' : ''}`), nPanos ? el('span', {}, `🌐 ${nPanos} photo${nPanos > 1 ? 's' : ''} 360°`) : null, el('span', {}, `${(current.size / 1048576).toFixed(1).replace('.', ',')} Mo`)),
     sel ? el('label', { class: 'vr-field' }, 'Commencer par', sel) : null,
-    xrBtn,
     el('button', { class: 'big go', id: 'btnGo', onclick: () => go('stereo') }, '🥽 Lancer dans le casque'),
     el('button', { class: 'big', id: 'btnMono', onclick: () => go('mono') }, '📱 Visite sans casque'),
     el('details', { class: 'vr-set', id: 'vrSet' }, el('summary', {}, '⚙️ Réglages du casque'),
@@ -384,6 +385,7 @@ function showPack() {
       el('label', {}, 'Lissage des mouvements de tête', opt('smooth', [[0, 'Aucun (le plus réactif)'], [1, 'Léger (conseillé)'], [2, 'Fort (téléphone qui tremble)']])),
       el('label', {}, 'Valider en fixant du regard', opt('dwell', [[1, '1 seconde'], [1.4, '1,4 seconde'], [2.2, '2,2 secondes'], [0, 'Non : télécommande ou écran']])),
       el('label', {}, 'Qualité d’image', opt('quality', [['economie', 'Économie (vieux téléphone)'], ['standard', 'Standard'], ['haute', 'Haute définition']]))),
+    vrRenduSettingsUi(set),
     el('details', { class: 'vr-set', id: 'vrRemote' }, el('summary', {}, '🎮 Télécommande Bluetooth'),
       el('p', { class: 'hint' }, 'Associez la télécommande dans les réglages Bluetooth du téléphone, puis appuyez sur ses boutons : ils s’affichent ici.'),
       el('div', { id: 'remoteTest', class: 'remote-test' }, 'En attente d’une touche…'),
@@ -572,14 +574,13 @@ function ringTexture() {
 /* ---------- Démarrage / arrêt ---------- */
 async function startVr(cur, opts) {
   if (VR.on) return;
-  const xr = !!opts.xr, stereo = !!opts.stereo || xr, set = vrSettings();
-  // WebXR : la session se demande tout de suite (geste de l'utilisateur) ; sinon plein écran et paysage
-  const xrAsk = xr ? navigator.xr.requestSession('immersive-vr', { optionalFeatures: ['local-floor'] }) : null;
-  const fs = xr ? null : document.documentElement.requestFullscreen?.({ navigationUI: 'hide' });
-  Object.assign(VR, { on: true, files: cur.files, pack: cur.pack, stereo, set, lens: stereo && !xr ? VR_LENS[set.lens] || null : null, planIdx: opts.plan || 0, scene: 'maquette',
-    ipd: (set.ipd || 64) / 1000, dwellT: +set.dwell, smooth: +set.smooth, xr: null,
+  const stereo = !!opts.stereo, set = vrSettings();
+  // plein écran et paysage : à demander tout de suite (geste de l'utilisateur)
+  const fs = document.documentElement.requestFullscreen?.({ navigationUI: 'hide' });
+  Object.assign(VR, { on: true, files: cur.files, pack: cur.pack, stereo, set, lens: stereo ? VR_LENS[set.lens] || null : null, planIdx: opts.plan || 0, scene: 'maquette',
+    ipd: (set.ipd || 64) / 1000, dwellT: +set.dwell, smooth: +set.smooth,
     head: [0, VR_EYE, 0], yawOffset: 0, wantYaw: 0, dragYaw: 0, dragPitch: 0, sensor: false, devQ: null, headS: null, fade: 1, fadeTo: 0, target: null, dwell: 0, cooldown: 0,
-    panel: null, menuYaw: 0, drone: false, quads: [], audio: null, hint: null, last: performance.now(), loading: true, urls: [], move: 0, keyMove: 0, moving: 0, aim: null, balloon: null, maquetteBalloon: null,
+    panel: null, menuYaw: 0, drone: false, quads: [], audio: null, hint: null, last: performance.now(), loading: true, urls: [], move: 0, keyMove: 0, moving: 0, balloon: null, hudSig: null, hudCtx: null, maquetteBalloon: null,
     meshBuf: null, levelTex: [], pano: null, fbo: null, maquetteHead: null, padPrev: {}, walk: null, walkAnchor: null, walkAnchorPrev: null, onBlack: null, trash: [], t0: performance.now(), saidNoSensor: false });
   const screenEl = el('section', { id: 'vrScreen', class: 'vr-screen' + (stereo ? ' stereo' : '') },
     el('canvas', { id: 'vrGl' }), el('canvas', { id: 'vrHud' }),
@@ -589,27 +590,24 @@ async function startVr(cur, opts) {
   history.pushState({ vr: true }, '');
   if (fs) fs.then(() => stereo && screen.orientation?.lock?.('landscape').catch(() => { })).catch(() => { });
   // capteurs (iPhone : autorisation explicite)
-  if (stereo && !xr) {
+  if (stereo) {
     try { if (typeof DeviceOrientationEvent !== 'undefined' && DeviceOrientationEvent.requestPermission) await DeviceOrientationEvent.requestPermission(); } catch { }
     addEventListener('deviceorientation', vrOnOrient);
   }
   try { VR.wake = await navigator.wakeLock?.request('screen'); } catch { }
   vrBindInput(screenEl);
   try {
-    vrInitGl($('#vrGl'), xr);
-    if (xr) await vrStartXr(xrAsk);
+    vrInitGl($('#vrGl'));
     await vrLoadPlan(VR.planIdx, true);
   } catch (e) { console.error(e); stopVr(); toast('Visite VR impossible : ' + e.message, true); return; }
   VR.loading = false;
   vrWelcome();
-  if (VR.xr) VR.raf = VR.xr.session.requestAnimationFrame(vrXrFrame);
-  else VR.raf = requestAnimationFrame(vrFrame);
+  VR.raf = requestAnimationFrame(vrFrame);
 }
 function stopVr(fromHistory) {
   if (!VR.on) return;
   VR.on = false;
-  if (VR.xr) { try { VR.xr.session.cancelAnimationFrame(VR.raf); } catch { } const ses = VR.xr.session; VR.xr = null; ses.end().catch(() => { }); }
-  else cancelAnimationFrame(VR.raf);
+  cancelAnimationFrame(VR.raf);
   removeEventListener('deviceorientation', vrOnOrient);
   removeEventListener('keydown', vrOnKey); removeEventListener('keyup', vrOnKeyUp);
   if (VR.audio) { VR.audio.pause(); VR.audio = null; }
@@ -624,8 +622,8 @@ function stopVr(fromHistory) {
 }
 addEventListener('popstate', () => { if (VR.on) stopVr(true); });
 
-function vrInitGl(canvas, xr) {
-  const attrs = { antialias: true, alpha: false, xrCompatible: !!xr };
+function vrInitGl(canvas) {
+  const attrs = { antialias: true, alpha: false, powerPreference: 'high-performance' };
   let gl = canvas.getContext('webgl2', attrs); VR.gl2 = !!gl;
   if (!gl) gl = canvas.getContext('webgl', attrs);
   if (!gl) throw new Error('WebGL indisponible sur ce téléphone');
@@ -648,6 +646,7 @@ function vrInitGl(canvas, xr) {
     ['ballon', '🎈', 'Montgolfière', '#d7263d'], ['up', '⬆️', 'Monter', '#f2a019'], ['down', '⬇️', 'Descendre', '#2f7fdc'], ['pause', '⏸️', 'Pause', '#475569'], ['go', '▶️', 'Avancer', '#3fb04a'],
     ['land', '🪂', 'Atterrir', '#16a34a']]) VR.menuTex[k] = vrTexture(iconTexture(e, l, bg));
   vrBalloonMesh();
+  vrRenduInit();
 }
 
 async function vrFile(name) { const b = VR.files.get(name); if (!b) throw new Error('fichier absent du pack : ' + name); return b; }
@@ -659,15 +658,19 @@ async function vrLoadPlan(idx, first) {
   for (const t of VR.levelTex || []) vrFree(t);
   VR.levelTex = [];
   // maquette
-  let data = new Float32Array(0);
-  if (P.mesh && (P.nO + P.nA)) { try { data = new Float32Array(await (await vrFile(P.mesh)).arrayBuffer()); } catch (e) { console.warn(e); } }
+  // pack v2 : 20 octets par sommet (couleur propre, normale, matériau) ; pack v1 : 7 flottants (couleur déjà éclairée)
+  let raw = new ArrayBuffer(0);
+  if (P.mesh && (P.nO + P.nA)) { try { raw = await (await vrFile(P.mesh)).arrayBuffer(); } catch (e) { console.warn(e); } }
+  VR.v2 = P.meshv === 2;
+  const buf = VR.v2 ? raw.slice(0, Math.floor(raw.byteLength / 20) * 20) : vrPackMesh(new Float32Array(raw, 0, Math.floor(raw.byteLength / 4)));
+  const nv = buf.byteLength / 20, data = new Float32Array(buf);   // position du sommet i : data[i * 5 .. i * 5 + 2]
   if (!VR.meshBuf) VR.meshBuf = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, VR.meshBuf); gl.bufferData(gl.ARRAY_BUFFER, data.length ? data : new Float32Array(7), gl.STATIC_DRAW);
-  VR.nO = Math.min(P.nO || 0, data.length / 7); VR.nA = Math.max(0, Math.min(P.nA || 0, data.length / 7 - VR.nO));
+  gl.bindBuffer(gl.ARRAY_BUFFER, VR.meshBuf); gl.bufferData(gl.ARRAY_BUFFER, nv ? buf : new ArrayBuffer(20), gl.STATIC_DRAW);
+  VR.nO = Math.min(P.nO || 0, nv); VR.nA = Math.max(0, Math.min(P.nA || 0, nv - VR.nO));
   // triangles opaques en coordonnées monde, pour la visée (les murs bloquent)
   const nt = Math.floor(VR.nO / 3), T = new Float32Array(nt * 9), N = new Float32Array(nt);
   for (let i = 0; i < nt; i++) {
-    for (let k = 0; k < 3; k++) { const s = (i * 3 + k) * 7; T[i * 9 + k * 3] = data[s]; T[i * 9 + k * 3 + 1] = data[s + 2]; T[i * 9 + k * 3 + 2] = -data[s + 1]; }
+    for (let k = 0; k < 3; k++) { const s = (i * 3 + k) * 5; T[i * 9 + k * 3] = data[s]; T[i * 9 + k * 3 + 1] = data[s + 2]; T[i * 9 + k * 3 + 2] = -data[s + 1]; }
     const e1 = [T[i * 9 + 3] - T[i * 9], T[i * 9 + 4] - T[i * 9 + 1], T[i * 9 + 5] - T[i * 9 + 2]], e2 = [T[i * 9 + 6] - T[i * 9], T[i * 9 + 7] - T[i * 9 + 1], T[i * 9 + 8] - T[i * 9 + 2]];
     N[i] = Math.abs(V3.norm(V3.cross(e1, e2))[1]);
   }
@@ -694,6 +697,7 @@ async function vrLoadPlan(idx, first) {
   const B = P.bounds || { x0: -10, y0: -10, x1: 10, y1: 10, hmax: 3 };
   VR.center = [(B.x0 + B.x1) / 2, 0, (B.y0 + B.y1) / 2]; VR.extent = Math.max(10, B.x1 - B.x0, B.y1 - B.y0); VR.hmax = B.hmax || 3;
   vrGoStart(first);
+  vrRenduPlan();   // ombres et ombres de contact : calculées une fois pour ce plan
 }
 /** Porte du pack : faces du mur de part et d'autre (mesurées dans la maquette), vantail dessiné de chaque côté. */
 function vrDoorPrep(d) {
@@ -738,15 +742,18 @@ function vrOnOrient(e) {
   if (!VR.sensor && VR.wantYaw == null) VR.wantYaw = VR.dragYaw;   // premier signal des capteurs : on garde le cap
   VR.sensor = true;
   VR.devQ = Q.device(e.alpha || 0, e.beta || 0, e.gamma || 0, screen.orientation?.angle ?? window.orientation ?? 0);
+  VR.devT = performance.now();
+  if (VR.R && VR.R.fx.prediction) vrTrackOmega(VR.devQ, VR.devT);
 }
 /** Orientation de la tête. Capteurs lissés à chaque image : les petits tremblements sont filtrés,
     les vrais mouvements passent tout de suite (le filtre s'ouvre quand l'écart grandit). */
 function vrHeadQ(dt = 1 / 60) {
   let q;
-  if (VR.xr) return VR.xr.headQ || [0, 0, 0, 1];
   if (VR.sensor && VR.devQ) {
     if (VR.wantYaw != null) { VR.yawOffset = VR.wantYaw - yawOf(Q.rot(VR.devQ, [0, 0, -1])); VR.wantYaw = null; }
     let d = VR.devQ;
+    // anticipation : on vise où sera la tête quand l'image s'affichera (retard des capteurs et de l'affichage ≈ 35 ms)
+    if (VR.R && VR.R.fx.prediction) d = vrPredict(d, 0.035 + Math.min(0.05, (performance.now() - (VR.devT || 0)) / 1000));
     if (VR.smooth > 0 && VR.headS) {
       const ang = 2 * Math.acos(Math.min(1, Math.abs(Q.dot(VR.headS, d)))), base = VR.smooth > 1 ? 9 : 22, rate = base + ang * (VR.smooth > 1 ? 160 : 420);
       d = Q.slerp(VR.headS, d, 1 - Math.exp(-rate * dt));
@@ -761,8 +768,7 @@ function vrHeadQ(dt = 1 / 60) {
 }
 /** Tourner sur place (télécommande, manette) : par pas, quel que soit le mode. */
 function vrTurn(a) {
-  if (VR.xr) { VR.xr.yaw += a; VR.xr.rebase = true; }
-  else if (VR.sensor) VR.yawOffset += a;
+  if (VR.sensor) VR.yawOffset += a;
   else VR.dragYaw += a;
 }
 function vrBindInput(root) {
@@ -842,7 +848,7 @@ function vrPollPads(dt) {
     if (Math.abs(m) > Math.abs(move)) move = m;
     VR.padPrev[pad.index] = now;
   }
-  VR.move = move || VR.xrMove || VR.keyMove;
+  VR.move = move || VR.keyMove;
 }
 /** Avancer en continu (manette, flèches) : on glisse le long du regard, arrêté par les murs. */
 function vrWalk(dt, fwd) {
@@ -866,7 +872,7 @@ function vrStep(sgn) {
   if (!VR.drone && vrBlocked(dir, 1.35)) return vrSay('🧱 Un mur bloque le passage');
   vrShift(V3.mul(dir, VR.drone ? 8 : 1));
 }
-function vrShift(v) { VR.head = V3.add(VR.head, v); if (VR.xr) { VR.xr.base = V3.add(VR.xr.base, v); VR.xr.lastHead = VR.head; } }
+function vrShift(v) { VR.head = V3.add(VR.head, v); }
 
 /* ---------- Ce que l'on peut viser ---------- */
 /** Quad face à la caméra : centre c, axes r (droite) et u (haut), taille w × h. */
@@ -971,53 +977,56 @@ function vrUpdate(now, dt, headQ) {
   const fwd0 = Q.rot(headQ, [0, 0, -1]);
   if (VR.balloon && VR.scene === 'maquette') vrBalloonUpdate(dt, fwd0); else vrWalk(dt, fwd0);
   const { fwd } = vrBuildTargets(headQ);
-  vrGaze(VR.aim ? VR.aim.d : fwd, dt, VR.aim ? VR.aim.o : VR.head);
-  if (VR.stereo && !VR.xr && !VR.sensor && !VR.saidNoSensor && now - VR.t0 > 2500) { VR.saidNoSensor = true; vrSay('Capteurs de mouvement indisponibles : glissez le doigt pour regarder'); }
+  vrGaze(fwd, dt);
+  if (VR.stereo && !VR.sensor && !VR.saidNoSensor && now - VR.t0 > 2500) { VR.saidNoSensor = true; vrSay('Capteurs de mouvement indisponibles : glissez le doigt pour regarder'); }
 }
 /** Profondeur : assez de précision pour que deux faces proches ne scintillent pas. */
 const vrNearFar = () => [0.1, VR.drone || VR.balloon ? 4000 : Math.max(400, VR.extent * 4)];
 function vrFrame(now) {
-  if (!VR.on || VR.xr) return;
+  if (!VR.on) return;
   VR.raf = requestAnimationFrame(vrFrame);
   const dt = Math.min(0.1, (now - VR.last) / 1000); VR.last = now;
-  const gl = VR.gl, cv = gl.canvas, dpr = Math.min(devicePixelRatio || 1, VR.stereo ? VR_QUALITY[VR.set.quality] || 2 : 1.75);
+  const gl = VR.gl, cv = gl.canvas, qual = VR_QUALITY[VR.set.quality] || VR_QUALITY.standard;
+  // résolution : plafonnée en densité et en nombre de pixels (les très grands écrans ne ralentissent pas)
+  let dpr = Math.min(devicePixelRatio || 1, VR.stereo ? qual.dpr : 1.75);
+  dpr = Math.min(dpr, Math.sqrt(qual.px / (innerWidth * innerHeight)));
   const W = Math.round(innerWidth * dpr), H = Math.round(innerHeight * dpr);
-  if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; const hud = $('#vrHud'); hud.width = W; hud.height = H; VR.fbo = null; }
+  const hd = Math.min(dpr, 1.5), Wh = Math.round(innerWidth * hd), Hh = Math.round(innerHeight * hd);
+  if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; VR.fbo = null; }
+  const hud = $('#vrHud'); if (hud.width !== Wh || hud.height !== Hh) { hud.width = Wh; hud.height = Hh; VR.hudSig = null; }
   const headQ = vrHeadQ(dt);
   vrUpdate(now, dt, headQ);
+  vrPrepQuads();
+  if (VR.R) { vrRenduLocal(false); vrNightLights(now / 1000); }
   // rendu
   const eyes = VR.stereo ? [-1, 1] : [0], vw = VR.stereo ? Math.floor(W / 2) : W;
   const fov = (VR.fovOverride || (VR.stereo ? VR.set.fov : 72)) * DEG2, asp = vw / H;   // fovOverride : captures (photos, 360°)
   const [near, far] = vrNearFar(), proj = M4.persp(fov, asp, near, far);
   const sh = VR.stereo ? Math.round((VR.set.shift || 0) / 100 * vw) : 0;   // centrage : chaque image en face de sa lentille
-  if (VR.lens && (!VR.fbo || VR.fbo.w !== W || VR.fbo.h !== H)) VR.fbo = vrMakeFbo(W, H);
-  const fbo = VR.lens && VR.fbo;
+  // image intermédiaire (lentilles, halo, fluidité) : sa définition suit la cadence réelle
+  const useFbo = vrNeedsFbo(), sc = useFbo ? vrAdaptScale(dt, now / 1000) : 1;
+  const Wf = Math.max(64, Math.round(W * sc)), Hf = Math.max(64, Math.round(H * sc)), vwf = VR.stereo ? Math.floor(Wf / 2) : Wf;
+  if (useFbo && (!VR.fbo || VR.fbo.w !== Wf || VR.fbo.h !== Hf)) VR.fbo = vrMakeFbo(Wf, Hf);
+  const fbo = useFbo && VR.fbo;
   gl.bindFramebuffer(gl.FRAMEBUFFER, fbo ? fbo.msaa || fbo.fb : null);
   gl.disable(gl.SCISSOR_TEST);
-  gl.viewport(0, 0, W, H); gl.clearColor(0, 0, 0, 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  gl.viewport(0, 0, fbo ? Wf : W, fbo ? Hf : H); gl.clearColor(0, 0, 0, 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  VR.now = (now - VR.t0) / 1000;
   eyes.forEach((e, i) => {
     const pos = V3.add(VR.head, Q.rot(headQ, [e * VR.ipd / 2, 0, 0]));
-    gl.viewport(i * vw + (fbo ? 0 : e * sh), 0, vw, H);
+    if (fbo) gl.viewport(i * vwf, 0, vwf, Hf); else gl.viewport(i * vw + e * sh, 0, vw, H);
     if (!fbo && sh) { gl.enable(gl.SCISSOR_TEST); gl.scissor(i * vw, 0, vw, H); }
-    vrDrawEye(proj, M4.view(headQ, pos), headQ, pos);
+    vrDrawEye(proj, M4.view(headQ, pos), pos);
   });
   gl.disable(gl.SCISSOR_TEST);
   if (fbo) {
     if (fbo.msaa) {   // anticrénelage : l'image multi-échantillonnée est résolue dans la texture
       gl.bindFramebuffer(gl.READ_FRAMEBUFFER, fbo.msaa); gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, fbo.fb);
-      gl.blitFramebuffer(0, 0, W, H, 0, 0, W, H, gl.COLOR_BUFFER_BIT, gl.NEAREST);
+      gl.blitFramebuffer(0, 0, Wf, Hf, 0, 0, Wf, Hf, gl.COLOR_BUFFER_BIT, gl.NEAREST);
     }
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    gl.viewport(0, 0, W, H); gl.clear(gl.COLOR_BUFFER_BIT);
-    const P = VR.prog.lens; gl.useProgram(P.p); gl.disable(gl.DEPTH_TEST); gl.disable(gl.BLEND);
-    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, fbo.tex); gl.uniform1i(P.u.t, 0);
-    gl.uniform1f(P.u.asp, asp); gl.uniform2f(P.u.k, VR.lens[0], VR.lens[1]);
-    vrBindFull(P);
-    gl.enable(gl.SCISSOR_TEST);
-    for (let i = 0; i < 2; i++) { const e = i ? 1 : -1; gl.scissor(i * vw, 0, vw, H); gl.viewport(i * vw + e * sh, 0, vw, H); gl.uniform1f(P.u.off, i * 0.5); gl.drawArrays(gl.TRIANGLES, 0, 3); }
-    gl.disable(gl.SCISSOR_TEST);
+    vrPostPass(fbo, W, H, vw, sh, asp, VR.stereo);
   }
-  vrHud(W, H, vw, dpr, sh);
+  vrHud(Wh, Hh, vw * Wh / W, hd, sh * Wh / W);
 }
 /** Image intermédiaire pour la correction des lentilles : texture + profondeur 24 bits, et en WebGL 2 un tampon
     multi-échantillonné (anticrénelage 4×) résolu dans la texture à chaque image. */
@@ -1051,175 +1060,120 @@ function vrMakeFbo(w, h) {
   return { fb, tex, w, h, msaa };
 }
 
-/* ---------- WebXR : casque autonome (Quest, Pico…) ou téléphone compatible ---------- */
-// Le casque fournit la position de la tête, les images de chaque œil, la correction des lentilles et les manettes.
-// Repère : la zone de jeu du casque est posée à VR.xr.base et tournée de VR.xr.yaw ; quand l'application déplace
-// VR.head (téléportation, porte, drone…), la zone de jeu est recalée pour que la tête arrive à cet endroit.
-async function vrStartXr(ask) {
-  const gl = VR.gl;
-  await gl.makeXRCompatible?.();
-  const session = await ask;
-  session.updateRenderState({ baseLayer: new XRWebGLLayer(session, gl, { antialias: true }), depthNear: 0.1, depthFar: 4000 });
-  let ref, floor = true;
-  try { ref = await session.requestReferenceSpace('local-floor'); } catch { ref = await session.requestReferenceSpace('local'); floor = false; }
-  VR.xr = { session, ref, floor, yaw: 0, base: [0, 0, 0], headQ: null, lastHead: null, rebase: true, padPrev: {} };
-  session.addEventListener('select', () => vrActivate());
-  session.addEventListener('squeeze', () => vrRemote('back'));
-  session.addEventListener('end', () => { if (VR.on) { VR.xr = null; stopVr(); } });
-}
-function vrXrFrame(now, frame) {
-  if (!VR.on || !VR.xr) return;
-  const X = VR.xr, session = frame.session;
-  VR.raf = session.requestAnimationFrame(vrXrFrame);
-  const dt = Math.min(0.1, (now - VR.last) / 1000); VR.last = now;
-  const pose = frame.getViewerPose(X.ref); if (!pose) return;
-  const Ry = Q.axis([0, 1, 0], X.yaw), t = pose.transform, o = t.orientation;
-  // l'application a déplacé la tête (téléportation, porte…) ou tourné la vue : on recale la zone de jeu
-  if (VR.wantYaw != null) { X.yaw += VR.wantYaw - yawOf(Q.rot(Q.mul(Ry, [o.x, o.y, o.z, o.w]), [0, 0, -1])); VR.wantYaw = null; X.rebase = true; }
-  const Ry2 = Q.axis([0, 1, 0], X.yaw), local = Q.rot(Ry2, [t.position.x, t.position.y + (X.floor ? 0 : VR_EYE), t.position.z]);
-  if (X.rebase || VR.head !== X.lastHead) { X.base = V3.sub(VR.head, local); X.rebase = false; }
-  const W = p => V3.add(X.base, Q.rot(Ry2, [p.x, p.y + (X.floor ? 0 : VR_EYE), p.z]));
-  VR.head = W(t.position); X.lastHead = VR.head;
-  X.headQ = Q.mul(Ry2, [o.x, o.y, o.z, o.w]);
-  // manettes : rayon de visée, boutons, joystick
-  VR.aim = null; VR.xrMove = 0;
-  for (const src of session.inputSources) {
-    if (src.targetRayMode === 'tracked-pointer' && (!VR.aim || src.handedness === 'right')) {
-      const rp = frame.getPose(src.targetRaySpace, X.ref);
-      if (rp) { const ro = rp.transform.orientation; VR.aim = { o: W(rp.transform.position), d: V3.norm(Q.rot(Q.mul(Ry2, [ro.x, ro.y, ro.z, ro.w]), [0, 0, -1])) }; }
-    }
-    const gp = src.gamepad; if (!gp) continue;
-    const prev = X.padPrev[src.handedness] || {}, cur = {}, b = i => !!gp.buttons[i]?.pressed, edge = (k, on) => { cur[k] = on; return on && !prev[k]; };
-    if (edge('a', b(4))) vrRemote('ok');
-    if (edge('b', b(5))) vrRemote(src.handedness === 'left' ? 'menu' : 'back');
-    const ax = gp.axes[2] || 0, ay = gp.axes[3] || 0;
-    if (edge('tl', ax < -0.7)) vrRemote('left');
-    if (edge('tr', ax > 0.7)) vrRemote('right');
-    if (Math.abs(ay) > 0.25 && Math.abs(ay) > Math.abs(VR.xrMove)) VR.xrMove = -ay;
-    X.padPrev[src.handedness] = cur;
-  }
-  vrUpdate(now, dt, X.headQ);
-  if (VR.xr !== X) return;
-  // rendu : une image par œil, dans la couche du casque
-  const gl = VR.gl, layer = session.renderState.baseLayer;
-  gl.bindFramebuffer(gl.FRAMEBUFFER, layer.framebuffer);
-  gl.clearColor(0, 0, 0, 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  vrXrOverlay(X.headQ);
-  for (const view of pose.views) {
-    const vp = layer.getViewport(view), vt = view.transform, vo = vt.orientation, q = Q.mul(Ry2, [vo.x, vo.y, vo.z, vo.w]), pos = W(vt.position);
-    gl.viewport(vp.x, vp.y, vp.width, vp.height);
-    vrDrawEye(Array.from(view.projectionMatrix), M4.view(q, pos), q, pos);
-  }
-}
-/** Dans le casque WebXR il n'y a pas de calque 2D : viseur, message et fondu deviennent des panneaux 3D. */
-function vrXrOverlay(headQ) {
-  const t = VR.target, need = t && t.walk ? 1.5 : VR.dwellT || 1.4, k = t && t.act && VR.dwellT ? Math.min(1, VR.dwell / need) : 0;
-  const hint = VR.hint && performance.now() < VR.hint.until ? VR.hint.text : (VR.balloon && VR.scene === 'maquette' ? vrBalloonStatus() : ''), label = (t && t.label) || '';
-  const sig = [Math.round(k * 24), label, !!(t && t.act), hint].join('|');
-  if (sig !== VR.xrSig) {
-    VR.xrSig = sig;
-    const [c, g] = VR.xrCanvas || (VR.xrCanvas = vrCanvas(512, 384));
-    g.clearRect(0, 0, 512, 384);
-    const cx = 256, cy = 150, R = 26;
-    g.lineWidth = 7; g.strokeStyle = 'rgba(0,0,0,.4)'; g.beginPath(); g.arc(cx, cy, R + 3, 0, 7); g.stroke();
-    g.strokeStyle = t && t.act ? '#ffc94a' : 'rgba(255,255,255,.95)'; g.beginPath(); g.arc(cx, cy, t && t.act ? R : R * 0.55, 0, 7); g.stroke();
-    if (k > 0) { g.lineWidth = 10; g.strokeStyle = '#3fb04a'; g.beginPath(); g.arc(cx, cy, R, -Math.PI / 2, -Math.PI / 2 + k * Math.PI * 2); g.stroke(); }
-    const pill = (text, y, bg) => { g.font = `800 30px ${VR_FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle'; const w = Math.min(500, g.measureText(text).width + 40); g.fillStyle = bg; roundRect(g, cx - w / 2, y - 24, w, 48, 24); g.fill(); g.fillStyle = '#fff'; g.fillText(fitText(g, text, 470), cx, y + 2); };
-    if (label) pill(label, cy + R + 50, t && t.act ? 'rgba(22,35,61,.85)' : 'rgba(185,28,28,.85)');
-    if (hint) pill(hint, 40, 'rgba(47,127,220,.92)');
-    if (!VR.xrTex) VR.xrTex = vrTexture(c, { mip: false });
-    else { const gl = VR.gl; gl.bindTexture(gl.TEXTURE_2D, VR.xrTex); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c); }
-  }
-  const fwd = Q.rot(headQ, [0, 0, -1]), o = VR.aim ? VR.aim.o : VR.head, d = VR.aim ? VR.aim.d : fwd, dist = 1.6;
-  VR.quads.push({ ...billboard(V3.add(o, V3.mul(d, dist)), 0.56, 0.42, VR.head, true, headQ), tex: VR.xrTex, top: true, overlay: true });
-  if (VR.fade > 0.001) VR.quads.push({ ...billboard(V3.add(VR.head, V3.mul(fwd, 0.25)), 3, 3, VR.head, true, headQ), tex: VR.texWhite, top: true, overlay: true, tint: [0, 0, 0, VR.fade] });
-}
 function vrBindFull(P) {
   const gl = VR.gl;
   gl.bindBuffer(gl.ARRAY_BUFFER, VR.full);
   gl.enableVertexAttribArray(P.a.p); gl.vertexAttribPointer(P.a.p, 2, gl.FLOAT, false, 0, 0);
 }
-function vrDrawEye(proj, view, headQ, eye) {
+function vrDrawEye(proj, view, eye) {
   const gl = VR.gl, vp = M4.mul(proj, view);
   // ciel ou photo 360°
-  const S = VR.prog.sphere, rotOnly = view.slice(); rotOnly[12] = rotOnly[13] = rotOnly[14] = 0;
+  const R = VR.R, S = R ? R.sky : VR.prog.sphere, rotOnly = view.slice(); rotOnly[12] = rotOnly[13] = rotOnly[14] = 0;
   gl.useProgram(S.p); gl.disable(gl.DEPTH_TEST); gl.disable(gl.BLEND); gl.depthMask(false);
   gl.uniformMatrix4fv(S.u.inv, false, M4.inv(M4.mul(proj, rotOnly)));
   const pano = VR.scene === 'pano' && VR.pano.tex;
   gl.uniform1f(S.u.sky, pano ? 0 : 1);
+  if (R && !pano && S.u.sunD) { gl.uniform3fv(S.u.sunD, R.sun); gl.uniform3fv(S.u.sunC, R.H.sun); gl.uniform3fv(S.u.zen, R.H.zen); gl.uniform3fv(S.u.hor, R.H.hor); gl.uniform3fv(S.u.gnd, R.H.gnd);
+    gl.uniform1f(S.u.tm, R.fx.anim ? VR.now : 0); gl.uniform1f(S.u.nite, R.H.nite); gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, R.det); gl.uniform1i(S.u.det, 1); }
   gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, pano || VR.texWhite); gl.uniform1i(S.u.t, 0);
   vrBindFull(S); gl.drawArrays(gl.TRIANGLES, 0, 3);
   gl.enable(gl.DEPTH_TEST); gl.depthMask(true); gl.depthFunc(gl.LEQUAL);
-  const fogd = VR.drone || VR.balloon ? 2600 : Math.max(160, VR.extent * 2.5);
+  const fogd = vrFogDist(), tm = R && R.fx.anim ? VR.now : 0;
   if (VR.scene === 'maquette') {
-    // sol puis image du plan
-    const R = 800, gx = Math.round(eye[0] / 2) * 2, gz = Math.round(eye[2] / 2) * 2;
-    vrQuadDraw(vp, eye, VR.texGround, [gx - R, -0.025, gz - R, gx + R, -0.025, gz - R, gx + R, -0.025, gz + R, gx - R, -0.025, gz + R], [(gx - R) / 2, (gz - R) / 2, (gx + R) / 2, (gz - R) / 2, (gx + R) / 2, (gz + R) / 2, (gx - R) / 2, (gz + R) / 2], [1, 1, 1, 1], fogd);
-    if (VR.planTex) { const r = VR.plan.rect; vrQuadDraw(vp, eye, VR.planTex, [r.x, 0.004, r.y, r.x + r.w, 0.004, r.y, r.x + r.w, 0.004, r.y + r.h, r.x, 0.004, r.y + r.h], [0, 0, 1, 0, 1, 1, 0, 1], [1, 1, 1, 1], fogd); }
-    // maquette opaque
-    const M = VR.prog.mesh;
-    gl.useProgram(M.p); gl.uniformMatrix4fv(M.u.vp, false, vp); gl.uniform3fv(M.u.eye, eye); gl.uniform1f(M.u.fogd, fogd); gl.uniform3fv(M.u.fogc, VR_SKY);
-    gl.bindBuffer(gl.ARRAY_BUFFER, VR.meshBuf);
-    gl.enableVertexAttribArray(M.a.p); gl.vertexAttribPointer(M.a.p, 3, gl.FLOAT, false, 28, 0);
-    gl.enableVertexAttribArray(M.a.c); gl.vertexAttribPointer(M.a.c, 4, gl.FLOAT, false, 28, 12);
-    if (VR.nO) gl.drawArrays(gl.TRIANGLES, 0, VR.nO);
-    // nacelle et ballon autour de soi (repère local, suit la tête)
-    if (VR.balloon && VR.balloonBuf) {
+    if (R) vrDrawGround(vp, eye, fogd, tm);                          // sol éclairé (ombres, plan) …
+    else qbDraw('sol', vp, eye, fogd);                               // … ou sol et plan en texture (WebGL 1)
+    const M = R ? (VR.v2 ? R.mesh : R.meshFlat) : VR.prog.mesh;
+    gl.useProgram(M.p); gl.uniformMatrix4fv(M.u.vp, false, vp);
+    if (R) { vrLightUniforms(M, eye, fogd, tm); gl.uniform1f(M.u.bk, VR.v2 ? 0 : 1); }
+    else { gl.uniform3fv(M.u.eye, eye); gl.uniform1f(M.u.fogd, fogd); gl.uniform3fv(M.u.fogc, VR_SKY); }
+    vrBindMesh(M, VR.meshBuf);
+    if (VR.nO) gl.drawArrays(gl.TRIANGLES, 0, VR.nO);                // maquette opaque
+    if (VR.balloon && VR.balloonBuf) {                                // nacelle et ballon autour de soi (repère local, suit la tête)
       const h = VR.head, T = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, h[0], h[1], h[2], 1], n = VR.balloonN - (VR.balloon.burn > 0.1 ? 0 : VR.balloonFlame);
-      gl.uniformMatrix4fv(M.u.vp, false, M4.mul(vp, T)); gl.uniform1f(M.u.fogd, 1e7);
-      gl.bindBuffer(gl.ARRAY_BUFFER, VR.balloonBuf);
-      gl.vertexAttribPointer(M.a.p, 3, gl.FLOAT, false, 28, 0); gl.vertexAttribPointer(M.a.c, 4, gl.FLOAT, false, 28, 12);
-      gl.drawArrays(gl.TRIANGLES, 0, n);
-      gl.uniformMatrix4fv(M.u.vp, false, vp); gl.uniform1f(M.u.fogd, fogd);
-      gl.bindBuffer(gl.ARRAY_BUFFER, VR.meshBuf);
-      gl.vertexAttribPointer(M.a.p, 3, gl.FLOAT, false, 28, 0); gl.vertexAttribPointer(M.a.c, 4, gl.FLOAT, false, 28, 12);
+      const B = R ? R.meshFlat : M;
+      if (B !== M) { gl.useProgram(B.p); vrLightUniforms(B, eye, 1e7, tm); }
+      gl.uniformMatrix4fv(B.u.vp, false, M4.mul(vp, T)); gl.uniform1f(B.u.fogd, 1e7);
+      if (R) { gl.uniform1f(B.u.bk, 1); if (B.u.shk) gl.uniform1f(B.u.shk, 0); if (B.u.aok) gl.uniform1f(B.u.aok, 0); }
+      vrBindMesh(B, VR.balloonBuf); gl.drawArrays(gl.TRIANGLES, 0, n);
+      if (R) { if (B.u.shk) gl.uniform1f(B.u.shk, 1); if (B.u.aok) gl.uniform1f(B.u.aok, 1); gl.uniform1f(B.u.bk, VR.v2 ? 0 : 1); }
+      gl.useProgram(M.p); gl.uniformMatrix4fv(M.u.vp, false, vp); gl.uniform1f(M.u.fogd, fogd);
+      vrBindMesh(M, VR.meshBuf);
     }
-    // cible de déplacement au sol
-    if (VR.walk && VR.walk.ok) {
-      const p = VR.walk.p, s = 0.35 + Math.min(1.2, VR.walk.dist * 0.03), y = p[1] + 0.02;
-      vrQuadDraw(vp, eye, VR.texRing, [p[0] - s, y, p[2] - s, p[0] + s, y, p[2] - s, p[0] + s, y, p[2] + s, p[0] - s, y, p[2] + s], [0, 0, 1, 0, 1, 1, 0, 1], [0.3 + 0.7 * VR.walk.k, 0.85, 1, 0.9], 0);
-    }
-    // vitres et volumes transparents
-    if (VR.nA) {
-      gl.useProgram(M.p); gl.bindBuffer(gl.ARRAY_BUFFER, VR.meshBuf);
-      gl.vertexAttribPointer(M.a.p, 3, gl.FLOAT, false, 28, 0); gl.vertexAttribPointer(M.a.c, 4, gl.FLOAT, false, 28, 12);
-      gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false);
-      gl.drawArrays(gl.TRIANGLES, VR.nO, VR.nA);
-      gl.depthMask(true);
-    }
+    gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    if (VR.nA) { gl.depthMask(false); gl.drawArrays(gl.TRIANGLES, VR.nO, VR.nA); gl.depthMask(true); }   // vitres, volumes transparents
   }
-  // bulles, portes, liens, panneau, menu
   gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-  for (const q of VR.quads) {
-    if (q.top) continue;
-    if (q.stalk) { const b = q.c, y0 = b[1] - q.h / 2, w = 0.025; vrQuadDraw(vp, eye, VR.texWhite, [b[0] - w, 0, b[2], b[0] + w, 0, b[2], b[0] + w, y0, b[2], b[0] - w, y0, b[2]], [0, 0, 1, 0, 1, 1, 0, 1], [0.13, 0.2, 0.33, 0.55], 0); }
-    const hot = VR.target && q.key && q.key === VR.target.key;
-    vrQuadOf(vp, eye, q, hot && !q.door ? 1.12 : 1, hot && q.door ? [1.2, 1.12, 0.9, 1] : null);
-  }
+  qbDraw('monde', vp, eye, fogd);                                   // cible au sol, bulles, portes, liens, panneau
   gl.disable(gl.DEPTH_TEST);
-  for (const q of VR.quads) if (q.top && !q.overlay) vrQuadOf(vp, eye, q, VR.target && q.key && q.key === VR.target.key ? 1.12 : 1);
-  for (const q of VR.quads) if (q.overlay) vrQuadOf(vp, eye, q, 1, q.tint);
+  qbDraw('dessus', vp, eye, fogd);                                  // menu : toujours devant
   gl.enable(gl.DEPTH_TEST);
 }
-function vrQuadOf(vp, eye, q, s, tint) {
+const vrFogDist = () => VR.drone || VR.balloon ? 2600 : Math.max(160, VR.extent * 2.5);
+/** Maillage compact (20 octets par sommet) : position, couleur, normale et matériau (voir vr-rendu.js). */
+function vrBindMesh(M, buf) { vrBindMesh20(M, buf); }
+
+/* ---------- Quads texturés (sol, bulles, portes, panneaux, menu) ----------
+   Préparés une fois par image dans un seul tampon, puis dessinés pour chaque œil :
+   un envoi au processeur graphique par image au lieu d'un par quad et par œil. */
+const QB = { data: new Float32Array(30 * 128), list: [], n: 0 };
+const QB_UV = [0, 0, 1, 0, 1, 1, 0, 1], QB_IDX = [0, 1, 2, 0, 2, 3], QB_WHITE = [1, 1, 1, 1];
+function qbAdd(pass, tex, P, UV, tint, fog) {
+  if (QB.n + 30 > QB.data.length) { const d = new Float32Array(QB.data.length * 2); d.set(QB.data); QB.data = d; }
+  const d = QB.data, first = QB.n / 5;
+  for (let i = 0; i < 6; i++) { const k = QB_IDX[i], o = QB.n + i * 5; d[o] = P[k * 3]; d[o + 1] = P[k * 3 + 1]; d[o + 2] = P[k * 3 + 2]; d[o + 3] = UV[k * 2]; d[o + 4] = UV[k * 2 + 1]; }
+  QB.n += 30; QB.list.push({ pass, tex, tint, fog, first });
+}
+function qbQuad(pass, q, s, tint) {
   const hw = q.w / 2 * s, hh = q.h / 2 * s, c = q.c, r = q.r, u = q.u, P = [];
   for (const [a, b] of [[-1, 1], [1, 1], [1, -1], [-1, -1]]) P.push(c[0] + r[0] * a * hw + u[0] * b * hh, c[1] + r[1] * a * hw + u[1] * b * hh, c[2] + r[2] * a * hw + u[2] * b * hh);
-  vrQuadDraw(vp, eye, q.tex, P, [0, 0, 1, 0, 1, 1, 0, 1], tint || [1, 1, 1, q.alpha ?? 1], 0);
+  qbAdd(pass, q.tex, P, QB_UV, tint || (q.alpha == null || q.alpha === 1 ? QB_WHITE : [1, 1, 1, q.alpha]), false);
 }
-function vrQuadDraw(vp, eye, tex, P, UV, tint, fogd) {
-  const gl = VR.gl, T = VR.prog.tex, d = new Float32Array(30), idx = [0, 1, 2, 0, 2, 3];
-  idx.forEach((k, i) => { d[i * 5] = P[k * 3]; d[i * 5 + 1] = P[k * 3 + 1]; d[i * 5 + 2] = P[k * 3 + 2]; d[i * 5 + 3] = UV[k * 2]; d[i * 5 + 4] = UV[k * 2 + 1]; });
-  gl.useProgram(T.p);
-  gl.uniformMatrix4fv(T.u.vp, false, vp); gl.uniform3fv(T.u.eye, eye); gl.uniform1f(T.u.fogd, fogd || 0); gl.uniform3fv(T.u.fogc, VR_SKY); gl.uniform4fv(T.u.tint, tint);
-  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex); gl.uniform1i(T.u.t, 0);
-  gl.bindBuffer(gl.ARRAY_BUFFER, VR.quadBuf); gl.bufferData(gl.ARRAY_BUFFER, d, gl.DYNAMIC_DRAW);
-  gl.enableVertexAttribArray(T.a.p); gl.vertexAttribPointer(T.a.p, 3, gl.FLOAT, false, 20, 0);
-  gl.enableVertexAttribArray(T.a.uv); gl.vertexAttribPointer(T.a.uv, 2, gl.FLOAT, false, 20, 12);
-  gl.drawArrays(gl.TRIANGLES, 0, 6);
+/** Tous les quads de l'image (ils ne dépendent pas de l'œil : les panneaux font face à la tête). */
+function vrPrepQuads() {
+  QB.list.length = 0; QB.n = 0;
+  if (VR.scene === 'maquette') {
+    const R = 800, gx = Math.round(VR.head[0] / 2) * 2, gz = Math.round(VR.head[2] / 2) * 2;
+    if (!VR.R) qbAdd('sol', VR.texGround, [gx - R, -0.025, gz - R, gx + R, -0.025, gz - R, gx + R, -0.025, gz + R, gx - R, -0.025, gz + R], [(gx - R) / 2, (gz - R) / 2, (gx + R) / 2, (gz - R) / 2, (gx + R) / 2, (gz + R) / 2, (gx - R) / 2, (gz + R) / 2], QB_WHITE, true);
+    if (VR.planTex && !VR.R) { const r = VR.plan.rect; qbAdd('sol', VR.planTex, [r.x, 0.004, r.y, r.x + r.w, 0.004, r.y, r.x + r.w, 0.004, r.y + r.h, r.x, 0.004, r.y + r.h], QB_UV, QB_WHITE, true); }
+    if (VR.walk && VR.walk.ok) {
+      const p = VR.walk.p, s = 0.35 + Math.min(1.2, VR.walk.dist * 0.03), y = p[1] + 0.02;
+      qbAdd('monde', VR.texRing, [p[0] - s, y, p[2] - s, p[0] + s, y, p[2] - s, p[0] + s, y, p[2] + s, p[0] - s, y, p[2] + s], QB_UV, [0.3 + 0.7 * VR.walk.k, 0.85, 1, 0.9], false);
+    }
+  }
+  const tk = VR.target && VR.target.key;
+  for (const q of VR.quads) {
+    if (q.top) continue;
+    if (q.stalk) { const b = q.c, y0 = b[1] - q.h / 2, w = 0.025; qbAdd('monde', VR.texWhite, [b[0] - w, 0, b[2], b[0] + w, 0, b[2], b[0] + w, y0, b[2], b[0] - w, y0, b[2]], QB_UV, [0.13, 0.2, 0.33, 0.55], false); }
+    const hot = tk && q.key === tk;
+    qbQuad('monde', q, hot && !q.door ? 1.12 : 1, hot && q.door ? [1.2, 1.12, 0.9, 1] : null);
+  }
+  for (const q of VR.quads) if (q.top) qbQuad('dessus', q, tk && q.key === tk ? 1.12 : 1);
+  const gl = VR.gl;
+  gl.bindBuffer(gl.ARRAY_BUFFER, VR.quadBuf); gl.bufferData(gl.ARRAY_BUFFER, QB.data.subarray(0, QB.n), gl.DYNAMIC_DRAW);
+}
+function qbDraw(pass, vp, eye, fogd) {
+  const gl = VR.gl, T = VR.prog.tex;
+  let started = false, curFog = -1, curTex = null, curTint = null;
+  for (const it of QB.list) {
+    if (it.pass !== pass) continue;
+    if (!started) {
+      started = true; gl.useProgram(T.p);
+      gl.uniformMatrix4fv(T.u.vp, false, vp); gl.uniform3fv(T.u.eye, eye); gl.uniform3fv(T.u.fogc, VR_SKY); gl.uniform1i(T.u.t, 0); gl.activeTexture(gl.TEXTURE0);
+      gl.bindBuffer(gl.ARRAY_BUFFER, VR.quadBuf);
+      gl.enableVertexAttribArray(T.a.p); gl.vertexAttribPointer(T.a.p, 3, gl.FLOAT, false, 20, 0);
+      gl.enableVertexAttribArray(T.a.uv); gl.vertexAttribPointer(T.a.uv, 2, gl.FLOAT, false, 20, 12);
+    }
+    const f = it.fog ? fogd : 0;
+    if (f !== curFog) { gl.uniform1f(T.u.fogd, f); curFog = f; }
+    if (it.tint !== curTint) { gl.uniform4fv(T.u.tint, it.tint); curTint = it.tint; }
+    if (it.tex !== curTex) { gl.bindTexture(gl.TEXTURE_2D, it.tex); curTex = it.tex; }
+    gl.drawArrays(gl.TRIANGLES, it.first, 6);
+  }
 }
 
 /* ---------- Le regard : viser, remplir, valider ---------- */
-function vrGaze(fwd, dt, o = VR.head) {
+function vrGaze(fwd, dt) {
+  const o = VR.head;
   VR.cooldown = Math.max(0, VR.cooldown - dt);
   let best = null, bestT = 1e9, panelHit = null;
   for (const q of VR.quads) {
@@ -1409,8 +1363,8 @@ function vrBalloonMesh() {
     const tip = [0, y1, 0], b = [[-w, -w], [w, -w], [w, w], [-w, w]].map(([x, z]) => [x, y0, z]);
     for (let i = 0; i < 4; i++) tri(b[i], b[(i + 1) % 4], tip, col);
   }
-  const gl = VR.gl, data = new Float32Array(out);
-  VR.balloonBuf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, VR.balloonBuf); gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+  const gl = VR.gl;
+  VR.balloonBuf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, VR.balloonBuf); gl.bufferData(gl.ARRAY_BUFFER, vrPackMesh(out), gl.STATIC_DRAW);
   VR.balloonN = out.length / 7; VR.balloonFlame = VR.balloonN - nBody;
 }
 
@@ -1452,7 +1406,7 @@ function vrWelcome() {
     g.font = `900 64px ${VR_FONT}`; g.fillText(fitText(g, VR.pack.nom || 'Visite', 900), c.width / 2, 120);
     g.font = `700 36px ${VR_FONT}`; g.fillStyle = '#61708c'; g.fillText(fitText(g, VR.plan.nom || '', 900), c.width / 2, 172);
     g.textAlign = 'left'; g.fillStyle = '#16233d'; g.font = `700 40px ${VR_FONT}`;
-    const pad = VR.xr || (navigator.getGamepads?.() || []).some(p => p);
+    const pad = (navigator.getGamepads?.() || []).some(p => p);
     [['👀', VR.dwellT ? 'Regardez le sol pour vous déplacer' : 'Visez le sol, validez pour y aller'], ['🫧', VR.dwellT ? 'Fixez une bulle pour l’ouvrir' : 'Visez une bulle, validez pour l’ouvrir'],
       pad ? ['🎮', 'Joystick : avancer · ← → tourner · B : retour'] : ['⬇️', 'Baissez la tête : le menu']].forEach(([e, t], i) => { g.fillText(e, 90, 268 + i * 82); g.fillText(t, 170, 268 + i * 82); });
     panelButton(g, buttons, 'go', c.width / 2 - 230, c.height - 150, 460, 100, 'C’est parti !', '#3fb04a', () => vrClosePanel(), 'C’est parti !');
@@ -1538,8 +1492,15 @@ function vrPanoLink(L) {
 }
 
 /* ---------- Viseur et messages (par-dessus la 3D) ---------- */
+/** Viseur et messages par-dessus la 3D : calque 2D en définition réduite, redessiné seulement quand il change. */
 function vrHud(W, H, vw, dpr, sh = 0) {
-  const g = $('#vrHud').getContext('2d'), t = VR.target, now = performance.now();
+  const t = VR.target, now = performance.now();
+  const need0 = t && t.walk ? VR.dwellT + 0.1 : VR.dwellT, k0 = t && t.act && need0 > 0 ? Math.min(1, VR.dwell / need0) : 0;
+  const hint = VR.hint && now < VR.hint.until ? VR.hint.text : '', bal = VR.balloon && VR.scene === 'maquette' ? vrBalloonStatus() : '';
+  const sig = [W, H, sh, t && t.label, !!(t && t.act), Math.round(k0 * 40), hint, bal, Math.round(VR.fade * 50), Math.round(VR.moving * 20)].join('|');
+  if (sig === VR.hudSig) return;
+  VR.hudSig = sig;
+  const g = VR.hudCtx || (VR.hudCtx = $('#vrHud').getContext('2d'));
   g.clearRect(0, 0, W, H);
   const centers = VR.stereo ? [vw / 2 - sh, vw * 1.5 + sh] : [W / 2];
   // vignette de confort : on assombrit les bords quand on se déplace en continu (moins de mal des transports)
@@ -1548,8 +1509,7 @@ function vrHud(W, H, vw, dpr, sh = 0) {
     gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, `rgba(0,0,0,${0.75 * VR.moving})`);
     g.save(); if (VR.stereo) { g.beginPath(); g.rect(cx < vw ? 0 : vw, 0, vw, H); g.clip(); } g.fillStyle = gr; g.fillRect(0, 0, W, H); g.restore();
   }
-  const need = t && t.walk ? VR.dwellT + 0.1 : VR.dwellT, k = t && t.act && need > 0 ? Math.min(1, VR.dwell / need) : 0;
-  const R = 11 * dpr * (VR.stereo ? 1 : 1.2);
+  const k = k0, R = 11 * dpr * (VR.stereo ? 1 : 1.2);
   for (const cx of centers) {
     const cy = H / 2;
     g.lineWidth = 3 * dpr; g.strokeStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.arc(cx, cy, R + 1.5 * dpr, 0, 7); g.stroke();
@@ -1558,9 +1518,9 @@ function vrHud(W, H, vw, dpr, sh = 0) {
     g.fillStyle = '#fff'; g.beginPath(); g.arc(cx, cy, 2 * dpr, 0, 7); g.fill();
     const label = t && t.label;
     if (label) vrHudPill(g, label, cx, cy + R + 22 * dpr, dpr, t.act ? 'rgba(22,35,61,.82)' : 'rgba(185,28,28,.82)');
-    if (VR.hint && now < VR.hint.until) vrHudPill(g, VR.hint.text, cx, H * 0.2, dpr, 'rgba(47,127,220,.9)');
+    if (hint) vrHudPill(g, hint, cx, H * 0.2, dpr, 'rgba(47,127,220,.9)');
+    if (bal) vrHudPill(g, bal, cx, H * 0.86, dpr, 'rgba(215,38,61,.85)');
   }
-  if (VR.balloon && VR.scene === 'maquette') for (const cx of centers) vrHudPill(g, vrBalloonStatus(), cx, H * 0.86, dpr, 'rgba(215,38,61,.85)');
   if (VR.fade > 0.001) { g.fillStyle = `rgba(0,0,0,${VR.fade})`; g.fillRect(0, 0, W, H); }
 }
 function vrHudPill(g, text, cx, cy, dpr, bg) {
@@ -1596,6 +1556,497 @@ addEventListener('gamepadconnected', e => {
 
 /* points d'entrée pour les essais automatiques */
 window.METATOR_VR = { state: VR, start: startVr, stop: stopVr, current: () => current, activate: vrActivate };
+
+/* ======================================================================
+   RENDU GRAPHIQUE (WebGL 2) — options à la carte, pensées pour le téléphone
+   • Chaque option ajoute ou retire du code dans les shaders (#define) : une option coupée ne coûte rien.
+   • Tout ce qui ne bouge pas est calculé UNE fois au chargement du plan, sur le processeur graphique :
+     ombres du soleil (carte d'ombre de tout le site + carte fine autour du visiteur, refaite seulement quand il
+     s'éloigne de plus de 8 m), ombres de contact (occupation du sol vue de dessus, floutée).
+   • Par pixel : au plus 4 lectures de texture (ombre, contact, détail, plan) et quelques calculs.
+   • Fluidité : la définition baisse toute seule si le téléphone n'arrive plus à suivre, et remonte ensuite.
+   ====================================================================== */
+const VR_FX_KEYS = [
+  ['ombres', 'Ombres du soleil', 'Ombres portées nettes, précalculées au chargement'],
+  ['contact', 'Ombres de contact', 'Pieds des murs, dessous des véhicules et du mobilier'],
+  ['materiaux', 'Matériaux réalistes', 'Reflets du ciel (vitres, métal, carrosseries), grain du béton, de l’enrobé, du gazon, du bois'],
+  ['ciel', 'Ciel et brume réalistes', 'Soleil, nuages qui défilent, horizon, brume atmosphérique'],
+  ['cinema', 'Couleurs « cinéma »', 'Rendu des lumières fortes comme une caméra (tone mapping ACES)'],
+  ['halo', 'Halo des lumières', 'Lampadaires, LED et gyrophares qui rayonnent (surtout la nuit) — le plus gourmand'],
+  ['lisse', 'Surfaces lisses', 'Arbres, poteaux, dômes et carrosseries sans facettes'],
+  ['fluidite', 'Fluidité automatique', 'Baisse la définition quand le téléphone peine, la remonte ensuite'],
+  ['prediction', 'Anticipation des mouvements de tête', 'Compense le retard des capteurs (moins de flottement)'],
+  ['couleurs', 'Correction des couleurs des lentilles', 'Supprime les franges colorées sur les bords (casque)'],
+  ['anim', 'Animations', 'Gyrophares et flashs qui clignotent, végétation dans le vent, nuages'],
+];
+const VR_PRESETS = {
+  leger: { ombres: 0, contact: 0, materiaux: 0, ciel: 0, cinema: 0, halo: 0, lisse: 1, fluidite: 1, prediction: 1, couleurs: 0, anim: 0 },
+  equilibre: { ombres: 1, contact: 1, materiaux: 1, ciel: 1, cinema: 1, halo: 0, lisse: 1, fluidite: 1, prediction: 1, couleurs: 1, anim: 1 },
+  haute: { ombres: 1, contact: 1, materiaux: 1, ciel: 1, cinema: 1, halo: 1, lisse: 1, fluidite: 1, prediction: 1, couleurs: 1, anim: 1 },
+};
+const VR_SHADOW_RES = { leger: [1024, 1024], equilibre: [2048, 1536], haute: [4096, 2048] };
+/** Heure de la visite : soleil (azimut depuis le nord, hauteur en degrés) et couleurs en lumière linéaire. */
+const VR_HEURES = {
+  matin: { label: 'Matin', az: 105, el: 18, sun: [1.6, 1.24, 0.88], zen: [0.20, 0.36, 0.66], hor: [0.66, 0.72, 0.80], gnd: [0.20, 0.19, 0.17], nite: 0 },
+  midi: { label: 'Midi', az: 175, el: 55, sun: [1.9, 1.8, 1.62], zen: [0.16, 0.34, 0.72], hor: [0.62, 0.72, 0.85], gnd: [0.22, 0.21, 0.19], nite: 0 },
+  apresmidi: { label: 'Après-midi', az: 225, el: 38, sun: [1.85, 1.66, 1.42], zen: [0.17, 0.35, 0.72], hor: [0.64, 0.73, 0.85], gnd: [0.22, 0.20, 0.18], nite: 0 },
+  soir: { label: 'Fin de journée', az: 262, el: 9, sun: [1.6, 0.9, 0.42], zen: [0.18, 0.24, 0.46], hor: [0.72, 0.6, 0.55], gnd: [0.17, 0.14, 0.12], nite: 0.15 },
+  nuit: { label: 'Nuit', az: 200, el: 35, sun: [0.16, 0.2, 0.3], zen: [0.006, 0.01, 0.03], hor: [0.035, 0.045, 0.08], gnd: [0.02, 0.02, 0.028], nite: 1 },
+};
+function vrFx(set) {
+  const p = set.rendu === 'perso' ? { ...VR_PRESETS.equilibre, ...(set.fx || {}) } : { ...(VR_PRESETS[set.rendu] || VR_PRESETS.equilibre) };
+  return p;
+}
+const vrSunDir = h => { const a = h.az * DEG2, e = h.el * DEG2; return [Math.sin(a) * Math.cos(e), Math.sin(e), -Math.cos(a) * Math.cos(e)]; };   // nord = −z, est = +x
+
+/* ---------- Shaders ---------- */
+const VR_GL3 = '#version 300 es\n';
+const VR_LIGHT_GLSL = `
+uniform vec3 eye,sunD,sunC,zen,hor,gnd,fogc;uniform float fogd,tm,nite;
+vec3 aces(vec3 x){x*=.86;x=clamp((x*(2.51*x+.03))/(x*(2.43*x+.59)+.14),0.,1.);return clamp(mix(vec3(dot(x,vec3(.299,.587,.114))),x,1.18),0.,1.);}
+vec3 skyc(vec3 d){return mix(hor,zen,pow(max(d.y,0.),.5));}
+vec3 finish(vec3 col,vec3 w){float dist=length(w-eye);
+#ifdef SKY
+float f=(1.-exp(-dist/fogd*.9))*.65;vec3 V=normalize(w-eye);vec3 fc=fogc+sunC*.06*pow(max(dot(V,sunD),0.),6.);
+#else
+float f=clamp((dist-fogd*.45)/(fogd*.55),0.,1.)*.6;vec3 fc=fogc;
+#endif
+col=mix(col,fc,f);
+#ifdef TONE
+col=aces(col);
+#else
+col=clamp(col,0.,1.);
+#endif
+return sqrt(col);}
+`;
+const VR_SHADOW_GLSL = `
+#ifdef SHADOW
+uniform highp sampler2DShadow sh0,sh1;uniform float shk;in vec4 s0,s1;
+float shadowAt(){vec3 a=s1.xyz/s1.w*.5+.5;
+if(a.x>.03&&a.x<.97&&a.y>.03&&a.y<.97&&a.z<1.)return texture(sh1,a);
+vec3 b=s0.xyz/s0.w*.5+.5;if(b.x<0.||b.y<0.||b.x>1.||b.y>1.||b.z>1.)return 1.;return texture(sh0,b);}
+#endif
+#ifdef AO
+uniform sampler2D aot;uniform vec4 aor;uniform float aok;
+#endif
+#ifdef NIGHT
+uniform vec4 lp[8];
+vec3 pools(vec3 w,vec3 N,vec3 alb){vec3 s=vec3(0.);for(int i=0;i<8;i++){vec4 L=lp[i];vec3 d=L.xyz-w;float r2=dot(d,d);float f=max(0.,1.-r2/(L.w*L.w))*step(w.y,L.y-.3);s+=f*f*max(dot(N,normalize(d)),0.);}return alb*vec3(1.,.8,.55)*s*1.5;}
+#endif
+`;
+function vrMeshSrc(D) {
+  const defs = Object.entries(D).filter(([, v]) => v).map(([k]) => `#define ${k}\n`).join('');
+  const vs = VR_GL3 + defs + `in vec3 p;in vec4 c;in vec3 nr;in float mt;uniform mat4 vp;uniform float tm;uniform vec3 sunD;
+#ifdef SHADOW
+uniform mat4 sm0,sm1;out vec4 s0,s1;
+#endif
+out vec4 vc;out vec3 vw;out vec3 vn;flat out int vm;
+void main(){vec3 w=vec3(p.x,p.z,-p.y);vn=vec3(nr.x,nr.z,-nr.y);vm=int(mt+.5);
+#ifdef ANIM
+if(vm==3){float h=min(max(0.,w.y-1.),8.);w.xz+=vec2(sin(tm*1.4+w.x*.31+w.z*.17),cos(tm*1.1+w.z*.27+w.x*.13))*h*.007;}
+#endif
+vc=c;vw=w;
+#ifdef SHADOW
+vec4 wo=vec4(w+sunD*.06,1.);s0=sm0*wo;s1=sm1*wo;
+#endif
+gl_Position=vp*vec4(w,1.);}`;
+  const fs = VR_GL3 + defs + `precision highp float;precision highp int;in vec4 vc;in vec3 vw;in vec3 vn;flat in int vm;uniform float bk;out vec4 o;
+#ifdef MAT
+uniform sampler2D det;
+#endif
+${VR_LIGHT_GLSL}${VR_SHADOW_GLSL}
+void main(){vec3 V=normalize(eye-vw);
+#ifdef FLATN
+vec3 N=normalize(cross(dFdx(vw),dFdy(vw)));if(dot(N,V)<0.)N=-N;
+#else
+vec3 N=normalize(vn);
+#endif
+int m=vm;vec3 alb=vc.rgb*vc.rgb;float spec=0.,rough=.8,env=0.;
+#ifdef MAT
+vec3 an=abs(N);vec2 uv=an.y>.7?vw.xz:(an.x>an.z?vw.zy:vw.xy);
+float sc=m==4?.22:m==3?1.2:m==9?.7:.5;vec2 u2=m==10?vec2(uv.x*2.,uv.y*.3):uv*sc;vec4 d4=texture(det,u2);
+if(m==4)alb*=.8+.4*d4.r;else if(m==5)alb*=.72+.56*d4.r;else if(m==9)alb*=.66+.68*d4.g;else if(m==3)alb*=.58+.84*d4.g;else if(m==10)alb*=.74+.52*d4.a;else alb*=.95+.1*d4.r;
+if(m==2){spec=.6;rough=.35;env=.32;}else if(m==8){spec=.45;rough=.18;env=.2;}else if(m==1){spec=1.;rough=.05;env=.85;}else if(m==0){spec=.08;rough=.6;env=.03;}else if(m==11){spec=.03;rough=.9;}
+#endif
+float ndl=dot(N,sunD),sh=1.,ao=1.;
+#ifdef SHADOW
+sh=mix(1.,ndl>0.?shadowAt():0.,shk);
+#endif
+#ifdef AO
+ao=1.-texture(aot,(vw.xz-aor.xy)*aor.zw).r*(1.-smoothstep(0.,1.2,vw.y))*.6*aok;
+#else
+ao=mix(1.,mix(.78,1.,smoothstep(0.,.9,vw.y)),1.-abs(N.y));
+#endif
+vec3 amb=mix(gnd,mix(hor,zen,.45),N.y*.5+.5);vec3 col;
+if(bk>.5)col=alb*(mix(hor,zen,.4)*1.2*ao+sunC*.32*sh);
+else{float wr=m==3?.4:0.;col=alb*(amb*.56*ao+sunC*max((ndl+wr)/(1.+wr),0.)*sh);}
+#ifdef MAT
+if(spec>0.){vec3 H=normalize(sunD+V);col+=sunC*pow(max(dot(N,H),0.),mix(12.,400.,1.-rough))*spec*sh*.35;
+float fr=env*(.06+.94*pow(1.-max(dot(N,V),0.),5.));col=mix(col,skyc(reflect(-V,N))*(.4+.6*ao),clamp(fr+env*.3,0.,1.));}
+#endif
+#ifdef NIGHT
+col+=pools(vw,N,alb);
+#endif
+if(m==6)col+=alb*(.3+nite*2.6);
+#ifdef ANIM
+if(m==7)col+=alb*step(.5,fract(tm*1.7+vw.x*.07+vw.z*.05))*(1.4+nite*2.6);
+#else
+if(m==7)col+=alb*(.3+nite*2.);
+#endif
+float a=vc.a;
+#ifdef MAT
+if(m==1)a=mix(a,1.,.55*pow(1.-max(dot(N,V),0.),3.));
+#endif
+o=vec4(finish(col,vw),a);}`;
+  return [vs, fs];
+}
+function vrGroundSrc(D) {
+  const defs = Object.entries(D).filter(([, v]) => v).map(([k]) => `#define ${k}\n`).join('');
+  const vs = VR_GL3 + defs + `in vec3 p;uniform mat4 vp;uniform vec3 sunD;
+#ifdef SHADOW
+uniform mat4 sm0,sm1;out vec4 s0,s1;
+#endif
+out vec3 vw;void main(){vw=p;
+#ifdef SHADOW
+vec4 wo=vec4(p+sunD*.06,1.);s0=sm0*wo;s1=sm1*wo;
+#endif
+gl_Position=vp*vec4(p,1.);}`;
+  const fs = VR_GL3 + defs + `precision highp float;in vec3 vw;out vec4 o;uniform sampler2D det,pt;uniform vec4 pr;uniform float hp;uniform vec3 gc;
+${VR_LIGHT_GLSL}${VR_SHADOW_GLSL}
+void main(){vec3 alb=gc;
+#ifdef MAT
+vec4 d1=texture(det,vw.xz*.31),d2=texture(det,vw.xz*.037);alb*=(.7+.6*d1.g)*(.8+.4*d2.r);
+#endif
+vec2 q=(vw.xz-pr.xy)*pr.zw;
+if(hp>.5&&q.x>=0.&&q.y>=0.&&q.x<=1.&&q.y<=1.){vec3 pc=texture(pt,q).rgb;alb=mix(alb,pc*pc*.92,.92);}
+vec3 N=vec3(0.,1.,0.);float sh=1.,ao=1.;
+#ifdef SHADOW
+sh=shadowAt();
+#endif
+#ifdef AO
+ao=1.-texture(aot,(vw.xz-aor.xy)*aor.zw).r*.6*aok;
+#endif
+vec3 col=alb*(mix(hor,zen,.45)*.56*ao+sunC*sunD.y*sh);
+#ifdef NIGHT
+col+=pools(vw,N,alb);
+#endif
+o=vec4(finish(col,vw),1.);}`;
+  return [vs, fs];
+}
+function vrSkySrc(D) {
+  const defs = Object.entries(D).filter(([, v]) => v).map(([k]) => `#define ${k}\n`).join('');
+  return [VR_GL3 + `in vec2 p;out vec2 vp;void main(){vp=p;gl_Position=vec4(p,.99999,1.);}`,
+    VR_GL3 + defs + `precision highp float;in vec2 vp;out vec4 o;uniform mat4 inv;uniform sampler2D t,det;uniform float sky,tm,nite;uniform vec3 sunD,sunC,zen,hor,gnd;
+vec3 aces(vec3 x){x*=.78;return clamp((x*(2.51*x+.03))/(x*(2.43*x+.59)+.14),0.,1.);}
+void main(){vec4 w=inv*vec4(vp,1.,1.);vec3 d=normalize(w.xyz/w.w);
+if(sky<.5){float u=.5+atan(d.x,-d.z)/6.2831853;float v=.5-asin(clamp(d.y,-1.,1.))/3.1415927;o=texture(t,vec2(u,v));return;}
+#ifdef SKY
+float h=d.y;vec3 c=h>0.?mix(hor,zen,pow(h,.5)):mix(hor,gnd*1.6,clamp(-h*5.,0.,1.));
+float mu=max(dot(d,sunD),0.);c+=sunC*(pow(mu,900.)*(nite>.5?6.:30.)+pow(mu,10.)*.12);
+if(h>0.){vec2 uv=d.xz/(h+.12)*.07+vec2(tm*.0025,tm*.001);float k=smoothstep(.42,.8,texture(det,uv).b)*smoothstep(0.,.3,h);
+vec3 cc=mix(hor*1.15,sunC*.45+zen*.5,.4)*(nite>.5?.25:1.);c=mix(c,cc,k*.75);
+if(nite>.5){vec3 g=floor(d*260.);float s=fract(sin(dot(g,vec3(12.9898,78.233,37.719)))*43758.5453);c+=step(.9982,s)*(1.-k)*h*vec3(.8);}}
+#ifdef TONE
+c=aces(c);
+#else
+c=clamp(c,0.,1.);
+#endif
+o=vec4(sqrt(c),1.);
+#else
+float h=d.y;vec3 c=h>0.?mix(vec3(.86,.93,.98),vec3(.42,.68,.93),pow(h,.6)):mix(vec3(.80,.90,.97),vec3(.72,.76,.70),clamp(-h*6.,0.,1.));o=vec4(c,1.);
+#endif
+}`];
+}
+const VR_DEPTH_SRC = [VR_GL3 + 'in vec3 p;uniform mat4 m;void main(){gl_Position=m*vec4(p.x,p.z,-p.y,1.);}', VR_GL3 + 'precision mediump float;out vec4 o;void main(){o=vec4(1.);}'];
+/** Passe finale : correction des lentilles (k), franges colorées (ca), halo (bl), image de définition réduite (agrandie ici). */
+const VR_POST_SRC = [VR_GL3 + 'in vec2 p;out vec2 vp;void main(){vp=p;gl_Position=vec4(p,0.,1.);}',
+  VR_GL3 + `precision mediump float;in vec2 vp;out vec4 o;uniform sampler2D t,bl;uniform float off,hw,asp,ca,bs;uniform vec2 k;
+void main(){vec2 q=vec2(vp.x*asp,vp.y)/length(vec2(asp,1.));float r2=dot(q,q);float f=(1.+k.x*r2+k.y*r2*r2)/(1.+k.x+k.y);vec2 s=vp*f;
+if(abs(s.x)>1.||abs(s.y)>1.){o=vec4(0.,0.,0.,1.);return;}
+vec2 uv=s*.5+.5;vec2 U=vec2(off+uv.x*hw,uv.y);vec3 c;
+if(ca>0.){vec2 dr=vp*f*(1.+ca*r2)*.5+.5,db=vp*f*(1.-ca*r2)*.5+.5;c=vec3(texture(t,vec2(off+dr.x*hw,dr.y)).r,texture(t,U).g,texture(t,vec2(off+db.x*hw,db.y)).b);}
+else c=texture(t,U).rgb;
+if(bs>0.)c+=texture(bl,U).rgb*bs;
+o=vec4(c,1.);}`];
+const VR_BRIGHT_SRC = [VR_POST_SRC[0], VR_GL3 + `precision mediump float;in vec2 vp;out vec4 o;uniform sampler2D t;uniform vec2 px;
+void main(){vec2 uv=vp*.5+.5;vec3 c=(texture(t,uv+px).rgb+texture(t,uv-px).rgb+texture(t,uv+vec2(px.x,-px.y)).rgb+texture(t,uv-vec2(px.x,-px.y)).rgb)*.25;
+float l=max(c.r,max(c.g,c.b));o=vec4(c*smoothstep(.9,1.,l),1.);}`];
+const VR_BLUR_SRC = [VR_POST_SRC[0], VR_GL3 + `precision mediump float;in vec2 vp;out vec4 o;uniform sampler2D t;uniform vec2 dir;
+void main(){vec2 uv=vp*.5+.5;vec4 c=texture(t,uv)*.227;c+=(texture(t,uv+dir*1.385)+texture(t,uv-dir*1.385))*.316;c+=(texture(t,uv+dir*3.23)+texture(t,uv-dir*3.23))*.07;o=c;}`];
+/** Occupation du sol (vue de dessus) → ombre de contact floutée */
+const VR_AO_SRC = [VR_POST_SRC[0], VR_GL3 + `precision highp float;in vec2 vp;out vec4 o;uniform highp sampler2D dt;uniform vec2 dir;uniform float top,rng,pass;
+void main(){vec2 uv=vp*.5+.5;
+if(pass<.5){float z=texture(dt,uv).r;float h=top-z*rng;o=vec4(clamp((h-.12)/.9,0.,1.),0.,0.,1.);return;}
+float c=texture(dt,uv).r*.2;for(int i=1;i<5;i++){float w=(5.-float(i))*.04;c+=(texture(dt,uv+dir*float(i)).r+texture(dt,uv-dir*float(i)).r)*w;}o=vec4(c,0.,0.,1.);}`];
+
+/* ---------- Textures de détail (générées une fois, 256 × 256, répétables) ---------- */
+function vrDetailTexture() {
+  const N = 256, img = new ImageData(N, N), d = img.data;
+  // bruit de valeur répétable à plusieurs octaves
+  const lat = (s, g) => { const a = new Float32Array(g * g); let x = s; for (let i = 0; i < g * g; i++) { x = (x * 1103515245 + 12345) & 0x7fffffff; a[i] = x / 0x7fffffff; } return a; };
+  const noise = (g, s) => { const L = lat(s, g); return (u, v) => { const x = u * g, y = v * g, i = Math.floor(x), j = Math.floor(y), fx = x - i, fy = y - j, sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy);
+    const at = (a, b) => L[((b % g + g) % g) * g + ((a % g + g) % g)]; return (at(i, j) * (1 - sx) + at(i + 1, j) * sx) * (1 - sy) + (at(i, j + 1) * (1 - sx) + at(i + 1, j + 1) * sx) * sy; }; };
+  const n8 = noise(8, 7), n16 = noise(16, 11), n32 = noise(32, 13), n64 = noise(64, 17), n4 = noise(4, 19), c8 = noise(8, 23), c16 = noise(16, 29), w8 = noise(8, 31);
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const u = x / N, v = y / N, k = (y * N + x) * 4;
+    const grain = 0.35 * n16(u, v) + 0.3 * n32(u, v) + 0.35 * n64(u, v);                        // béton, enrobé
+    const leaf = Math.min(1, Math.max(0, 0.15 + 0.5 * n8(u, v) + 0.45 * n32(u, v) + 0.2 * (n64(u, v) - 0.5)));   // feuillage, gazon
+    const cloud = 0.55 * c8(u, v) + 0.3 * c16(u, v) + 0.15 * n32(u, v) + 0.1 * (n4(u, v) - 0.5);  // nuages
+    const wood = 0.5 + 0.5 * Math.sin((v * 34 + 3.2 * w8(u, v)) * Math.PI);                      // veinage
+    d[k] = grain * 255; d[k + 1] = leaf * 255; d[k + 2] = Math.min(1, Math.max(0, cloud)) * 255; d[k + 3] = (0.55 + 0.45 * wood) * 255;
+  }
+  const gl = VR.gl, t = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, t); gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img); gl.generateMipmap(gl.TEXTURE_2D);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+  if (VR.aniso) gl.texParameterf(gl.TEXTURE_2D, VR.aniso.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(4, gl.getParameter(VR.aniso.MAX_TEXTURE_MAX_ANISOTROPY_EXT)));
+  return t;
+}
+
+/* ---------- Mise en place ---------- */
+/** Compile les programmes selon les options (WebGL 2) ; renvoie false si le téléphone n'a que WebGL 1. */
+function vrRenduInit() {
+  const gl = VR.gl; VR.R = null;
+  if (!VR.gl2) return false;
+  const fx = vrFx(VR.set), H = VR_HEURES[VR.set.heure] || VR_HEURES.apresmidi;
+  const D = { SHADOW: !!fx.ombres, AO: !!fx.contact, MAT: !!fx.materiaux, SKY: !!fx.ciel, TONE: !!fx.cinema, ANIM: !!fx.anim, NIGHT: H.nite > 0.5, FLATN: !fx.lisse };
+  try {
+    const R = {
+      fx, H, D, sun: vrSunDir(H), res: VR_SHADOW_RES[VR.set.rendu] || VR_SHADOW_RES.equilibre,
+      mesh: vrProgram(gl, vrMeshSrc(D)), meshFlat: vrProgram(gl, vrMeshSrc({ ...D, FLATN: true })), ground: vrProgram(gl, vrGroundSrc(D)), sky: vrProgram(gl, vrSkySrc(D)),
+      post: vrProgram(gl, VR_POST_SRC), det: vrDetailTexture(), scale: 1, ft: 0, tgt: 0, tMin: 1, lastAdj: 0, light8: new Float32Array(32), lightT: 0,
+    };
+    if (D.SHADOW) R.depth = vrProgram(gl, VR_DEPTH_SRC);
+    if (D.AO) R.aoProg = vrProgram(gl, VR_AO_SRC);
+    if (fx.halo) { R.bright = vrProgram(gl, VR_BRIGHT_SRC); R.blur = vrProgram(gl, VR_BLUR_SRC); }
+    R.gbuf = gl.createBuffer();
+    VR.R = R;
+    return true;
+  } catch (e) { console.warn('rendu avancé indisponible', e); VR.R = null; return false; }
+}
+/** Texture de profondeur (ombres : comparaison matérielle filtrée = adoucissement 2 × 2 gratuit) */
+function vrDepthTarget(size, compare) {
+  const gl = VR.gl, tex = gl.createTexture(), fb = gl.createFramebuffer();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT24, size, size, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_INT, null);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, compare ? gl.LINEAR : gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, compare ? gl.LINEAR : gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  if (compare) { gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_FUNC, gl.LEQUAL); }
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, tex, 0);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  return { tex, fb, size };
+}
+function vrColorTarget(w, h, linear = true) {
+  const gl = VR.gl, tex = gl.createTexture(), fb = gl.createFramebuffer();
+  gl.bindTexture(gl.TEXTURE_2D, tex); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, linear ? gl.LINEAR : gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, linear ? gl.LINEAR : gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0); gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  return { tex, fb, w, h };
+}
+/** Projection orthographique vue depuis la direction d (vers la scène), centrée en c, demi-largeur r, profondeur ±depth */
+function vrOrtho(d, c, r, depth) {
+  const f = V3.norm(V3.mul(d, -1)), up = Math.abs(f[1]) > 0.95 ? [0, 0, -1] : [0, 1, 0], s = V3.norm(V3.cross(f, up)), u = V3.cross(s, f);
+  const e = V3.sub(c, V3.mul(f, depth));
+  const view = [s[0], u[0], -f[0], 0, s[1], u[1], -f[1], 0, s[2], u[2], -f[2], 0, -V3.dot(s, e), -V3.dot(u, e), V3.dot(f, e), 1];
+  const n = 0, fa = depth * 2, proj = [1 / r, 0, 0, 0, 0, 1 / r, 0, 0, 0, 0, -2 / (fa - n), 0, 0, 0, -(fa + n) / (fa - n), 1];
+  return M4.mul(proj, view);
+}
+/** Profondeur de la maquette opaque vue depuis la matrice m, dans la cible T */
+function vrDepthPass(T, m) {
+  const gl = VR.gl, P = VR.R.depth || (VR.R.depth = vrProgram(gl, VR_DEPTH_SRC));
+  gl.bindFramebuffer(gl.FRAMEBUFFER, T.fb); gl.viewport(0, 0, T.size, T.size);
+  gl.disable(gl.SCISSOR_TEST); gl.disable(gl.BLEND); gl.enable(gl.DEPTH_TEST); gl.depthMask(true); gl.colorMask(false, false, false, false);
+  gl.clear(gl.DEPTH_BUFFER_BIT); gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(2.5, 6);
+  gl.useProgram(P.p); gl.uniformMatrix4fv(P.u.m, false, m);
+  gl.bindBuffer(gl.ARRAY_BUFFER, VR.meshBuf); gl.enableVertexAttribArray(P.a.p); gl.vertexAttribPointer(P.a.p, 3, gl.FLOAT, false, 20, 0);
+  if (VR.nO) gl.drawArrays(gl.TRIANGLES, 0, VR.nO);
+  gl.disable(gl.POLYGON_OFFSET_FILL); gl.colorMask(true, true, true, true); gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+}
+/** Précalculs du plan : ombre de tout le site, ombres de contact. Quelques dizaines de millisecondes, une seule fois. */
+function vrRenduPlan() {
+  const R = VR.R; if (!R) return;
+  const gl = VR.gl, B = VR.plan.bounds || { x0: -10, y0: -10, x1: 10, y1: 10, hmax: 3 };
+  const cx = (B.x0 + B.x1) / 2, cz = (B.y0 + B.y1) / 2, half = Math.max(10, Math.hypot(B.x1 - B.x0, B.y1 - B.y0) / 2 + 4), hm = Math.max(3, B.hmax || 3);
+  R.sm0 = R.sm1 = null;
+  if (R.D.SHADOW) {
+    R.t0 = R.t0 || vrDepthTarget(R.res[0], true); R.t1 = R.t1 || vrDepthTarget(R.res[1], true);
+    R.sm0 = vrOrtho(R.sun, [cx, hm / 2, cz], half, half + hm + 20); vrDepthPass(R.t0, R.sm0);
+    R.local = null; vrRenduLocal(true);
+  }
+  if (R.D.AO) {
+    const S = Math.max(half, 12) + 6, res = S > 120 ? 2048 : 1024, top = hm + 5, rng = top + 5;
+    const T = vrDepthTarget(res, false), m = vrOrtho([0, 1, 0], [cx, top - rng / 2, cz], S, rng / 2);
+    vrDepthPass(T, m);
+    const A = R.aoA && R.aoA.w === res ? R.aoA : vrColorTarget(res, res), Bt = R.aoB && R.aoB.w === res ? R.aoB : vrColorTarget(res, res), P = R.aoProg;
+    gl.useProgram(P.p); gl.disable(gl.DEPTH_TEST); gl.disable(gl.BLEND); gl.viewport(0, 0, res, res); vrBindFull(P); gl.activeTexture(gl.TEXTURE0); gl.uniform1i(P.u.dt, 0);
+    gl.uniform1f(P.u.top, top); gl.uniform1f(P.u.rng, rng);
+    const step = Math.max(1, 0.35 / (2 * S / res)) / res;    // pas de flou ≈ 35 cm (rayon ≈ 1,4 m)
+    const pass = (src, dst, n, dir) => { gl.bindFramebuffer(gl.FRAMEBUFFER, dst.fb); gl.bindTexture(gl.TEXTURE_2D, src); gl.uniform1f(P.u.pass, n); gl.uniform2fv(P.u.dir, dir); gl.drawArrays(gl.TRIANGLES, 0, 3); };
+    pass(T.tex, A, 0, [0, 0]); pass(A.tex, Bt, 1, [step, 0]); pass(Bt.tex, A, 1, [0, step]);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.deleteTexture(T.tex); gl.deleteFramebuffer(T.fb);
+    R.aoA = A; R.aoB = Bt;
+    // texture ↔ monde (vue de dessus, « haut » = −z) : u = (x − x0) / 2S, v = (z1 − z) / 2S
+    R.aor = [cx - S, cz + S, 1 / (2 * S), -1 / (2 * S)];
+  }
+}
+/** Carte d'ombre fine autour du visiteur (48 à 64 m), refaite seulement quand il s'en éloigne */
+function vrRenduLocal(force) {
+  const R = VR.R; if (!R || !R.D.SHADOW || VR.scene !== 'maquette') return;
+  const h = VR.head, r = R.res[1] >= 2048 ? 32 : 24, c = [Math.round(h[0] / 4) * 4, 0, Math.round(h[2] / 4) * 4];
+  if (!force && R.local && Math.hypot(c[0] - R.local[0], c[2] - R.local[2]) < 8) return;
+  if (VR.drone || VR.balloon) { if (!R.local || force) { R.sm1 = R.sm0; R.local = c; } return; }   // vue aérienne : la carte du site suffit
+  R.local = c; R.sm1 = vrOrtho(R.sun, [c[0], 4, c[2]], r, r + (VR.hmax || 3) + 20); vrDepthPass(R.t1, R.sm1);
+}
+/** Uniformes communs (soleil, ciel, brume, ombres, contact, lumières de nuit) */
+function vrLightUniforms(P, eye, fogd, now) {
+  const gl = VR.gl, R = VR.R, H = R.H;
+  gl.uniform3fv(P.u.eye, eye); gl.uniform3fv(P.u.sunD, R.sun); gl.uniform3fv(P.u.sunC, H.sun);
+  gl.uniform3fv(P.u.zen, H.zen); gl.uniform3fv(P.u.hor, H.hor); gl.uniform3fv(P.u.gnd, H.gnd);
+  gl.uniform3fv(P.u.fogc, R.D.SKY ? H.hor : VR_SKY.map(v => v * v)); gl.uniform1f(P.u.fogd, fogd); gl.uniform1f(P.u.tm, now); gl.uniform1f(P.u.nite, H.nite);
+  if (R.D.SHADOW) {
+    gl.uniformMatrix4fv(P.u.sm0, false, R.sm0); gl.uniformMatrix4fv(P.u.sm1, false, R.sm1 || R.sm0);
+    gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, R.t0.tex); gl.uniform1i(P.u.sh0, 2);
+    gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D, (R.sm1 && R.sm1 !== R.sm0 ? R.t1 : R.t0).tex); gl.uniform1i(P.u.sh1, 3);
+    if (P.u.shk) gl.uniform1f(P.u.shk, 1);
+  }
+  if (R.D.AO) { gl.activeTexture(gl.TEXTURE4); gl.bindTexture(gl.TEXTURE_2D, R.aoA.tex); gl.uniform1i(P.u.aot, 4); gl.uniform4fv(P.u.aor, R.aor); gl.uniform1f(P.u.aok, 1); }
+  if (R.D.NIGHT && P.u['lp[0]']) gl.uniform4fv(P.u['lp[0]'], R.light8);
+  if (P.u.det) { gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, R.det); gl.uniform1i(P.u.det, 1); }
+  gl.activeTexture(gl.TEXTURE0);
+}
+/** Lumières de nuit : les 8 plus proches du visiteur (recalculées 2 fois par seconde) */
+function vrNightLights(now) {
+  const R = VR.R; if (!R || !R.D.NIGHT || now - R.lightT < 0.5) return;
+  R.lightT = now;
+  const L = (VR.plan.lights || []).map(([x, y, z, r]) => [x, z, y, r]).sort((a, b) => (a[0] - VR.head[0]) ** 2 + (a[2] - VR.head[2]) ** 2 - (b[0] - VR.head[0]) ** 2 - (b[2] - VR.head[2]) ** 2);
+  R.light8.fill(0); for (let i = 0; i < Math.min(8, L.length); i++) R.light8.set([L[i][0], L[i][1], L[i][2], L[i][3]], i * 4); for (let i = L.length; i < 8; i++) R.light8[i * 4 + 3] = 0.001;
+}
+/** Sol : un grand carré qui suit le visiteur (gazon fin, image du plan, ombres) */
+function vrDrawGround(vp, eye, fogd, now) {
+  const gl = VR.gl, R = VR.R, P = R.ground, Rr = 1500, gx = Math.round(VR.head[0] / 50) * 50, gz = Math.round(VR.head[2] / 50) * 50;
+  if (R.gpos !== gx + ',' + gz) { R.gpos = gx + ',' + gz; gl.bindBuffer(gl.ARRAY_BUFFER, R.gbuf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([gx - Rr, -0.025, gz - Rr, gx + Rr, -0.025, gz - Rr, gx + Rr, -0.025, gz + Rr, gx - Rr, -0.025, gz - Rr, gx + Rr, -0.025, gz + Rr, gx - Rr, -0.025, gz + Rr]), gl.STATIC_DRAW); }
+  gl.useProgram(P.p); gl.uniformMatrix4fv(P.u.vp, false, vp); vrLightUniforms(P, eye, fogd, now);
+  const night = R.H.nite > 0.5; gl.uniform3fv(P.u.gc, night ? [0.11, 0.13, 0.09] : [0.27, 0.34, 0.19]);
+  const r = VR.plan.rect, pt = VR.planTex;
+  gl.uniform1f(P.u.hp, pt && r ? 1 : 0);
+  if (pt && r) { gl.activeTexture(gl.TEXTURE5); gl.bindTexture(gl.TEXTURE_2D, pt); gl.uniform1i(P.u.pt, 5); gl.uniform4fv(P.u.pr, [r.x, r.y, 1 / r.w, 1 / r.h]); gl.activeTexture(gl.TEXTURE0); }
+  else { gl.activeTexture(gl.TEXTURE5); gl.bindTexture(gl.TEXTURE_2D, VR.texWhite); gl.uniform1i(P.u.pt, 5); gl.activeTexture(gl.TEXTURE0); }
+  gl.bindBuffer(gl.ARRAY_BUFFER, R.gbuf); gl.enableVertexAttribArray(P.a.p); gl.vertexAttribPointer(P.a.p, 3, gl.FLOAT, false, 12, 0);
+  gl.drawArrays(gl.TRIANGLES, 0, 6);
+}
+/** Maillage compact (20 octets) : position, couleur, normale, matériau */
+function vrBindMesh20(M, buf) {
+  const gl = VR.gl;
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.enableVertexAttribArray(M.a.p); gl.vertexAttribPointer(M.a.p, 3, gl.FLOAT, false, 20, 0);
+  gl.enableVertexAttribArray(M.a.c); gl.vertexAttribPointer(M.a.c, 4, gl.UNSIGNED_BYTE, true, 20, 12);
+  if (M.a.nr != null && M.a.nr >= 0) { gl.enableVertexAttribArray(M.a.nr); gl.vertexAttribPointer(M.a.nr, 3, gl.BYTE, true, 20, 16); }
+  if (M.a.mt != null && M.a.mt >= 0) { gl.enableVertexAttribArray(M.a.mt); gl.vertexAttribPointer(M.a.mt, 1, gl.UNSIGNED_BYTE, false, 20, 19); }
+}
+/** Format des packs v1 (7 flottants, couleur déjà éclairée) → 20 octets, normale de la face, matériau neutre */
+function vrPackMesh(f) {
+  const n = Math.floor(f.length / 7), buf = new ArrayBuffer(n * 20), F = new Float32Array(buf), U = new Uint8Array(buf), I = new Int8Array(buf);
+  for (let t = 0; t + 2 < n; t += 3) {
+    const a = t * 7, b = a + 7, c = b + 7, e1 = [f[b] - f[a], f[b + 1] - f[a + 1], f[b + 2] - f[a + 2]], e2 = [f[c] - f[a], f[c + 1] - f[a + 1], f[c + 2] - f[a + 2]], nn = V3.norm(V3.cross(e1, e2));
+    for (let k = 0; k < 3; k++) {
+      const s = (t + k) * 7, i = t + k, o = i * 5, B = i * 20;
+      F[o] = f[s]; F[o + 1] = f[s + 1]; F[o + 2] = f[s + 2];
+      U[B + 12] = f[s + 3] * 255 + 0.5; U[B + 13] = f[s + 4] * 255 + 0.5; U[B + 14] = f[s + 5] * 255 + 0.5; U[B + 15] = f[s + 6] * 255 + 0.5;
+      I[B + 16] = nn[0] * 127; I[B + 17] = nn[1] * 127; I[B + 18] = nn[2] * 127; U[B + 19] = 0;
+    }
+  }
+  return buf;
+}
+
+/* ---------- Image finale : halo, définition variable, lentilles, franges ---------- */
+/** Faut-il dessiner dans une image intermédiaire ? (lentilles, halo, fluidité, franges) */
+const vrNeedsFbo = () => !!(VR.lens || (VR.R && (VR.R.fx.halo || VR.R.fx.fluidite)));
+/** Fluidité : la définition suit la cadence réelle (par paliers de 10 %, jamais sous 60 %) */
+function vrAdaptScale(dt, now) {
+  const R = VR.R; if (!R || !R.fx.fluidite) return 1;
+  if (now - VR.t0 / 1000 < 2) { R.tMin = Math.min(R.tMin, Math.max(1 / 120, dt)); return R.scale; }
+  const tgt = Math.min(1 / 30, Math.max(1 / 120, R.tMin));
+  R.ft = R.ft ? R.ft * 0.94 + dt * 0.06 : dt;
+  if (now - R.lastAdj > 1.2) {
+    if (R.ft > tgt * 1.18 && R.scale > 0.6) { R.scale = Math.round((R.scale - 0.1) * 10) / 10; R.lastAdj = now; }
+    else if (R.ft < tgt * 1.04 && R.scale < 1 && now - R.lastAdj > 4) { R.scale = Math.round((R.scale + 0.1) * 10) / 10; R.lastAdj = now; }
+  }
+  return R.scale;
+}
+function vrBloom(fbo) {
+  const R = VR.R, gl = VR.gl, w = Math.max(16, fbo.w >> 2), h = Math.max(16, fbo.h >> 2);
+  if (!R.b1 || R.b1.w !== w || R.b1.h !== h) { R.b1 = vrColorTarget(w, h); R.b2 = vrColorTarget(w, h); }
+  gl.disable(gl.DEPTH_TEST); gl.disable(gl.BLEND); gl.disable(gl.SCISSOR_TEST); gl.viewport(0, 0, w, h); gl.activeTexture(gl.TEXTURE0);
+  let P = R.bright; gl.useProgram(P.p); vrBindFull(P); gl.uniform1i(P.u.t, 0); gl.uniform2f(P.u.px, 1 / fbo.w, 1 / fbo.h);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, R.b1.fb); gl.bindTexture(gl.TEXTURE_2D, fbo.tex); gl.drawArrays(gl.TRIANGLES, 0, 3);
+  P = R.blur; gl.useProgram(P.p); vrBindFull(P); gl.uniform1i(P.u.t, 0);
+  for (let i = 0; i < 2; i++) {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, R.b2.fb); gl.bindTexture(gl.TEXTURE_2D, R.b1.tex); gl.uniform2f(P.u.dir, (1.5 + i) / w, 0); gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, R.b1.fb); gl.bindTexture(gl.TEXTURE_2D, R.b2.tex); gl.uniform2f(P.u.dir, 0, (1.5 + i) / h); gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  return R.b1.tex;
+}
+/** Passe finale : chaque œil (ou la vue unique) depuis l'image intermédiaire */
+function vrPostPass(fbo, W, H, vw, sh, asp, stereo) {
+  const gl = VR.gl, R = VR.R, bl = R && R.fx.halo ? vrBloom(fbo) : null;
+  const P = R ? R.post : VR.prog.lens;
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  gl.viewport(0, 0, W, H); gl.clearColor(0, 0, 0, 1); gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.useProgram(P.p); gl.disable(gl.DEPTH_TEST); gl.disable(gl.BLEND);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, fbo.tex); gl.uniform1i(P.u.t, 0);
+  if (R) { gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, bl || fbo.tex); gl.uniform1i(P.u.bl, 1); gl.activeTexture(gl.TEXTURE0); gl.uniform1f(P.u.bs, bl ? (R.H.nite > 0.5 ? 0.8 : 0.3) : 0);
+    gl.uniform1f(P.u.ca, VR.lens && R.fx.couleurs ? 0.018 + VR.lens[0] * 0.03 : 0); gl.uniform1f(P.u.hw, stereo ? 0.5 : 1); }
+  gl.uniform1f(P.u.asp, asp); gl.uniform2f(P.u.k, VR.lens ? VR.lens[0] : 0, VR.lens ? VR.lens[1] : 0);
+  vrBindFull(P);
+  if (!stereo) { gl.uniform1f(P.u.off, 0); gl.drawArrays(gl.TRIANGLES, 0, 3); return; }
+  gl.enable(gl.SCISSOR_TEST);
+  for (let i = 0; i < 2; i++) { const e = i ? 1 : -1; gl.scissor(i * vw, 0, vw, H); gl.viewport(i * vw + e * sh, 0, vw, H); gl.uniform1f(P.u.off, i * 0.5); gl.drawArrays(gl.TRIANGLES, 0, 3); }
+  gl.disable(gl.SCISSOR_TEST);
+}
+
+/* ---------- Anticipation des mouvements de tête ---------- */
+/** Vitesse de rotation mesurée entre deux signaux des capteurs (rad/s, repère monde), lissée */
+function vrTrackOmega(q, t) {
+  if (VR.devPrev && VR.devPrevT) {
+    const dt = (t - VR.devPrevT) / 1000;
+    if (dt > 0.002 && dt < 0.1) {
+      const p = VR.devPrev, inv = [-p[0], -p[1], -p[2], p[3]]; let d = Q.mul(q, inv); if (d[3] < 0) d = d.map(v => -v);
+      const s = Math.hypot(d[0], d[1], d[2]), ang = 2 * Math.atan2(s, d[3]), w = s > 1e-6 ? [d[0] / s * ang / dt, d[1] / s * ang / dt, d[2] / s * ang / dt] : [0, 0, 0];
+      VR.omega = VR.omega ? VR.omega.map((v, i) => v * 0.5 + w[i] * 0.5) : w;
+    }
+  }
+  VR.devPrev = q; VR.devPrevT = t;
+}
+/** Orientation anticipée de lead secondes (au plus 0,3 rad) */
+function vrPredict(q, lead) {
+  const w = VR.omega; if (!w) return q;
+  const sp = Math.hypot(w[0], w[1], w[2]); if (sp < 0.05) return q;
+  const ang = Math.min(0.3, sp * lead), ax = [w[0] / sp, w[1] / sp, w[2] / sp];
+  return Q.mul(Q.axis(ax, ang), q);
+}
+
+/* ---------- Réglages : section « Rendu graphique » de l'accueil ---------- */
+function vrRenduSettingsUi(set) {
+  const box = el('div', { class: 'fx-list' });
+  const refresh = () => {
+    const fx = vrFx(set);
+    box.replaceChildren(...VR_FX_KEYS.map(([k, lab, tip]) => el('label', { class: 'fx-row', title: tip },
+      el('input', { type: 'checkbox', checked: !!fx[k], onchange: e => { set.fx = { ...vrFx(set), [k]: e.target.checked ? 1 : 0 }; set.rendu = 'perso'; sel.value = 'perso'; vrSaveSettings(set); } }),
+      el('span', {}, lab, el('small', {}, tip)))));
+  };
+  const sel = el('select', { id: 'set-rendu', onchange: e => { set.rendu = e.target.value; if (set.rendu !== 'perso') delete set.fx; vrSaveSettings(set); refresh(); } },
+    [['leger', 'Léger (vieux téléphone, autonomie)'], ['equilibre', 'Équilibré (conseillé)'], ['haute', 'Haute qualité (téléphone récent)'], ['perso', 'Personnalisé']].map(([v, t]) => { const o = el('option', { value: v }, t); if (set.rendu === v) o.selected = true; return o; }));
+  const heure = el('select', { id: 'set-heure', onchange: e => { set.heure = e.target.value; vrSaveSettings(set); } },
+    Object.entries(VR_HEURES).map(([v, h]) => { const o = el('option', { value: v }, h.label); if (set.heure === v) o.selected = true; return o; }));
+  refresh();
+  return el('details', { class: 'vr-set', id: 'vrFx' }, el('summary', {}, '✨ Rendu graphique'),
+    el('label', {}, 'Niveau', sel), el('label', {}, 'Heure de la visite', heure),
+    el('p', { class: 'hint' }, 'Chaque option se coupe séparément. Les ombres et les ombres de contact sont calculées une fois au chargement : elles coûtent peu pendant la visite. Le halo est l’option la plus gourmande.'),
+    box);
+}
 
 /* ---------- Démarrage ---------- */
 $('#emblem').innerHTML = metatorEmblem('emblem');
