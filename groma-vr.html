@@ -1,0 +1,2255 @@
+<!DOCTYPE html>
+<!--
+  GROMA VR — visite en casque VR d'un pack « .groma-vr » créé dans Groma PC (bouton « 🥽 Pack VR »).
+  • Outil autonome : à poser seul sur une adresse https (les capteurs de mouvement l'exigent), avec
+    groma-vr.webmanifest, groma-vr-sw.js et les deux icônes groma-vr-icon-*.png (application installable, hors ligne).
+  • Le pack est choisi sur le téléphone à chaque visite (copié par câble, e-mail, Bluetooth…) : rien n'est conservé.
+  • Casque type Cardboard (vue stéréo, suivi de la tête) ou « visite sans casque » (glisser le doigt pour regarder).
+-->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#16233d">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Groma VR</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22 aria-hidden=%22true%22%3E%3Ccircle cx=%2232%22 cy=%2232%22 r=%2231%22 fill=%22%231d4f9c%22/%3E%3Ccircle cx=%2232%22 cy=%2232%22 r=%2228%22 fill=%22none%22 stroke=%22%23f2c14e%22 stroke-width=%222.2%22/%3E%3Cellipse cx=%229.9%22 cy=%2224.0%22 rx=%221.9%22 ry=%224.2%22 transform=%22rotate%2820 9.9 24.0%29%22 fill=%22%237cc35a%22/%3E%3Cellipse cx=%2254.1%22 cy=%2224.0%22 rx=%221.9%22 ry=%224.2%22 transform=%22rotate%28-20 54.1 24.0%29%22 fill=%22%237cc35a%22/%3E%3Cellipse cx=%228.5%22 cy=%2230.8%22 rx=%221.9%22 ry=%224.2%22 transform=%22rotate%283 8.5 30.8%29%22 fill=%22%237cc35a%22/%3E%3Cellipse cx=%2255.5%22 cy=%2230.8%22 rx=%221.9%22 ry=%224.2%22 transform=%22rotate%28-3 55.5 30.8%29%22 fill=%22%237cc35a%22/%3E%3Cellipse cx=%229.2%22 cy=%2237.7%22 rx=%221.9%22 ry=%224.2%22 transform=%22rotate%28-14 9.2 37.7%29%22 fill=%22%237cc35a%22/%3E%3Cellipse cx=%2254.8%22 cy=%2237.7%22 rx=%221.9%22 ry=%224.2%22 transform=%22rotate%2814 54.8 37.7%29%22 fill=%22%237cc35a%22/%3E%3Cellipse cx=%2211.9%22 cy=%2244.1%22 rx=%221.9%22 ry=%224.2%22 transform=%22rotate%28-31 11.9 44.1%29%22 fill=%22%237cc35a%22/%3E%3Cellipse cx=%2252.1%22 cy=%2244.1%22 rx=%221.9%22 ry=%224.2%22 transform=%22rotate%2831 52.1 44.1%29%22 fill=%22%237cc35a%22/%3E%3Cellipse cx=%2216.3%22 cy=%2249.5%22 rx=%221.9%22 ry=%224.2%22 transform=%22rotate%28-48 16.3 49.5%29%22 fill=%22%237cc35a%22/%3E%3Cellipse cx=%2247.7%22 cy=%2249.5%22 rx=%221.9%22 ry=%224.2%22 transform=%22rotate%2848 47.7 49.5%29%22 fill=%22%237cc35a%22/%3E%3Cellipse cx=%2222.1%22 cy=%2253.3%22 rx=%221.9%22 ry=%224.2%22 transform=%22rotate%28-65 22.1 53.3%29%22 fill=%22%237cc35a%22/%3E%3Cellipse cx=%2241.9%22 cy=%2253.3%22 rx=%221.9%22 ry=%224.2%22 transform=%22rotate%2865 41.9 53.3%29%22 fill=%22%237cc35a%22/%3E%0A%3Cpath d=%22M31 21v29%22 stroke=%22%23c98b45%22 stroke-width=%223.4%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M28 50h6l-3 6z%22 fill=%22%23f2c14e%22/%3E%0A%3Cg style=%22transform-origin:17px 20px%22%3E%3Cpath d=%22M17 20v14%22 stroke=%22%23e8eef8%22 stroke-width=%221%22/%3E%3Cpath d=%22M15 34h4l-2 4z%22 fill=%22%23e63946%22/%3E%3C/g%3E%0A%3Cg style=%22transform-origin:47px 15px%3Banimation-delay:-.7s%22%3E%3Cpath d=%22M47 15v14%22 stroke=%22%23e8eef8%22 stroke-width=%221%22/%3E%3Cpath d=%22M45 29h4l-2 4z%22 fill=%22%23e63946%22/%3E%3C/g%3E%0A%3Cg style=%22transform-origin:33px 11px%3Banimation-delay:-1.2s%22%3E%3Cpath d=%22M33 11v12%22 stroke=%22%23e8eef8%22 stroke-width=%221%22/%3E%3Cpath d=%22M31 23h4l-2 4z%22 fill=%22%23e63946%22/%3E%3C/g%3E%0A%3Cpath d=%22M17 20L47 15%22 stroke=%22%23f2a019%22 stroke-width=%223.4%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M33 11l-2 14%22 stroke=%22%23ffc94a%22 stroke-width=%223%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2232%22 cy=%2217.6%22 r=%222.6%22 fill=%22%23b8740a%22/%3E%3C/svg%3E">
+<style>
+/* Groma VR — page d'accueil */
+:root { --ink: #16233d; --muted: #61708c; --line: #e3e8f0; --bg: #eef5fc; --accent: #2f7fdc; --accent2: #1d56a0; --green: #3fb04a; --green2: #2a7f33; --brand: #1d4f9c;
+  --round: ui-rounded, "SF Pro Rounded", "Nunito", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--ink); font: 16px/1.4 var(--round); }
+button { font: inherit; color: inherit; border: none; background: none; cursor: pointer; }
+select { font: inherit; width: 100%; padding: 12px 14px; border: 2px solid var(--line); border-radius: 14px; background: #fff; color: var(--ink); }
+.hidden { display: none !important; }
+.home { min-height: 100dvh; display: flex; flex-direction: column; }
+.hero { position: relative; overflow: hidden; padding: calc(16px + env(safe-area-inset-top)) 18px 0; min-height: 300px; background: linear-gradient(180deg, #16233d 0%, #2b4c86 45%, #7cc4f2 82%, #eef5fc 100%); color: #fff; }
+.hero .stars { position: absolute; inset: 0; pointer-events: none; background-image: radial-gradient(1.5px 1.5px at 12% 18%, #fff 50%, transparent), radial-gradient(1px 1px at 32% 8%, #fff 50%, transparent), radial-gradient(1.5px 1.5px at 66% 14%, #fff 50%, transparent), radial-gradient(1px 1px at 82% 26%, #fff 50%, transparent), radial-gradient(1px 1px at 48% 30%, #dbeafe 50%, transparent); opacity: .8; }
+.brand { position: relative; display: flex; align-items: center; gap: 12px; }
+.brand .emblem { width: 62px; height: 62px; flex: none; filter: drop-shadow(0 4px 0 rgba(0,0,0,.25)); }
+.brand h1 { margin: 0; font: 900 32px/1 var(--round); letter-spacing: -.01em; }
+.brand h1 b { color: #ffc94a; }
+.brand h1 small { display: inline-block; margin-left: 6px; padding: 3px 9px; border-radius: 10px; background: #f2a019; color: #fff; font-size: 13px; vertical-align: 6px; letter-spacing: .04em; }
+.brand p { margin: 4px 0 0; font-size: 13.5px; color: #cfe1ff; }
+.scene { position: relative; max-width: 460px; margin: 6px auto -16px; }
+.scene svg { width: 100%; height: auto; display: block; }
+.panel { position: relative; flex: 1; padding: 6px 18px calc(22px + env(safe-area-inset-bottom)); max-width: 520px; width: 100%; margin: 0 auto; }
+.big { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 58px; margin-bottom: 12px; padding: 12px 16px; border-radius: 18px; font-size: 18px; font-weight: 800; background: #fff; color: var(--ink); border: 2px solid var(--line); box-shadow: 0 5px 0 #d3dbe6; }
+.big:active { transform: translateY(3px); box-shadow: 0 2px 0 #d3dbe6; }
+.big.go, .big.primary { color: #fff; border-color: transparent; background: var(--c); box-shadow: 0 5px 0 var(--c2); }
+.big.go { --c: var(--green); --c2: var(--green2); font-size: 19px; }
+.big.primary { --c: var(--accent); --c2: var(--accent2); }
+.lnk { display: block; margin: 4px auto 0; padding: 8px; color: var(--accent); font-weight: 700; text-decoration: underline; }
+.tips { margin: 6px 0 14px; padding: 12px 14px; list-style: none; border-radius: 16px; background: #fff; font-size: 14px; line-height: 1.45; box-shadow: 0 4px 0 #d8e3f0; }
+.tips li + li { margin-top: 6px; }
+.note { margin: 10px 4px 0; font-size: 12.5px; color: var(--muted); text-align: center; }
+#packCard:empty { display: none; }
+#packCard { margin-bottom: 14px; padding: 14px; border-radius: 20px; background: #fff; box-shadow: 0 4px 0 #d8e3f0, 0 8px 18px rgba(16,42,84,.06); animation: rise .3s; }
+.pk-head b { display: block; font-size: 20px; font-weight: 900; }
+.pk-head span { color: var(--muted); font-size: 13.5px; }
+.pk-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 12px; }
+.pk-chips span { padding: 3px 9px; border-radius: 10px; background: var(--bg); font-size: 13px; font-weight: 700; }
+.home.loaded #btnOpen, .home.loaded .tips { display: none; }
+.vr-field { display: block; margin-bottom: 12px; font-weight: 800; font-size: 14px; color: var(--muted); }
+.vr-field select { margin-top: 6px; }
+.vr-check { display: flex; align-items: center; gap: 10px; margin: 0 2px 6px; font-size: 14.5px; font-weight: 700; }
+.vr-check input { width: 22px; height: 22px; flex: none; accent-color: var(--green); }
+.toast { position: fixed; left: 16px; right: 16px; top: calc(16px + env(safe-area-inset-top)); z-index: 60; padding: 14px 18px; border-radius: 18px; background: #16233d; color: #fff; text-align: center; font-weight: 700; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+.toast.error { background: #b91c1c; }
+.busy { position: fixed; inset: 0; z-index: 70; display: flex; flex-direction: column; gap: 16px; align-items: center; justify-content: center; background: rgba(15,30,60,.6); color: #fff; font-weight: 800; }
+.busy::before { content: ''; width: 46px; height: 46px; border-radius: 50%; border: 5px solid rgba(255,255,255,.3); border-top-color: #ffc94a; animation: spin .8s linear infinite; }
+.busy:empty { display: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes rise { from { transform: translateY(10px); opacity: 0; } }
+@keyframes fade { from { opacity: 0; } }
+/* Lecteur VR */
+.vr-screen { position: fixed; inset: 0; z-index: 50; background: #000; touch-action: none; user-select: none; -webkit-user-select: none; }
+.vr-screen canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#vrHud { pointer-events: none; }
+.vr-quit { position: absolute; top: calc(10px + env(safe-area-inset-top)); right: calc(10px + env(safe-area-inset-right)); z-index: 2; width: 44px; height: 44px; border-radius: 50%; background: rgba(0,0,0,.45); color: #fff; font-size: 20px; font-weight: 900; }
+.vr-screen.stereo .vr-quit { top: 6px; right: auto; left: 50%; transform: translateX(-50%); width: 34px; height: 34px; font-size: 15px; opacity: .55; }
+.vr-divider { position: absolute; top: 46px; bottom: 0; left: 50%; width: 2px; margin-left: -1px; background: rgba(255,255,255,.12); pointer-events: none; }
+.vr-mono-hint { position: absolute; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom)); transform: translateX(-50%); padding: 8px 16px; border-radius: 18px; background: rgba(0,0,0,.45); color: #fff; font-size: 13.5px; font-weight: 700; white-space: nowrap; pointer-events: none; animation: fade 4s 6s forwards reverse; }
+/* Réglages du casque et télécommande */
+.vr-set { margin: 4px 0 10px; padding: 10px 14px; border-radius: 16px; background: var(--bg); }
+.vr-set summary { cursor: pointer; font-weight: 900; font-size: 15px; padding: 4px 0; }
+.vr-set label { display: block; margin: 10px 0 2px; font-weight: 800; font-size: 13.5px; color: var(--muted); }
+.vr-set label select { margin-top: 4px; padding: 9px 12px; font-size: 14.5px; }
+.vr-set input[type=range] { width: calc(100% - 70px); vertical-align: middle; accent-color: var(--accent); margin-top: 6px; }
+.vr-set output { display: inline-block; width: 64px; text-align: right; font-weight: 900; color: var(--ink); }
+.vr-set .hint { margin: 4px 0 0; font-size: 12.5px; color: var(--muted); line-height: 1.4; }
+.remote-test { margin: 10px 0; padding: 14px; border-radius: 14px; background: #16233d; color: #fff; font-weight: 800; text-align: center; min-height: 22px; }
+.remote-test.flash { animation: flash .5s; }
+@keyframes flash { from { background: #3fb04a; } }
+.remote-map { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.6; }
+/* Rendu graphique : options à cocher */
+.fx-list { margin-top: 8px; }
+.vr-set label.fx-row { display: flex; align-items: flex-start; gap: 10px; margin: 8px 0 0; color: var(--ink); font-size: 14px; font-weight: 800; }
+.fx-row input { width: 22px; height: 22px; flex: none; margin: 1px 0 0; accent-color: var(--green); }
+.fx-row small { display: block; font-weight: 600; font-size: 12px; color: var(--muted); line-height: 1.35; }
+</style>
+</head>
+<body>
+<section id="home" class="home">
+  <header class="hero">
+    <div class="stars" aria-hidden="true"></div>
+    <div class="brand"><span id="emblem"></span>
+      <div><h1>Gro<b>ma</b><small>VR</small></h1><p>Visitez le site en réalité virtuelle</p></div></div>
+    <div class="scene" id="scene" aria-hidden="true"></div>
+  </header>
+  <main class="panel">
+    <div id="packCard"></div>
+    <button id="btnOpen" class="big primary">📂 Ouvrir un pack VR</button>
+    <ul class="tips">
+      <li><b>1.</b> Dans Groma sur le PC : bouton « 🥽 Pack VR ». Copiez le fichier « .groma-vr » sur ce téléphone.</li>
+      <li><b>2.</b> Touchez « Ouvrir un pack VR » et choisissez-le (souvent dans Téléchargements).</li>
+      <li><b>3.</b> « Lancer dans le casque », puis placez le téléphone dans le casque.</li>
+      <li><b>👀 Avancer :</b> regardez le sol, la cible se remplit… vous y êtes. <b>⬇ Menu :</b> baissez la tête.</li>
+      <li><b>🎈 Montgolfière :</b> baissez la tête, « Montgolfière » : on s’envole et on dérive vers où l’on regarde.</li>
+      <li><b>🎮 Télécommande Bluetooth :</b> OK pour valider, ↑ ↓ pour avancer, ← → pour tourner (essai dans « Réglages » une fois le pack ouvert).</li>
+    </ul>
+    <p class="note">Le pack n’est pas conservé : il est relu à chaque visite. Rien ne quitte le téléphone.</p>
+  </main>
+</section>
+<div id="toast" class="toast hidden"></div>
+<div id="busy" class="busy"></div>
+<input id="packInput" type="file" accept=".groma-vr,.metator-vr,.zip,application/zip,application/octet-stream" hidden>
+<script>
+'use strict';
+/* ======================================================================
+   Les instruments de l'arpenteur romain (agrimensor), dessinés en isométrique pour les écrans de lancement :
+   groma (angles droits), chorobate (niveau à eau), dioptre (visées), decempeda (perche de 10 pieds),
+   fil à plomb (perpendiculum), odomètre (compteur de distance) et cadran solaire.
+   Chaque fonction reçoit une projection P(i, j, z) → [x, y] et T, la taille d'une unité en pixels.
+   ====================================================================== */
+const RT = {
+  mix(hex, k) { const n = parseInt(hex.slice(1), 16), f = c => Math.max(0, Math.min(255, Math.round(c + (k > 0 ? (255 - c) * k : c * k)))); return `rgb(${f(n >> 16)},${f((n >> 8) & 255)},${f(n & 255)})`; },
+  pts: a => a.map(p => p.map(v => v.toFixed(1)).join(',')).join(' '),
+  line: (a, b, col, w, extra = '') => `<line x1="${a[0].toFixed(1)}" y1="${a[1].toFixed(1)}" x2="${b[0].toFixed(1)}" y2="${b[1].toFixed(1)}" stroke="${col}" stroke-width="${w}" stroke-linecap="round"${extra}/>`,
+  /** pavé : dessus et deux faces visibles */
+  box(P, i, j, w, d, h, col, z = 0) {
+    const A = P(i, j + d, z), B = P(i + w, j + d, z), C = P(i + w, j, z), At = P(i, j + d, z + h), Bt = P(i + w, j + d, z + h), Ct = P(i + w, j, z + h), Dt = P(i, j, z + h);
+    return `<polygon points="${RT.pts([A, B, Bt, At])}" fill="${RT.mix(col, -0.12)}"/><polygon points="${RT.pts([B, C, Ct, Bt])}" fill="${RT.mix(col, -0.3)}"/><polygon points="${RT.pts([Dt, Ct, Bt, At])}" fill="${RT.mix(col, 0.15)}"/>`;
+  },
+  /** cercle horizontal (plateau) ou vertical (roue, axe le long de j) */
+  ring(P, ci, cj, cz, r, vertical, n = 28) { return Array.from({ length: n }, (_, k) => { const t = k / n * Math.PI * 2; return vertical ? P(ci + r * Math.cos(t), cj, cz + r * Math.sin(t)) : P(ci + r * Math.cos(t), cj + r * Math.sin(t), cz); }); },
+  shadow: (p, rx, ry) => `<ellipse cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" rx="${rx}" ry="${ry}" fill="rgba(0,0,0,.18)"/>`,
+  plumb(top, len, T, delay = 0) {   // fil et plomb qui se balancent
+    const s = T / 34;
+    return `<g class="rt-swing" style="transform-origin:${top[0].toFixed(1)}px ${top[1].toFixed(1)}px;animation-delay:-${delay}s">${RT.line(top, [top[0], top[1] + len], '#33415c', 1.1 * s)}<path d="M${(top[0] - 3 * s).toFixed(1)} ${(top[1] + len).toFixed(1)}h${6 * s}l${-3 * s} ${6 * s}z" fill="#e63946"/></g>`;
+  },
+};
+const ROMAN_TOOLS = {
+  /** la groma : bâton, bras décalé, croix à quatre fils à plomb */
+  groma(P, i, j, T, h = 2.3, arm = 0.7) {
+    const s = T / 34, foot = P(i, j, 0), top = P(i, j, h), hub = P(i + 0.18, j + 0.18, h + 0.12);
+    const ends = [[arm, 0], [-arm, 0], [0, arm], [0, -arm]].map(([dx, dy]) => P(i + 0.18 + dx, j + 0.18 + dy, h + 0.12));
+    let g = RT.shadow(foot, 16 * s, 7 * s) + RT.line(foot, top, '#8a5a2b', 6 * s) + RT.line(top, hub, '#8a5a2b', 4.5 * s);
+    ends.forEach((e, k) => { g += RT.plumb(e, 46 * s, T, (k * 0.55).toFixed(2)); });
+    return g + RT.line(ends[0], ends[1], '#f2a019', 6 * s) + RT.line(ends[2], ends[3], '#ffc94a', 6 * s) + `<circle cx="${hub[0].toFixed(1)}" cy="${hub[1].toFixed(1)}" r="${4 * s}" fill="#b8740a"/>`;
+  },
+  /** le chorobate : long banc de niveau, rigole d'eau sur le dessus, fils à plomb sur les côtés */
+  chorobate(P, i, j, T, L = 2.2) {
+    const s = T / 34, w = 0.22, H = 0.62, wood = '#a0672e';
+    let g = RT.shadow(P(i + L / 2, j + w / 2, 0), L * T * 0.72, 9 * s);
+    for (const di of [0.12, L - 0.12]) for (const dj of [0, w]) g += RT.line(P(i + di, j + dj, 0), P(i + di, j + dj, H), RT.mix(wood, -0.2), 4 * s);
+    for (const di of [0.12, L - 0.12]) g += RT.line(P(i + di, j + w, 0.12), P(i + (di < 1 ? di + 0.45 : di - 0.45), j + w, H), RT.mix(wood, -0.1), 3 * s);
+    g += RT.box(P, i, j, L, w, 0.12, wood, H);
+    g += `<polygon points="${RT.pts([P(i + 0.25, j + 0.07, H + 0.121), P(i + L - 0.25, j + 0.07, H + 0.121), P(i + L - 0.25, j + w - 0.07, H + 0.121), P(i + 0.25, j + w - 0.07, H + 0.121)])}" fill="#5bbcf0" class="rt-water"/>`;
+    for (const di of [0.32, L - 0.32]) { const t = P(i + di, j + w + 0.02, H); g += RT.plumb(t, 0.42 * T, T, di < 1 ? 0.3 : 1.1); g += RT.line(P(i + di - 0.06, j + w + 0.02, 0.12), P(i + di + 0.06, j + w + 0.02, 0.12), '#f2f2f2', 2 * s); }
+    return g;
+  },
+  /** la dioptre : trépied, colonne, plateau gradué et alidade qui tourne lentement */
+  dioptre(P, i, j, T) {
+    const s = T / 34, apex = P(i, j, 1.0), r = 0.38, bronze = '#c9933f';
+    let g = RT.shadow(P(i, j, 0), 20 * s, 8 * s);
+    for (const a of [0.4, 2.5, 4.6]) g += RT.line(P(i + r * Math.cos(a), j + r * Math.sin(a), 0), apex, '#7a5532', 3.4 * s);
+    g += RT.line(apex, P(i, j, 1.28), '#7a5532', 4.5 * s);
+    const disc = RT.ring(P, i, j, 1.3, 0.3, false);
+    g += `<polygon points="${RT.pts(disc)}" fill="${bronze}" stroke="${RT.mix(bronze, -0.35)}" stroke-width="${1.5 * s}"/>`;
+    for (let k = 0; k < 12; k++) { const t = k / 12 * Math.PI * 2; g += RT.line(P(i + 0.24 * Math.cos(t), j + 0.24 * Math.sin(t), 1.3), P(i + 0.29 * Math.cos(t), j + 0.29 * Math.sin(t), 1.3), '#6b4a1a', 1 * s); }
+    const c = P(i, j, 1.33);
+    g += `<g class="rt-turn" style="transform-origin:${c[0].toFixed(1)}px ${c[1].toFixed(1)}px">${RT.line(P(i - 0.32, j + 0.1, 1.33), P(i + 0.32, j - 0.1, 1.33), '#5b3b12', 3 * s)}${RT.line(P(i - 0.3, j + 0.09, 1.33), P(i - 0.3, j + 0.09, 1.48), '#5b3b12', 2.4 * s)}${RT.line(P(i + 0.3, j - 0.09, 1.33), P(i + 0.3, j - 0.09, 1.48), '#5b3b12', 2.4 * s)}</g>`;
+    return g;
+  },
+  /** l'odomètre : chariot, grande roue et boîte à cailloux qui compte les milles */
+  odometre(P, i, j, T) {
+    const s = T / 34, R = 0.34, body = '#b5793a';
+    let g = RT.shadow(P(i + 0.35, j + 0.25, 0), 26 * s, 9 * s);
+    g += `<g class="rt-wheel">${[j, j + 0.5].map(jj => { const W = RT.ring(P, i + 0.35, jj, R, R, true); return `<polygon points="${RT.pts(W)}" fill="none" stroke="#5b3b12" stroke-width="${3 * s}"/>` + [0, 1, 2, 3].map(k => { const t = k * Math.PI / 4; return RT.line(P(i + 0.35 - R * Math.cos(t), jj, R - R * Math.sin(t)), P(i + 0.35 + R * Math.cos(t), jj, R + R * Math.sin(t)), '#7a5532', 1.4 * s); }).join(''); }).join('')}</g>`;
+    g += RT.box(P, i + 0.05, j + 0.05, 0.6, 0.4, 0.3, body, R + 0.05);
+    g += `<polygon points="${RT.pts(RT.ring(P, i + 0.35, j + 0.25, R + 0.36, 0.1, false, 16))}" fill="#e7d3a8" stroke="#5b3b12" stroke-width="${s}"/>`;
+    g += RT.line(P(i - 0.05, j + 0.25, R + 0.2), P(i - 0.55, j + 0.25, R + 0.05), '#7a5532', 3 * s);
+    return g;
+  },
+  /** le fil à plomb (perpendiculum) sur son petit chevalet */
+  perpendiculum(P, i, j, T) {
+    const s = T / 34, base = P(i, j, 0), top = P(i, j, 1.05), arm = P(i + 0.3, j, 1.05);
+    return RT.shadow(base, 12 * s, 5 * s) + RT.line(base, top, '#8a5a2b', 4 * s) + RT.line(top, arm, '#8a5a2b', 3.4 * s) + RT.line(P(i - 0.15, j, 0), P(i + 0.15, j, 0), '#6b4a1a', 4 * s) + RT.plumb(arm, 0.75 * T, T, 0.8);
+  },
+  /** le cadran solaire (scaphé) sur son socle */
+  cadran(P, i, j, T) {
+    const s = T / 34;
+    let g = RT.shadow(P(i + 0.2, j + 0.2, 0), 18 * s, 7 * s) + RT.box(P, i, j, 0.4, 0.4, 0.55, '#e8e0cc');
+    const bowl = RT.ring(P, i + 0.2, j + 0.2, 0.56, 0.17, false, 20);
+    g += `<polygon points="${RT.pts(bowl)}" fill="#cfc4a8" stroke="#8a7f66" stroke-width="${s}"/>` + RT.line(P(i + 0.2, j + 0.2, 0.56), P(i + 0.2, j + 0.2, 0.8), '#5b3b12', 2 * s);
+    return g;
+  },
+  /** un arpenteur romain en tunique ; rod = il porte la decempeda (perche de 10 pieds, embouts de bronze) */
+  agrimensor(P, i, j, T, tunic = '#c0392b', rod = true, flip = false) {
+    const s = T / 34, m = P(i, j, 0), x = m[0], y = m[1], d = flip ? -1 : 1;
+    let g = `<g class="rt-bob">${RT.shadow([x, y], 11 * s, 4.5 * s)}`;
+    g += `<rect x="${x - 5.5 * s}" y="${y - 16 * s}" width="${4.5 * s}" height="${16 * s}" rx="${2 * s}" fill="#f1c6a0"/><rect x="${x + 1 * s}" y="${y - 16 * s}" width="${4.5 * s}" height="${16 * s}" rx="${2 * s}" fill="#f1c6a0"/>`;
+    g += `<path d="M${x - 6 * s} ${y + 0.5 * s}h${6 * s}M${x + 1 * s} ${y + 0.5 * s}h${6 * s}" stroke="#6b4a1a" stroke-width="${2.4 * s}" stroke-linecap="round"/>`;
+    g += `<path d="M${x - 9 * s} ${y - 13 * s}L${x - 7 * s} ${y - 38 * s}h${14 * s}L${x + 9 * s} ${y - 13 * s}z" fill="${tunic}"/><path d="M${x - 8 * s} ${y - 27 * s}h${16 * s}" stroke="#f2c14e" stroke-width="${2 * s}"/>`;
+    g += `<circle cx="${x}" cy="${y - 45 * s}" r="${7.5 * s}" fill="#f1c6a0"/><path d="M${x - 8 * s} ${y - 47 * s}a8 7 0 0 1 ${16 * s} 0z" fill="#5b3b12"/><circle cx="${x + d * 3 * s}" cy="${y - 44 * s}" r="${1.2 * s}" fill="#2f3a4a"/>`;
+    if (rod) {   // perche sur l'épaule, alternance de segments, embouts de bronze
+      const a = [x - d * 34 * s, y - 20 * s], b = [x + d * 30 * s, y - 52 * s];
+      for (let k = 0; k < 10; k++) { const t0 = k / 10, t1 = (k + 1) / 10; g += RT.line([a[0] + (b[0] - a[0]) * t0, a[1] + (b[1] - a[1]) * t0], [a[0] + (b[0] - a[0]) * t1, a[1] + (b[1] - a[1]) * t1], k % 2 ? '#e8d3a0' : '#9c6b30', 3.2 * s, ' stroke-linecap="butt"'); }
+      g += `<circle cx="${a[0]}" cy="${a[1]}" r="${2.4 * s}" fill="#c9933f"/><circle cx="${b[0]}" cy="${b[1]}" r="${2.4 * s}" fill="#c9933f"/>`;
+      g += RT.line([x + d * 4 * s, y - 35 * s], [x + d * 12 * s, y - 42 * s], '#f1c6a0', 4 * s);
+    } else g += RT.line([x - d * 6 * s, y - 33 * s], [x - d * 20 * s, y - 42 * s], '#f1c6a0', 4.5 * s);
+    return g + '</g>';
+  },
+};
+/** Animations des instruments (à insérer une fois dans la page) */
+const ROMAN_CSS = `@keyframes rtswing{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(7deg)}}@keyframes rtturn{0%,100%{transform:rotate(-25deg)}50%{transform:rotate(25deg)}}
+@keyframes rtbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}@keyframes rtwater{0%,100%{opacity:.75}50%{opacity:1}}
+.rt-swing{animation:rtswing 2.2s ease-in-out infinite}.rt-turn{animation:rtturn 7s ease-in-out infinite}.rt-bob{animation:rtbob 2.8s ease-in-out infinite}.rt-water{animation:rtwater 3s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.rt-swing,.rt-turn,.rt-bob,.rt-water{animation:none}}`;
+
+/** Petite scène autonome (Groma mobile, Groma VR) : un chantier d'arpenteurs sur un îlot d'herbe */
+function romanScene(width = 340, height = 190) {
+  const T = Math.min(width / 12.6, height / 9.4), OX = width / 2, OY = 2.75 * T;
+  const P = (i, j, z = 0) => [OX + (i - j) * T, OY + (i + j) * T / 2 - z * T];
+  const N = 6, E = [P(0, 0), P(N, 0), P(N, N), P(0, N)], drop = 0.55 * T;
+  let g = `<polygon points="${RT.pts([E[3], E[2], [E[2][0], E[2][1] + drop], [E[3][0], E[3][1] + drop]])}" fill="#a4723f"/><polygon points="${RT.pts([E[2], E[1], [E[1][0], E[1][1] + drop], [E[2][0], E[2][1] + drop]])}" fill="#7f5630"/>`;
+  g += `<polygon points="${RT.pts(E)}" fill="#7ccc5c"/>`;
+  for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) if ((i + j) % 2) g += `<polygon points="${RT.pts([P(i, j), P(i + 1, j), P(i + 1, j + 1), P(i, j + 1)])}" fill="#86d266"/>`;
+  // voie romaine en pavés et visée à angle droit
+  g += `<polygon points="${RT.pts([P(0, 4.1), P(N, 4.1), P(N, 4.9), P(0, 4.9)])}" fill="#c9bfa8"/>`;
+  for (let k = 0; k < 12; k++) g += RT.line(P(k * 0.5, 4.1), P(k * 0.5, 4.9), '#b0a68f', 1);
+  g += `<line x1="${P(3.4, 2.2)[0]}" y1="${P(3.4, 2.2)[1]}" x2="${P(5.6, 2.2)[0]}" y2="${P(5.6, 2.2)[1]}" stroke="#e63946" stroke-width="1.8" stroke-dasharray="6 4"/>`;
+  const items = [
+    [1.6, 1.4, ROMAN_TOOLS.chorobate(P, 0.4, 0.4, T, 2.1)],
+    [5.6, 3.2, ROMAN_TOOLS.groma(P, 3.4, 2.2, T, 2.0, 0.6)],
+    [7.8, 0, ROMAN_TOOLS.perpendiculum(P, 5.6, 2.2, T)],
+    [9.0, 0, ROMAN_TOOLS.dioptre(P, 5.0, 4.0, T)],
+    [5.4, 0, ROMAN_TOOLS.cadran(P, 0.6, 3.0, T)],
+    [8.6, 0, ROMAN_TOOLS.odometre(P, 1.6, 4.3, T)],
+    [6.3, 0, ROMAN_TOOLS.agrimensor(P, 4.0, 2.3, T, '#c0392b', false)],
+    [9.5, 0, ROMAN_TOOLS.agrimensor(P, 4.2, 5.3, T, '#2f6fc9', true, true)],
+  ].sort((a, b) => a[0] - b[0]);
+  return `<svg class="roman-scene" viewBox="0 0 ${width} ${height}" role="img" aria-label="Arpenteurs romains et leurs instruments">${g}${items.map(x => x[2]).join('')}</svg>`;
+}
+
+/** Emblème Groma : médaillon bleu cerclé d'or, couronne de laurier, groma au centre */
+function gromaEmblem(cls = 'groma-emblem') {
+  const leaf = (x, y, r) => `<ellipse cx="${x}" cy="${y}" rx="1.9" ry="4.2" transform="rotate(${r} ${x} ${y})" fill="#7cc35a"/>`;
+  let laurel = '';
+  for (let k = 0; k < 6; k++) { const a = 160 + k * 17, t = a * Math.PI / 180, x = 32 + 23.5 * Math.cos(t), y = 32 - 23.5 * Math.sin(t); laurel += leaf(x.toFixed(1), y.toFixed(1), (180 - a).toFixed(0)) + leaf((64 - x).toFixed(1), y.toFixed(1), (a - 180).toFixed(0)); }
+  return `<svg class="${cls}" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="31" fill="#1d4f9c"/><circle cx="32" cy="32" r="28" fill="none" stroke="#f2c14e" stroke-width="2.2"/>${laurel}
+<path d="M31 21v29" stroke="#c98b45" stroke-width="3.4" stroke-linecap="round"/><path d="M28 50h6l-3 6z" fill="#f2c14e"/>
+<g class="rt-swing" style="transform-origin:17px 20px"><path d="M17 20v14" stroke="#e8eef8" stroke-width="1"/><path d="M15 34h4l-2 4z" fill="#e63946"/></g>
+<g class="rt-swing" style="transform-origin:47px 15px;animation-delay:-.7s"><path d="M47 15v14" stroke="#e8eef8" stroke-width="1"/><path d="M45 29h4l-2 4z" fill="#e63946"/></g>
+<g class="rt-swing" style="transform-origin:33px 11px;animation-delay:-1.2s"><path d="M33 11v12" stroke="#e8eef8" stroke-width="1"/><path d="M31 23h4l-2 4z" fill="#e63946"/></g>
+<path d="M17 20L47 15" stroke="#f2a019" stroke-width="3.4" stroke-linecap="round"/><path d="M33 11l-2 14" stroke="#ffc94a" stroke-width="3" stroke-linecap="round"/><circle cx="32" cy="17.6" r="2.6" fill="#b8740a"/></svg>`;
+}
+
+// animations : une feuille de style pour toute la page
+if (typeof document !== 'undefined' && !document.getElementById('rt-css')) { const st = document.createElement('style'); st.id = 'rt-css'; st.textContent = ROMAN_CSS; document.head.append(st); }
+
+/* ---------- Utilitaires ---------- */
+const $ = s => document.querySelector(s);
+function el(tag, attrs = {}, ...children) {
+  const node = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v == null || v === false) continue;
+    if (k === 'class') node.className = v;
+    else if (k === 'html') node.innerHTML = v;
+    else if (k.startsWith('on')) node.addEventListener(k.slice(2), v);
+    else if (k === 'value') node.value = v;
+    else node.setAttribute(k, v === true ? '' : v);
+  }
+  node.append(...children.flat().filter(c => c != null && c !== false));
+  return node;
+}
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+let toastTimer;
+function toast(message, error = false) {
+  const t = $('#toast'); t.textContent = message; t.className = 'toast' + (error ? ' error' : '');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.add('hidden'), error ? 6000 : 2500);
+}
+function busy(message) { $('#busy').textContent = message || ''; }
+function pickFile(input) {
+  return new Promise(resolve => { input.value = ''; input.onchange = () => resolve(input.files[0] || null); input.oncancel = () => resolve(null); input.click(); });
+}
+
+/* ======================================================================
+   GROMA VR — visite immersive d'un pack « .groma-vr » créé dans Groma PC (bouton « 🥽 Pack VR »)
+   • Outil à part, à héberger sur sa propre adresse https (les capteurs de mouvement l'exigent).
+   • Le pack est choisi sur le téléphone à chaque visite : rien n'est conservé (il reste en mémoire le temps de la visite).
+   • Téléphone dans un casque type Cardboard : vue stéréo, suivi de la tête (capteurs du téléphone).
+   • Se déplacer : regarder un endroit au sol, la cible se remplit (1,5 s) → on y est. Un appui sur l'écran
+     (ou le bouton du casque) valide tout de suite. Les murs bloquent la visée.
+   • Bulles des repères (notes, photos, audio, objets métier), portes, photos 360° avec leurs liens.
+   • Baisser la tête : menu aux pieds (Départ, Vue drone, Plan suivant, Quitter).
+   • « Visite sans casque » : une seule vue, on glisse le doigt pour regarder (pour essayer ou montrer).
+   • Balade en montgolfière (menu aux pieds) : on dérive vers où l'on regarde, commandes au fond de la nacelle.
+   • Télécommande Bluetooth (clavier, multimédia, souris ou manette) : valider, retour, avancer, tourner, menu.
+   • Réglages du casque mémorisés sur le téléphone : lentilles, champ de vision, écart des yeux, centrage, lissage.
+   Repère monde : Y vers le haut ; un point du plan (x, y) à la hauteur h est en (x, h, y).
+   ====================================================================== */
+
+/* ---------- Lecture d'un ZIP (stocké ou compressé) ---------- */
+async function unzipBlob(blob) {
+  const tailStart = Math.max(0, blob.size - 65557), tail = new DataView(await blob.slice(tailStart).arrayBuffer());
+  let eocd = -1;
+  for (let i = tail.byteLength - 22; i >= 0; i--) if (tail.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  if (eocd < 0) throw new Error('ce fichier n’est pas un pack VR');
+  const count = tail.getUint16(eocd + 10, true), dirSize = tail.getUint32(eocd + 12, true), dirOff = tail.getUint32(eocd + 16, true);
+  const dir = new DataView(await blob.slice(dirOff, dirOff + dirSize).arrayBuffer()), dec = new TextDecoder(), out = new Map();
+  for (let i = 0, p = 0; i < count; i++) {
+    if (dir.getUint32(p, true) !== 0x02014b50) throw new Error('ZIP abîmé');
+    const method = dir.getUint16(p + 10, true), csize = dir.getUint32(p + 20, true), nlen = dir.getUint16(p + 28, true), xlen = dir.getUint16(p + 30, true), clen = dir.getUint16(p + 32, true), loc = dir.getUint32(p + 42, true);
+    const name = dec.decode(new Uint8Array(dir.buffer, p + 46, nlen));
+    p += 46 + nlen + xlen + clen;
+    if (name.endsWith('/')) continue;
+    const lh = new DataView(await blob.slice(loc, loc + 30).arrayBuffer()), start = loc + 30 + lh.getUint16(26, true) + lh.getUint16(28, true);
+    let data = blob.slice(start, start + csize);
+    if (method === 8) {
+      if (!window.DecompressionStream) throw new Error('ZIP compressé non pris en charge par ce navigateur');
+      data = await new Response(data.stream().pipeThrough(new DecompressionStream('deflate-raw'))).blob();
+    } else if (method !== 0) throw new Error('compression ZIP inconnue');
+    out.set(name, data);
+  }
+  return out;
+}
+
+/* ---------- Accueil : ouvrir un pack (à chaque visite) ---------- */
+let current = null;   // { name, size, pack, files }
+async function openPackFile() {
+  const file = await pickFile($('#packInput'));
+  if (!file) return;
+  busy('Ouverture du pack…');
+  try {
+    let files = await unzipBlob(file);
+    const key = [...files.keys()].find(k => k === 'pack.json' || k.endsWith('/pack.json'));
+    if (!key) throw new Error('pack.json absent : est-ce bien un fichier « .groma-vr » ?');
+    const prefix = key.slice(0, -'pack.json'.length);
+    if (prefix) files = new Map([...files].filter(([k]) => k.startsWith(prefix)).map(([k, v]) => [k.slice(prefix.length), v]));
+    const pack = JSON.parse(await files.get('pack.json').text());
+    if (!['groma-vr', 'metator-vr'].includes(pack.format) || !Array.isArray(pack.plans) || !pack.plans.length) throw new Error('format de pack inconnu');
+    files.delete('pack.json');
+    current = { name: file.name, size: file.size, pack, files };
+    busy(); showPack();
+  } catch (e) { console.error(e); busy(); toast('Pack illisible : ' + e.message, true); }
+}
+/* ---------- Réglages du casque (mémorisés sur le téléphone) ---------- */
+const VR_SET_DEF = { lens: 'moyenne', fov: 96, ipd: 64, shift: 0, smooth: 1, dwell: 1.4, quality: 'standard', rendu: 'equilibre', heure: 'apresmidi' };
+/** Correction des lentilles : coefficients de distorsion en barillet (k1, k2) par intensité. */
+const VR_LENS = { aucune: null, legere: [0.15, 0.05], moyenne: [0.26, 0.12], forte: [0.42, 0.24] };
+const VR_QUALITY = { economie: { dpr: 1.25, px: 1.6e6 }, standard: { dpr: 2, px: 3.2e6 }, haute: { dpr: 3, px: 6e6 } };
+function vrSettings() {
+  let s = {};
+  try { s = JSON.parse(localStorage.getItem('groma-vr-reglages') || localStorage.getItem('metator-vr-reglages') || '{}'); if (localStorage.getItem('metator-vr-lens') === '0' && !s.lens) s.lens = 'aucune'; } catch { }
+  return { ...VR_SET_DEF, ...s };
+}
+function vrSaveSettings(s) { try { localStorage.setItem('groma-vr-reglages', JSON.stringify(s)); } catch { } }
+
+function showPack() {
+  const P = current.pack, nPins = P.plans.reduce((s, p) => s + (p.pins || []).length, 0), nPanos = Object.keys(P.panos || {}).length;
+  const set = vrSettings();
+  const sel = P.plans.length > 1 ? el('select', { id: 'vrPlanSel' }, P.plans.map((p, i) => el('option', { value: i }, p.nom))) : null;
+  const go = mode => { vrSaveSettings(set); startVr(current, { stereo: mode !== 'mono', plan: sel ? +sel.value : 0 }); };
+  const opt = (k, list) => el('select', { id: 'set-' + k, onchange: e => { set[k] = isNaN(+e.target.value) ? e.target.value : +e.target.value; vrSaveSettings(set); } },
+    list.map(([v, t]) => { const o = el('option', { value: v }, t); if (String(set[k]) === String(v)) o.selected = true; return o; }));
+  const range = (k, min, max, step, fmt) => {
+    const out = el('output', {}, fmt(set[k]));
+    return [el('input', { type: 'range', id: 'set-' + k, min, max, step, value: set[k], oninput: e => { set[k] = +e.target.value; out.textContent = fmt(set[k]); vrSaveSettings(set); } }), out];
+  };
+  $('#packCard').replaceChildren(...[
+    el('div', { class: 'pk-head' }, el('b', {}, P.nom || current.name), el('span', {}, [P.auteur, P.date].filter(Boolean).join(' · ') || current.name)),
+    el('div', { class: 'pk-chips' }, el('span', {}, `🗺️ ${P.plans.length} plan${P.plans.length > 1 ? 's' : ''}`), el('span', {}, `🫧 ${nPins} repère${nPins > 1 ? 's' : ''}`), nPanos ? el('span', {}, `🌐 ${nPanos} photo${nPanos > 1 ? 's' : ''} 360°`) : null, el('span', {}, `${(current.size / 1048576).toFixed(1).replace('.', ',')} Mo`)),
+    sel ? el('label', { class: 'vr-field' }, 'Commencer par', sel) : null,
+    el('button', { class: 'big go', id: 'btnGo', onclick: () => go('stereo') }, '🥽 Lancer dans le casque'),
+    el('button', { class: 'big', id: 'btnMono', onclick: () => go('mono') }, '📱 Visite sans casque'),
+    el('details', { class: 'vr-set', id: 'vrSet' }, el('summary', {}, '⚙️ Réglages du casque'),
+      el('label', {}, 'Correction des lentilles', opt('lens', [['aucune', 'Aucune'], ['legere', 'Légère'], ['moyenne', 'Moyenne (Cardboard, VR Box)'], ['forte', 'Forte (grandes lentilles)']])),
+      el('p', { class: 'hint' }, 'Choisissez celle où les murs restent droits jusqu’au bord de l’image.'),
+      el('label', {}, 'Champ de vision', ...range('fov', 70, 110, 2, v => v + '°')),
+      el('label', {}, 'Écart des yeux', ...range('ipd', 54, 74, 1, v => v + ' mm')),
+      el('label', {}, 'Centrage des images', ...range('shift', -15, 15, 1, v => (v > 0 ? '+' : '') + v + ' %')),
+      el('p', { class: 'hint' }, 'Si l’image se dédouble ou fatigue les yeux : réglez le centrage pour que chaque image soit en face de sa lentille.'),
+      el('label', {}, 'Lissage des mouvements de tête', opt('smooth', [[0, 'Aucun (le plus réactif)'], [1, 'Léger (conseillé)'], [2, 'Fort (téléphone qui tremble)']])),
+      el('label', {}, 'Valider en fixant du regard', opt('dwell', [[1, '1 seconde'], [1.4, '1,4 seconde'], [2.2, '2,2 secondes'], [0, 'Non : télécommande ou écran']])),
+      el('label', {}, 'Qualité d’image', opt('quality', [['economie', 'Économie (vieux téléphone)'], ['standard', 'Standard'], ['haute', 'Haute définition']]))),
+    vrRenduSettingsUi(set),
+    el('details', { class: 'vr-set', id: 'vrRemote' }, el('summary', {}, '🎮 Télécommande Bluetooth'),
+      el('p', { class: 'hint' }, 'Associez la télécommande dans les réglages Bluetooth du téléphone, puis appuyez sur ses boutons : ils s’affichent ici.'),
+      el('div', { id: 'remoteTest', class: 'remote-test' }, 'En attente d’une touche…'),
+      el('ul', { class: 'remote-map' }, ...VR_REMOTE_HELP.map(([k, t]) => el('li', {}, el('b', {}, k), ' ', t)))),
+    el('button', { class: 'lnk', onclick: () => { current = null; $('#packCard').replaceChildren(); $('#home').classList.remove('loaded'); } }, 'Choisir un autre pack')].filter(Boolean));
+  $('#home').classList.add('loaded');
+}
+
+/* ---------- Petites maths 3D ---------- */
+const V3 = {
+  add: (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]], sub: (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]],
+  mul: (a, k) => [a[0] * k, a[1] * k, a[2] * k], dot: (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2],
+  cross: (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]],
+  len: a => Math.hypot(a[0], a[1], a[2]), norm: a => { const l = Math.hypot(a[0], a[1], a[2]) || 1; return [a[0] / l, a[1] / l, a[2] / l]; },
+};
+const Q = {
+  mul(a, b) { return [a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1], a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0], a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3], a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2]]; },
+  axis(ax, ang) { const s = Math.sin(ang / 2); return [ax[0] * s, ax[1] * s, ax[2] * s, Math.cos(ang / 2)]; },
+  rot(q, v) { const [x, y, z, w] = q, ix = w * v[0] + y * v[2] - z * v[1], iy = w * v[1] + z * v[0] - x * v[2], iz = w * v[2] + x * v[1] - y * v[0], iw = -x * v[0] - y * v[1] - z * v[2];
+    return [ix * w + iw * -x + iy * -z - iz * -y, iy * w + iw * -y + iz * -x - ix * -z, iz * w + iw * -z + ix * -y - iy * -x]; },
+  dot: (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3],
+  slerp(a, b, t) {
+    let d = a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3]; if (d < 0) { b = b.map(v => -v); d = -d; }
+    if (d > 0.9995) { const r = a.map((v, i) => v + (b[i] - v) * t), l = Math.hypot(...r); return r.map(v => v / l); }
+    const th = Math.acos(d), s0 = Math.sin((1 - t) * th) / Math.sin(th), s1 = Math.sin(t * th) / Math.sin(th);
+    return a.map((v, i) => v * s0 + b[i] * s1);
+  },
+  /** Orientation du téléphone (même calcul que DeviceOrientationControls de three.js), repère Y vers le haut. */
+  device(alpha, beta, gamma, orient) {
+    const x = beta * DEG2, y = alpha * DEG2, z = -gamma * DEG2, c1 = Math.cos(x / 2), c2 = Math.cos(y / 2), c3 = Math.cos(z / 2), s1 = Math.sin(x / 2), s2 = Math.sin(y / 2), s3 = Math.sin(z / 2);
+    let q = [s1 * c2 * c3 + c1 * s2 * s3, c1 * s2 * c3 - s1 * c2 * s3, c1 * c2 * s3 - s1 * s2 * c3, c1 * c2 * c3 + s1 * s2 * s3];
+    q = Q.mul(q, [-Math.SQRT1_2, 0, 0, Math.SQRT1_2]);
+    return Q.mul(q, Q.axis([0, 0, 1], -orient * DEG2));
+  },
+};
+const DEG2 = Math.PI / 180;
+const M4 = {
+  persp(fovy, asp, n, f) { const t = 1 / Math.tan(fovy / 2); return [t / asp, 0, 0, 0, 0, t, 0, 0, 0, 0, (f + n) / (n - f), -1, 0, 0, 2 * f * n / (n - f), 0]; },
+  mul(a, b) { const o = new Array(16); for (let c = 0; c < 4; c++) for (let r = 0; r < 4; r++) { let s = 0; for (let k = 0; k < 4; k++) s += a[k * 4 + r] * b[c * 4 + k]; o[c * 4 + r] = s; } return o; },
+  /** Vue d'une caméra placée en p, tournée par le quaternion q. */
+  view(q, p) {
+    const [x, y, z, w] = q, r = [1 - 2 * (y * y + z * z), 2 * (x * y + z * w), 2 * (x * z - y * w), 2 * (x * y - z * w), 1 - 2 * (x * x + z * z), 2 * (y * z + x * w), 2 * (x * z + y * w), 2 * (y * z - x * w), 1 - 2 * (x * x + y * y)];
+    // r = colonnes de la rotation ; vue = transposée, puis translation
+    const m = [r[0], r[3], r[6], 0, r[1], r[4], r[7], 0, r[2], r[5], r[8], 0, 0, 0, 0, 1];
+    m[12] = -(m[0] * p[0] + m[4] * p[1] + m[8] * p[2]); m[13] = -(m[1] * p[0] + m[5] * p[1] + m[9] * p[2]); m[14] = -(m[2] * p[0] + m[6] * p[1] + m[10] * p[2]);
+    return m;
+  },
+  inv(m) {
+    const [a00, a01, a02, a03, a10, a11, a12, a13, a20, a21, a22, a23, a30, a31, a32, a33] = m;
+    const b00 = a00 * a11 - a01 * a10, b01 = a00 * a12 - a02 * a10, b02 = a00 * a13 - a03 * a10, b03 = a01 * a12 - a02 * a11, b04 = a01 * a13 - a03 * a11, b05 = a02 * a13 - a03 * a12;
+    const b06 = a20 * a31 - a21 * a30, b07 = a20 * a32 - a22 * a30, b08 = a20 * a33 - a23 * a30, b09 = a21 * a32 - a22 * a31, b10 = a21 * a33 - a23 * a31, b11 = a22 * a33 - a23 * a32;
+    const d = 1 / (b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06);
+    return [(a11 * b11 - a12 * b10 + a13 * b09) * d, (a02 * b10 - a01 * b11 - a03 * b09) * d, (a31 * b05 - a32 * b04 + a33 * b03) * d, (a22 * b04 - a21 * b05 - a23 * b03) * d,
+      (a12 * b08 - a10 * b11 - a13 * b07) * d, (a00 * b11 - a02 * b08 + a03 * b07) * d, (a32 * b02 - a30 * b05 - a33 * b01) * d, (a20 * b05 - a22 * b02 + a23 * b01) * d,
+      (a10 * b10 - a11 * b08 + a13 * b06) * d, (a01 * b08 - a00 * b10 - a03 * b06) * d, (a30 * b04 - a31 * b02 + a33 * b00) * d, (a21 * b02 - a20 * b04 - a23 * b00) * d,
+      (a11 * b07 - a10 * b09 - a12 * b06) * d, (a00 * b09 - a01 * b07 + a02 * b06) * d, (a31 * b01 - a30 * b03 - a32 * b00) * d, (a20 * b03 - a21 * b01 + a22 * b00) * d];
+  },
+};
+const yawOf = f => Math.atan2(-f[0], -f[2]);
+const dirYaw = yaw => [-Math.sin(yaw), 0, -Math.cos(yaw)];
+
+/* ---------- Moteur ---------- */
+const VR = { on: false };
+const VR_EYE = 1.6, VR_WALK_SPEED = 1.4, VR_TURN = Math.PI / 6;
+const VR_SKY = [0.80, 0.90, 0.97];
+const TYPE_EMOJI = { photo: '📷', note: '📝', audio: '🎧', panorama: '🌐', intrusion: '🚨', video: '📹', acces: '🔑', informatique: '💻', visiophonie: '📞' };
+
+const VR_PREC = '#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\n';
+const VR_SHADERS = {
+  // brume calculée par pixel (et non par sommet) : un grand sol aux coins lointains ne se voile plus en entier
+  mesh: ['attribute vec3 p;attribute vec4 c;uniform mat4 vp;varying vec4 vc;varying vec3 vw;' +
+    'void main(){vec3 w=vec3(p.x,p.z,-p.y);gl_Position=vp*vec4(w,1.);vc=c;vw=w;}',
+    VR_PREC + 'uniform vec3 fogc;uniform vec3 eye;uniform float fogd;varying vec4 vc;varying vec3 vw;' +
+    'void main(){float f=clamp((length(vw-eye)-fogd*.45)/(fogd*.55),0.,1.)*.6;gl_FragColor=vec4(mix(vc.rgb,fogc,f),vc.a);}'],
+  // WebGL 2 : même chose + ombre de contact au pied des murs et des objets (normale de la face calculée par pixel)
+  mesh3: ['#version 300 es\nin vec3 p;in vec4 c;uniform mat4 vp;out vec4 vc;out vec3 vw;' +
+    'void main(){vec3 w=vec3(p.x,p.z,-p.y);gl_Position=vp*vec4(w,1.);vc=c;vw=w;}',
+    '#version 300 es\nprecision highp float;uniform vec3 fogc;uniform vec3 eye;uniform float fogd;in vec4 vc;in vec3 vw;out vec4 o;' +
+    'void main(){vec3 n=normalize(cross(dFdx(vw),dFdy(vw)));float side=1.-abs(n.y);' +
+    'float ao=mix(1.,mix(.76,1.,smoothstep(0.,.9,vw.y)),side);' +
+    'float f=clamp((length(vw-eye)-fogd*.45)/(fogd*.55),0.,1.)*.6;o=vec4(mix(vc.rgb*ao,fogc,f),vc.a);}'],
+  tex: ['attribute vec3 p;attribute vec2 uv;uniform mat4 vp;varying vec2 vu;varying vec3 vw;' +
+    'void main(){gl_Position=vp*vec4(p,1.);vu=uv;vw=p;}',
+    VR_PREC + 'uniform sampler2D t;uniform vec4 tint;uniform vec3 fogc;uniform vec3 eye;uniform float fogd;varying vec2 vu;varying vec3 vw;' +
+    'void main(){vec4 c=texture2D(t,vu)*tint;if(c.a<.02)discard;float f=fogd>0.?clamp((length(vw-eye)-fogd*.45)/(fogd*.55),0.,1.)*.6:0.;gl_FragColor=vec4(mix(c.rgb,fogc,f),c.a);}'],
+  // ciel ou photo 360° : un triangle plein écran, la direction de chaque pixel donne la couleur
+  sphere: ['attribute vec2 p;varying vec2 vp;void main(){vp=p;gl_Position=vec4(p,.99999,1.);}',
+    'precision highp float;uniform mat4 inv;uniform sampler2D t;uniform float sky;varying vec2 vp;' +
+    'void main(){vec4 w=inv*vec4(vp,1.,1.);vec3 d=normalize(w.xyz/w.w);' +
+    'if(sky>.5){float h=d.y;vec3 c=h>0.?mix(vec3(.86,.93,.98),vec3(.42,.68,.93),pow(h,.6)):mix(vec3(.80,.90,.97),vec3(.72,.76,.70),clamp(-h*6.,0.,1.));gl_FragColor=vec4(c,1.);return;}' +
+    'float u=.5+atan(d.x,-d.z)/6.2831853;float v=.5-asin(clamp(d.y,-1.,1.))/3.1415927;gl_FragColor=texture2D(t,vec2(u,v));}'],
+  // correction des lentilles : distorsion en barillet de chaque œil
+  lens: ['attribute vec2 p;varying vec2 vp;void main(){vp=p;gl_Position=vec4(p,0.,1.);}',
+    'precision mediump float;uniform sampler2D t;uniform float off;uniform float asp;uniform vec2 k;varying vec2 vp;' +
+    'void main(){vec2 q=vec2(vp.x*asp,vp.y)/length(vec2(asp,1.));float r2=dot(q,q);float f=(1.+k.x*r2+k.y*r2*r2)/(1.+k.x+k.y);vec2 s=vp*f;' +
+    'if(abs(s.x)>1.||abs(s.y)>1.){gl_FragColor=vec4(0.,0.,0.,1.);return;}vec2 uv=s*.5+.5;gl_FragColor=texture2D(t,vec2(off+uv.x*.5,uv.y));}'],
+};
+
+function vrProgram(gl, [vs, fs]) {
+  const mk = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; };
+  const p = gl.createProgram(); gl.attachShader(p, mk(gl.VERTEX_SHADER, vs)); gl.attachShader(p, mk(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(p);
+  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+  const u = {}, a = {};
+  for (let i = 0; i < gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS); i++) { const n = gl.getActiveUniform(p, i).name; u[n] = gl.getUniformLocation(p, n); }
+  for (let i = 0; i < gl.getProgramParameter(p, gl.ACTIVE_ATTRIBUTES); i++) { const n = gl.getActiveAttrib(p, i).name; a[n] = gl.getAttribLocation(p, n); }
+  return { p, u, a };
+}
+function vrTexture(src, { repeat = false, mip = true } = {}) {
+  const gl = VR.gl, t = gl.createTexture(), pot = n => (n & (n - 1)) === 0;
+  gl.bindTexture(gl.TEXTURE_2D, t);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);
+  const canMip = mip && (VR.gl2 || (pot(src.width) && pot(src.height)));
+  if (canMip) gl.generateMipmap(gl.TEXTURE_2D);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, canMip ? gl.LINEAR_MIPMAP_LINEAR : gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  const wrap = repeat && (VR.gl2 || (pot(src.width) && pot(src.height))) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap);
+  if (canMip && VR.aniso) gl.texParameterf(gl.TEXTURE_2D, VR.aniso.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(8, gl.getParameter(VR.aniso.MAX_TEXTURE_MAX_ANISOTROPY_EXT)));
+  return t;
+}
+async function vrBitmap(blob, max) {
+  const bm = await createImageBitmap(blob);
+  const lim = Math.min(max || 1e9, VR.maxTex || 4096);
+  if (Math.max(bm.width, bm.height) <= lim) return bm;
+  const k = lim / Math.max(bm.width, bm.height), c = el('canvas', { width: Math.round(bm.width * k), height: Math.round(bm.height * k) });
+  c.getContext('2d').drawImage(bm, 0, 0, c.width, c.height); bm.close?.();
+  return c;
+}
+
+/* ---------- Textures dessinées (bulles, panneaux, menu) ---------- */
+function vrCanvas(w, h) { const c = el('canvas', { width: w, height: h }); return [c, c.getContext('2d')]; }
+function roundRect(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+function fitText(g, text, max) { if (g.measureText(text).width <= max) return text; let s = text; while (s.length > 1 && g.measureText(s + '…').width > max) s = s.slice(0, -1); return s + '…'; }
+function wrapText(g, text, max, lines) {
+  const out = [];
+  for (const para of String(text || '').split('\n')) {
+    let line = '';
+    for (const word of para.split(/\s+/)) { const t = line ? line + ' ' + word : word; if (g.measureText(t).width > max && line) { out.push(line); line = word; } else line = t; }
+    out.push(line);
+    if (out.length >= lines) break;
+  }
+  if (out.length > lines) out.length = lines;
+  if (out.length === lines) out[lines - 1] = fitText(g, out[lines - 1], max);
+  return out;
+}
+const VR_FONT = '"Nunito", "Segoe UI", system-ui, Roboto, sans-serif';
+function bubbleTexture(pin) {
+  const [c, g] = vrCanvas(512, 400);
+  // halo d'état (objets métier)
+  if (pin.etatColor) { g.fillStyle = pin.etatColor; g.globalAlpha = .35; g.beginPath(); g.arc(256, 140, 132, 0, 7); g.fill(); g.globalAlpha = 1; }
+  g.fillStyle = 'rgba(0,0,0,.18)'; g.beginPath(); g.ellipse(256, 262, 70, 14, 0, 0, 7); g.fill();
+  g.fillStyle = '#fff'; g.beginPath(); g.arc(256, 140, 112, 0, 7); g.fill();
+  g.fillStyle = pin.color || '#2f7fdc'; g.beginPath(); g.arc(256, 140, 98, 0, 7); g.fill();
+  g.fillStyle = 'rgba(255,255,255,.25)'; g.beginPath(); g.ellipse(226, 100, 50, 30, -.5, 0, 7); g.fill();
+  g.font = `110px ${VR_FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(TYPE_EMOJI[pin.type] || '📍', 256, 148);
+  if (pin.etatColor) { g.fillStyle = pin.etatColor; g.strokeStyle = '#fff'; g.lineWidth = 8; g.beginPath(); g.arc(340, 64, 30, 0, 7); g.fill(); g.stroke(); }
+  const title = pin.titre || (pin.metier || ({ photo: 'Photo', note: 'Note', audio: 'Audio', panorama: 'Photo 360°' })[pin.type] || 'Repère');
+  g.font = `800 50px ${VR_FONT}`; const t = fitText(g, title, 470), w = Math.max(140, g.measureText(t).width + 50);
+  g.fillStyle = '#16233d'; roundRect(g, 256 - w / 2, 300, w, 80, 40); g.fill();
+  g.fillStyle = '#fff'; g.fillText(t, 256, 342);
+  return c;
+}
+function iconTexture(emoji, label, bg = '#2f7fdc') {
+  const [c, g] = vrCanvas(256, 300);
+  g.fillStyle = 'rgba(255,255,255,.95)'; g.beginPath(); g.arc(128, 116, 108, 0, 7); g.fill();
+  g.fillStyle = bg; g.beginPath(); g.arc(128, 116, 94, 0, 7); g.fill();
+  g.font = `96px ${VR_FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#fff'; g.fillText(emoji, 128, 122);
+  if (label) { g.font = `800 38px ${VR_FONT}`; const t = fitText(g, label, 250), w = g.measureText(t).width + 30; g.fillStyle = 'rgba(22,35,61,.9)'; roundRect(g, 128 - w / 2, 236, w, 56, 28); g.fill(); g.fillStyle = '#fff'; g.fillText(t, 128, 265); }
+  return c;
+}
+function groundTexture() {
+  const [c, g] = vrCanvas(256, 256);
+  g.fillStyle = '#d3dcc7'; g.fillRect(0, 0, 256, 256);
+  for (let i = 0; i < 900; i++) { g.fillStyle = Math.random() < .5 ? 'rgba(120,150,100,.08)' : 'rgba(255,255,255,.12)'; g.fillRect(Math.random() * 256, Math.random() * 256, 3, 3); }
+  g.strokeStyle = 'rgba(90,110,80,.28)'; g.lineWidth = 3; g.strokeRect(0, 0, 256, 256);
+  return c;
+}
+function ringTexture() {
+  const [c, g] = vrCanvas(256, 256);
+  g.strokeStyle = '#fff'; g.lineWidth = 18; g.beginPath(); g.arc(128, 128, 100, 0, 7); g.stroke();
+  g.fillStyle = 'rgba(255,255,255,.35)'; g.beginPath(); g.arc(128, 128, 60, 0, 7); g.fill();
+  return c;
+}
+
+/* ---------- Démarrage / arrêt ---------- */
+async function startVr(cur, opts) {
+  if (VR.on) return;
+  const stereo = !!opts.stereo, set = vrSettings();
+  // plein écran et paysage : à demander tout de suite (geste de l'utilisateur)
+  const fs = document.documentElement.requestFullscreen?.({ navigationUI: 'hide' });
+  Object.assign(VR, { on: true, files: cur.files, pack: cur.pack, stereo, set, lens: stereo ? VR_LENS[set.lens] || null : null, planIdx: opts.plan || 0, scene: 'maquette',
+    ipd: (set.ipd || 64) / 1000, dwellT: +set.dwell, smooth: +set.smooth,
+    head: [0, VR_EYE, 0], yawOffset: 0, wantYaw: 0, dragYaw: 0, dragPitch: 0, sensor: false, devQ: null, headS: null, fade: 1, fadeTo: 0, target: null, dwell: 0, cooldown: 0,
+    panel: null, menuYaw: 0, drone: false, quads: [], audio: null, hint: null, last: performance.now(), loading: true, urls: [], move: 0, keyMove: 0, moving: 0, balloon: null, hudSig: null, hudCtx: null, maquetteBalloon: null,
+    meshBuf: null, levelTex: [], pano: null, fbo: null, maquetteHead: null, padPrev: {}, walk: null, walkAnchor: null, walkAnchorPrev: null, onBlack: null, trash: [], t0: performance.now(), saidNoSensor: false });
+  const screenEl = el('section', { id: 'vrScreen', class: 'vr-screen' + (stereo ? ' stereo' : '') },
+    el('canvas', { id: 'vrGl' }), el('canvas', { id: 'vrHud' }),
+    el('button', { class: 'vr-quit', 'aria-label': 'Quitter', onclick: () => stopVr() }, '✕'),
+    stereo ? el('div', { class: 'vr-divider' }) : el('div', { class: 'vr-mono-hint' }, 'Glissez pour regarder · touchez pour valider'));
+  document.body.append(screenEl);
+  history.pushState({ vr: true }, '');
+  if (fs) fs.then(() => stereo && screen.orientation?.lock?.('landscape').catch(() => { })).catch(() => { });
+  // capteurs (iPhone : autorisation explicite)
+  if (stereo) {
+    try { if (typeof DeviceOrientationEvent !== 'undefined' && DeviceOrientationEvent.requestPermission) await DeviceOrientationEvent.requestPermission(); } catch { }
+    addEventListener('deviceorientation', vrOnOrient);
+  }
+  try { VR.wake = await navigator.wakeLock?.request('screen'); } catch { }
+  vrBindInput(screenEl);
+  try {
+    vrInitGl($('#vrGl'));
+    await vrLoadPlan(VR.planIdx, true);
+  } catch (e) { console.error(e); stopVr(); toast('Visite VR impossible : ' + e.message, true); return; }
+  VR.loading = false;
+  vrWelcome();
+  VR.raf = requestAnimationFrame(vrFrame);
+}
+function stopVr(fromHistory) {
+  if (!VR.on) return;
+  VR.on = false;
+  cancelAnimationFrame(VR.raf);
+  removeEventListener('deviceorientation', vrOnOrient);
+  removeEventListener('keydown', vrOnKey); removeEventListener('keyup', vrOnKeyUp);
+  if (VR.audio) { VR.audio.pause(); VR.audio = null; }
+  VR.urls.forEach(u => URL.revokeObjectURL(u));
+  try { VR.wake?.release(); } catch { }
+  try { screen.orientation?.unlock?.(); } catch { }
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => { });
+  try { VR.gl?.getExtension('WEBGL_lose_context')?.loseContext(); } catch { }
+  $('#vrScreen')?.remove();
+  VR.gl = null;
+  if (!fromHistory && history.state?.vr) history.back();
+}
+addEventListener('popstate', () => { if (VR.on) stopVr(true); });
+
+function vrInitGl(canvas) {
+  const attrs = { antialias: true, alpha: false, powerPreference: 'high-performance' };
+  let gl = canvas.getContext('webgl2', attrs); VR.gl2 = !!gl;
+  if (!gl) gl = canvas.getContext('webgl', attrs);
+  if (!gl) throw new Error('WebGL indisponible sur ce téléphone');
+  VR.gl = gl;
+  VR.aniso = gl.getExtension('EXT_texture_filter_anisotropic');
+  VR.maxTex = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+  VR.samples = VR.gl2 ? Math.min(4, gl.getParameter(gl.MAX_SAMPLES) || 0) : 0;
+  if (!VR.gl2) gl.getExtension('OES_element_index_uint');
+  let mesh = null;
+  if (VR.gl2) try { mesh = vrProgram(gl, VR_SHADERS.mesh3); } catch (e) { console.warn('ombrage simplifié', e); }
+  VR.prog = { mesh: mesh || vrProgram(gl, VR_SHADERS.mesh), tex: vrProgram(gl, VR_SHADERS.tex), sphere: vrProgram(gl, VR_SHADERS.sphere), lens: vrProgram(gl, VR_SHADERS.lens) };
+  VR.full = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, VR.full); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  VR.quadBuf = gl.createBuffer();
+  VR.texGround = vrTexture(groundTexture(), { repeat: true });
+  VR.texRing = vrTexture(ringTexture());
+  const [w1] = vrCanvas(2, 2); w1.getContext('2d').fillStyle = '#fff'; w1.getContext('2d').fillRect(0, 0, 2, 2); VR.texWhite = vrTexture(w1, { mip: false });
+  VR.menuTex = {}; VR.doorTex = {};
+  for (const [k, e, l, bg] of [['start', '🏁', 'Départ', '#3fb04a'], ['drone', '🚁', 'Vue drone', '#2f7fdc'], ['ground', '🧍', 'Au sol', '#2f7fdc'], ['plan', '🗺️', 'Plan suivant', '#f2a019'],
+    ['quit', '🚪', 'Quitter', '#dc2626'], ['back', '↩️', 'Maquette', '#3fb04a'], ['door', '🚪', '', '#8a5a2b'],
+    ['ballon', '🎈', 'Montgolfière', '#d7263d'], ['up', '⬆️', 'Monter', '#f2a019'], ['down', '⬇️', 'Descendre', '#2f7fdc'], ['pause', '⏸️', 'Pause', '#475569'], ['go', '▶️', 'Avancer', '#3fb04a'],
+    ['land', '🪂', 'Atterrir', '#16a34a'], ['intr', '🚨', 'Intrusions', '#dc2626'], ['stopi', '⏹️', 'Arrêter', '#475569']]) VR.menuTex[k] = vrTexture(iconTexture(e, l, bg));
+  vrBalloonMesh();
+  vrRenduInit();
+}
+
+async function vrFile(name) { const b = VR.files.get(name); if (!b) throw new Error('fichier absent du pack : ' + name); return b; }
+
+/** Charge un plan du pack : maquette 3D, image du plan, bulles et portes. */
+async function vrLoadPlan(idx, first) {
+  const gl = VR.gl, P = VR.pack.plans[idx];
+  VR.planIdx = idx; VR.plan = P; VR.scene = 'maquette'; VR.panel = null; VR.drone = false; VR.balloon = null; VR.intr = null;
+  for (const t of VR.levelTex || []) vrFree(t);
+  VR.levelTex = [];
+  // maquette
+  // pack v2 : 20 octets par sommet (couleur propre, normale, matériau) ; pack v1 : 7 flottants (couleur déjà éclairée)
+  let raw = new ArrayBuffer(0);
+  if (P.mesh && (P.nO + P.nA)) { try { raw = await (await vrFile(P.mesh)).arrayBuffer(); } catch (e) { console.warn(e); } }
+  VR.v2 = P.meshv === 2;
+  const buf = VR.v2 ? raw.slice(0, Math.floor(raw.byteLength / 20) * 20) : vrPackMesh(new Float32Array(raw, 0, Math.floor(raw.byteLength / 4)));
+  const nv = buf.byteLength / 20, data = new Float32Array(buf);   // position du sommet i : data[i * 5 .. i * 5 + 2]
+  if (!VR.meshBuf) VR.meshBuf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, VR.meshBuf); gl.bufferData(gl.ARRAY_BUFFER, nv ? buf : new ArrayBuffer(20), gl.STATIC_DRAW);
+  VR.nO = Math.min(P.nO || 0, nv); VR.nA = Math.max(0, Math.min(P.nA || 0, nv - VR.nO));
+  // triangles opaques en coordonnées monde, pour la visée (les murs bloquent)
+  const nt = Math.floor(VR.nO / 3), T = new Float32Array(nt * 9), N = new Float32Array(nt);
+  for (let i = 0; i < nt; i++) {
+    for (let k = 0; k < 3; k++) { const s = (i * 3 + k) * 5; T[i * 9 + k * 3] = data[s]; T[i * 9 + k * 3 + 1] = data[s + 2]; T[i * 9 + k * 3 + 2] = -data[s + 1]; }
+    const e1 = [T[i * 9 + 3] - T[i * 9], T[i * 9 + 4] - T[i * 9 + 1], T[i * 9 + 5] - T[i * 9 + 2]], e2 = [T[i * 9 + 6] - T[i * 9], T[i * 9 + 7] - T[i * 9 + 1], T[i * 9 + 8] - T[i * 9 + 2]];
+    N[i] = Math.abs(V3.norm(V3.cross(e1, e2))[1]);
+  }
+  VR.tris = T; VR.triUp = N;
+  // boîtes englobantes par paquets de 32 triangles (voisins dans le maillage) : un rayon saute les paquets qu'il ne touche pas
+  const nc = Math.ceil(nt / 32), BX = new Float32Array(nc * 6);
+  for (let c = 0; c < nc; c++) {
+    let x0 = 1e9, y0 = 1e9, z0 = 1e9, x1 = -1e9, y1 = -1e9, z1 = -1e9;
+    for (let i = c * 32, e = Math.min(nt, i + 32); i < e; i++) for (let k = 0; k < 3; k++) {
+      const j = i * 9 + k * 3; x0 = Math.min(x0, T[j]); x1 = Math.max(x1, T[j]); y0 = Math.min(y0, T[j + 1]); y1 = Math.max(y1, T[j + 1]); z0 = Math.min(z0, T[j + 2]); z1 = Math.max(z1, T[j + 2]);
+    }
+    BX.set([x0, y0, z0, x1, y1, z1], c * 6);
+  }
+  VR.triBox = BX;
+  // image du plan au sol
+  VR.planTex = null;
+  if (P.img && P.rect) {
+    try { VR.planTex = vrTexture(await vrBitmap(await vrFile(P.img), 4096)); VR.levelTex.push(VR.planTex); } catch (e) { console.warn(e); }
+  }
+  // bulles
+  VR.pins = (P.pins || []).map(pin => ({ pin, tex: null, pos: [pin.x, Math.max(1.5, (pin.z || 0) + 0.7), pin.y] }));
+  for (const b of VR.pins) { b.tex = vrTexture(bubbleTexture(b.pin)); VR.levelTex.push(b.tex); }
+  VR.doors = (P.doors || []).map(vrDoorPrep);
+  const B = P.bounds || { x0: -10, y0: -10, x1: 10, y1: 10, hmax: 3 };
+  VR.center = [(B.x0 + B.x1) / 2, 0, (B.y0 + B.y1) / 2]; VR.extent = Math.max(10, B.x1 - B.x0, B.y1 - B.y0); VR.hmax = B.hmax || 3;
+  vrGoStart(first);
+  vrRenduPlan();   // ombres et ombres de contact : calculées une fois pour ce plan
+}
+/** Porte du pack : faces du mur de part et d'autre (mesurées dans la maquette), vantail dessiné de chaque côté. */
+function vrDoorPrep(d) {
+  const r = (d.rot || 0) * DEG2, n = [-Math.sin(r), 0, Math.cos(r)], h = d.h || 2.1, z = d.z || 0, c = [d.x, z + Math.min(h, 2.2) * 0.5, d.y];
+  const face = s => { const hit = vrRayMesh(c, V3.mul(n, s), 0.8); return hit ? hit.t : null; };
+  const fp = face(1), fm = face(-1), mur = d.mur ?? (fp != null && fm != null);
+  const half = s => (s > 0 ? fp : fm) ?? (d.d ? d.d / 2 : 0.05);
+  const tex = mur && d.kind !== 'portail' ? vrDoorTexture(d.kind, d.color) : null;
+  return { ...d, n, c: [d.x, z + h / 2, d.y], half, tex, pos: [d.x, z + Math.min(h, 2.2) * 0.55, d.y] };
+}
+/** Vantail de porte (texture) : bois à panneaux, double porte, porte sectionnelle ; mis en cache par type et couleur. */
+function vrDoorTexture(kind, color) {
+  const key = (kind || 'porte') + (color || '');
+  if (VR.doorTex[key]) return VR.doorTex[key];
+  const col = color || (kind === 'garage' ? '#9aa3ad' : '#8a5a2b'), wide = kind === 'porte2' || kind === 'garage';
+  const [c, g] = vrCanvas(wide ? 512 : 256, 512), W = c.width, H = c.height;
+  const shade = (hex, k) => { const n = parseInt(hex.slice(1), 16), f = v => Math.max(0, Math.min(255, Math.round(v * k))); return `rgb(${f(n >> 16)},${f((n >> 8) & 255)},${f(n & 255)})`; };
+  g.fillStyle = shade(col, 0.62); g.fillRect(0, 0, W, H);                                     // chambranle
+  const leaf = (x0, x1, handle) => {
+    g.fillStyle = col; g.fillRect(x0, 14, x1 - x0, H - 14);
+    if (kind === 'garage') { g.fillStyle = shade(col, 0.8); for (let k = 1; k < 7; k++) g.fillRect(x0 + 6, 14 + k * (H - 14) / 7 - 3, x1 - x0 - 12, 6); return; }
+    g.strokeStyle = shade(col, 0.72); g.lineWidth = 6;
+    const m = (x1 - x0) * 0.16; g.strokeRect(x0 + m, 50, x1 - x0 - 2 * m, H * 0.36); g.strokeRect(x0 + m, 70 + H * 0.36, x1 - x0 - 2 * m, H * 0.46);
+    g.fillStyle = 'rgba(255,255,255,.08)'; g.fillRect(x0, 14, (x1 - x0) * 0.25, H - 14);
+    g.fillStyle = '#d9b84a'; g.beginPath(); g.arc(handle, H * 0.52, 9, 0, 7); g.fill(); g.fillRect(handle - (handle > (x0 + x1) / 2 ? 26 : 0), H * 0.52 - 4, 26, 8);
+  };
+  if (kind === 'porte2') { leaf(14, W / 2 - 2, W / 2 - 34); leaf(W / 2 + 2, W - 14, W / 2 + 34); }
+  else leaf(14, W - 14, kind === 'garage' ? 0 : W - 42);
+  return (VR.doorTex[key] = vrTexture(c));
+}
+function vrGoStart() {
+  const S = VR.plan.start || { x: VR.center[0], y: VR.center[2] + 10 };
+  VR.head = [S.x, VR_EYE, S.y]; VR.drone = false; VR.balloon = null;
+  vrFace(VR.center);
+}
+/** Tourne la vue (sans bouger la tête de l'utilisateur) pour regarder vers un point. */
+function vrFace(p) { const d = V3.sub(p, VR.head); VR.wantYaw = yawOf([d[0], 0, d[2]]); if (!VR.sensor) { VR.dragYaw = VR.wantYaw; VR.wantYaw = null; } }
+
+/* ---------- Tête : capteurs ou doigt ---------- */
+function vrOnOrient(e) {
+  if (e.alpha == null && e.beta == null) return;
+  if (!VR.sensor && VR.wantYaw == null) VR.wantYaw = VR.dragYaw;   // premier signal des capteurs : on garde le cap
+  VR.sensor = true;
+  VR.devQ = Q.device(e.alpha || 0, e.beta || 0, e.gamma || 0, screen.orientation?.angle ?? window.orientation ?? 0);
+  VR.devT = performance.now();
+  if (VR.R && VR.R.fx.prediction) vrTrackOmega(VR.devQ, VR.devT);
+}
+/** Orientation de la tête. Capteurs lissés à chaque image : les petits tremblements sont filtrés,
+    les vrais mouvements passent tout de suite (le filtre s'ouvre quand l'écart grandit). */
+function vrHeadQ(dt = 1 / 60) {
+  let q;
+  if (VR.sensor && VR.devQ) {
+    if (VR.wantYaw != null) { VR.yawOffset = VR.wantYaw - yawOf(Q.rot(VR.devQ, [0, 0, -1])); VR.wantYaw = null; }
+    let d = VR.devQ;
+    // anticipation : on vise où sera la tête quand l'image s'affichera (retard des capteurs et de l'affichage ≈ 35 ms)
+    if (VR.R && VR.R.fx.prediction) d = vrPredict(d, 0.035 + Math.min(0.05, (performance.now() - (VR.devT || 0)) / 1000));
+    if (VR.smooth > 0 && VR.headS) {
+      const ang = 2 * Math.acos(Math.min(1, Math.abs(Q.dot(VR.headS, d)))), base = VR.smooth > 1 ? 9 : 22, rate = base + ang * (VR.smooth > 1 ? 160 : 420);
+      d = Q.slerp(VR.headS, d, 1 - Math.exp(-rate * dt));
+    }
+    VR.headS = d;
+    q = Q.mul(Q.axis([0, 1, 0], VR.yawOffset), d);
+  } else {
+    if (VR.wantYaw != null) { VR.dragYaw = VR.wantYaw; VR.wantYaw = null; }
+    q = Q.mul(Q.axis([0, 1, 0], VR.dragYaw), Q.axis([1, 0, 0], VR.dragPitch));
+  }
+  return q;
+}
+/** Tourner sur place (télécommande, manette) : par pas, quel que soit le mode. */
+function vrTurn(a) {
+  if (VR.sensor) VR.yawOffset += a;
+  else VR.dragYaw += a;
+}
+function vrBindInput(root) {
+  let down = null;
+  root.addEventListener('pointerdown', e => { if (e.target.closest('.vr-quit')) return; down = { x: e.clientX, y: e.clientY, yaw: VR.dragYaw, pitch: VR.dragPitch, moved: false }; root.setPointerCapture?.(e.pointerId); });
+  root.addEventListener('pointermove', e => {
+    if (!down) return;
+    const dx = e.clientX - down.x, dy = e.clientY - down.y;
+    if (Math.hypot(dx, dy) > 8) down.moved = true;
+    if (!VR.sensor && down.moved) { const k = 1.6 / Math.max(innerWidth, innerHeight) * Math.PI; VR.dragYaw = down.yaw + dx * k; VR.dragPitch = clamp(down.pitch + dy * k, -1.45, 1.45); }
+  });
+  const up = () => { if (down && !down.moved) vrActivate(); down = null; };
+  root.addEventListener('pointerup', up); root.addEventListener('pointercancel', () => { down = null; });
+  // télécommande « souris » : la molette fait avancer ou reculer d'un pas
+  root.addEventListener('wheel', e => { e.preventDefault(); vrStep(e.deltaY < 0 ? 1 : -1); }, { passive: false });
+  root.addEventListener('contextmenu', e => { e.preventDefault(); vrRemote('back'); });
+  addEventListener('keydown', vrOnKey); addEventListener('keyup', vrOnKeyUp);
+}
+
+/* ---------- Télécommande Bluetooth : clavier, multimédia, souris ou manette ---------- */
+// Touches envoyées par les télécommandes courantes (VR Box et compatibles en mode clavier, télécommandes de
+// présentation, télécommandes multimédia) et par un clavier Bluetooth.
+const VR_KEYMAP = {
+  ok: ['Enter', ' ', 'NumpadEnter', 'MediaPlayPause', 'MediaPlay', 'AudioVolumeUp', 'PageDown', 'Select', 'Accept'],
+  back: ['Escape', 'Backspace', 'BrowserBack', 'GoBack', 'AudioVolumeDown', 'PageUp', 'MediaStop'],
+  fwd: ['ArrowUp', 'w', 'z', 'W', 'Z'], rev: ['ArrowDown', 's', 'S'],
+  left: ['ArrowLeft', 'a', 'q', 'A', 'Q', 'MediaTrackPrevious', 'MediaRewind'], right: ['ArrowRight', 'd', 'D', 'MediaTrackNext', 'MediaFastForward'],
+  menu: ['m', 'M', 'ContextMenu', 'Tab', 'F1'],
+  drone: ['y', 'Y', 'v', 'V'],
+};
+const VR_REMOTE_HELP = [['OK / A / Entrée', 'valider (ce que vise le point)'], ['Retour / B / Échap', 'fermer, revenir, sortir'], ['↑ ↓ / joystick', 'avancer, reculer'],
+  ['← → / LB RB', 'tourner de 30°'], ['Menu / X', 'menu de la visite'], ['Y', 'vue drone ; en montgolfière : atterrir'], ['Molette (souris)', 'un pas en avant ou en arrière']];
+const VR_ACT_LABEL = { ok: 'Valider', back: 'Retour', fwd: 'Avancer', rev: 'Reculer', left: 'Tourner à gauche', right: 'Tourner à droite', menu: 'Menu', drone: 'Vue drone' };
+const vrKeyAction = e => Object.keys(VR_KEYMAP).find(a => VR_KEYMAP[a].includes(e.key) || VR_KEYMAP[a].includes(e.code));
+function vrOnKey(e) {
+  if (!VR.on) return;
+  const a = vrKeyAction(e); if (!a) return;
+  e.preventDefault();
+  if (a === 'fwd' || a === 'rev') { VR.keyMove = a === 'fwd' ? 1 : -1; return; }
+  if (e.repeat) return;
+  vrRemote(a);
+}
+function vrOnKeyUp(e) { const a = vrKeyAction(e); if (a === 'fwd' || a === 'rev') VR.keyMove = 0; }
+/** Une action de la télécommande ou de la manette. */
+function vrRemote(a) {
+  if (!VR.on || VR.loading) return;
+  if (a === 'ok') return vrActivate();
+  if (a === 'left') return vrTurn(VR_TURN);
+  if (a === 'right') return vrTurn(-VR_TURN);
+  if (a === 'menu') return VR.panel?.menu ? vrClosePanel() : vrMenuPanel();
+  if (a === 'drone') return VR.balloon ? vrBalloonLand() : vrMenu(VR.drone ? 'ground' : 'drone');
+  if (a === 'back') {
+    if (VR.panel) return vrClosePanel();
+    if (VR.scene === 'pano') return vrMenu('back');
+    if (VR.drone) return vrMenu('ground');
+    return stopVr();
+  }
+}
+/** Manettes et télécommandes en mode « manette » (lues à chaque image). */
+function vrPollPads(dt) {
+  let move = 0;
+  for (const pad of navigator.getGamepads?.() || []) {
+    if (!pad || !pad.connected) continue;
+    const prev = VR.padPrev[pad.index] || {}, now = {}, b = i => !!pad.buttons[i]?.pressed;
+    const press = (k, on) => { now[k] = on; if (on && !prev[k]) return true; return false; };
+    const std = pad.mapping === 'standard';
+    if (press('ok', b(0) || (std && (b(6) || b(7))))) vrRemote('ok');
+    if (press('back', b(1) || (std && b(8)))) vrRemote('back');
+    if (press('menu', std ? b(2) || b(9) : b(2))) vrRemote('menu');
+    if (press('drone', b(3))) vrRemote('drone');
+    const ax = pad.axes || [], lx = ax[0] || 0, ly = ax[1] || 0, rx = ax[2] || 0;
+    const turnL = (std && (b(4) || b(14))) || lx < -0.7 || rx < -0.7, turnR = (std && (b(5) || b(15))) || lx > 0.7 || rx > 0.7;
+    if (press('tl', turnL)) vrRemote('left');
+    if (press('tr', turnR)) vrRemote('right');
+    let m = Math.abs(ly) > 0.2 ? -ly : 0;
+    if (std && b(12)) m = 1; if (std && b(13)) m = -1;
+    if (Math.abs(m) > Math.abs(move)) move = m;
+    VR.padPrev[pad.index] = now;
+  }
+  VR.move = move || VR.keyMove;
+}
+/** Avancer en continu (manette, flèches) : on glisse le long du regard, arrêté par les murs. */
+function vrWalk(dt, fwd) {
+  const m = VR.scene === 'maquette' && !VR.panel ? VR.move : 0;
+  VR.moving += ((Math.abs(m) > 0.1 ? 1 : 0) - VR.moving) * Math.min(1, dt * 8);
+  if (Math.abs(m) < 0.1) return;
+  const f = V3.norm([fwd[0], 0, fwd[2]]), dir = m > 0 ? f : V3.mul(f, -1), step = Math.abs(m) * (VR.drone ? 14 : VR_WALK_SPEED) * dt;
+  if (!VR.drone && vrBlocked(dir, step + 0.35)) return;
+  vrShift(V3.mul(dir, step));
+}
+/** Un mur ou un obstacle devant, à hauteur de genou ou de poitrine ? */
+function vrBlocked(dir, dist) {
+  const g = VR.head[1] - VR_EYE;
+  for (const h of [0.45, 1.2]) { const hit = vrRayMesh([VR.head[0], g + h, VR.head[2]], dir, dist); if (hit && hit.up < 0.7) return true; }
+  return false;
+}
+/** Un pas (molette) : 1 m, sans traverser les murs. */
+function vrStep(sgn) {
+  if (!VR.on || VR.scene !== 'maquette' || VR.fade > 0.3) return;
+  const fwd = Q.rot(vrHeadQ(), [0, 0, -1]), f = V3.norm([fwd[0], 0, fwd[2]]), dir = sgn > 0 ? f : V3.mul(f, -1);
+  if (!VR.drone && vrBlocked(dir, 1.35)) return vrSay('🧱 Un mur bloque le passage');
+  vrShift(V3.mul(dir, VR.drone ? 8 : 1));
+}
+function vrShift(v) { VR.head = V3.add(VR.head, v); }
+
+/* ---------- Ce que l'on peut viser ---------- */
+/** Quad face à la caméra : centre c, axes r (droite) et u (haut), taille w × h. */
+function billboard(c, w, h, eye, spherical, headQ) {
+  let r, u;
+  if (spherical) { r = Q.rot(headQ, [1, 0, 0]); u = Q.rot(headQ, [0, 1, 0]); }
+  else { const t = V3.sub(eye, c); t[1] = 0; const f = V3.norm(V3.mul(t, -1)); r = V3.norm(V3.cross(f, [0, 1, 0])); u = [0, 1, 0]; }
+  return { c, r, u, w, h };
+}
+function quadHit(q, o, d) {
+  const n = V3.cross(q.r, q.u), den = V3.dot(d, n);
+  if (Math.abs(den) < 1e-6) return null;
+  const t = V3.dot(V3.sub(q.c, o), n) / den;
+  if (t <= 0.05) return null;
+  const p = V3.add(o, V3.mul(d, t)), rel = V3.sub(p, q.c), x = V3.dot(rel, q.r), y = V3.dot(rel, q.u), m = q.pad || 1.15;
+  if (Math.abs(x) > q.w / 2 * m || Math.abs(y) > q.h / 2 * m) return null;
+  return { t, u: x / q.w + 0.5, v: 0.5 - y / q.h };
+}
+/** Premier mur touché par le rayon (null si aucun) : distance et « sol praticable ». */
+function vrRayMesh(o, d, tmax) {
+  const T = VR.tris, U = VR.triUp, BX = VR.triBox; let best = tmax, up = 0;
+  const ix = 1 / (d[0] || 1e-12), iy = 1 / (d[1] || 1e-12), iz = 1 / (d[2] || 1e-12);
+  for (let c = 0, nc = BX ? BX.length / 6 : 1; c < nc; c++) {
+   if (BX) {   // rayon contre la boîte du paquet
+    const b = c * 6;
+    let t0 = (BX[b] - o[0]) * ix, t1 = (BX[b + 3] - o[0]) * ix; if (t0 > t1) { const t = t0; t0 = t1; t1 = t; }
+    let u0 = (BX[b + 1] - o[1]) * iy, u1 = (BX[b + 4] - o[1]) * iy; if (u0 > u1) { const t = u0; u0 = u1; u1 = t; }
+    if (u0 > t0) t0 = u0; if (u1 < t1) t1 = u1;
+    let v0 = (BX[b + 2] - o[2]) * iz, v1 = (BX[b + 5] - o[2]) * iz; if (v0 > v1) { const t = v0; v0 = v1; v1 = t; }
+    if (v0 > t0) t0 = v0; if (v1 < t1) t1 = v1;
+    if (t0 > t1 + 1e-6 || t1 < 0 || t0 > best) continue;
+   }
+   for (let i = BX ? c * 32 : 0, n = BX ? Math.min(U.length, i + 32) : U.length; i < n; i++) {
+    const j = i * 9, ax = T[j], ay = T[j + 1], az = T[j + 2];
+    const e1x = T[j + 3] - ax, e1y = T[j + 4] - ay, e1z = T[j + 5] - az, e2x = T[j + 6] - ax, e2y = T[j + 7] - ay, e2z = T[j + 8] - az;
+    const px = d[1] * e2z - d[2] * e2y, py = d[2] * e2x - d[0] * e2z, pz = d[0] * e2y - d[1] * e2x, det = e1x * px + e1y * py + e1z * pz;
+    if (det > -1e-9 && det < 1e-9) continue;
+    const inv = 1 / det, sx = o[0] - ax, sy = o[1] - ay, sz = o[2] - az, uu = (sx * px + sy * py + sz * pz) * inv;
+    if (uu < 0 || uu > 1) continue;
+    const qx = sy * e1z - sz * e1y, qy = sz * e1x - sx * e1z, qz = sx * e1y - sy * e1x, vv = (d[0] * qx + d[1] * qy + d[2] * qz) * inv;
+    if (vv < 0 || uu + vv > 1) continue;
+    const t = (e2x * qx + e2y * qy + e2z * qz) * inv;
+    if (t > 1e-3 && t < best) { best = t; up = U[i]; }
+   }
+  }
+  return best < tmax ? { t: best, up } : null;
+}
+function vrBuildTargets(headQ) {
+  const eye = VR.head, list = [], fwd = Q.rot(headQ, [0, 0, -1]), pitch = Math.asin(clamp(fwd[1], -1, 1));
+  if (pitch > -0.55) VR.menuYaw = yawOf(fwd);
+  if (VR.scene === 'maquette') {
+    for (const b of VR.pins) {
+      const dist = V3.len(V3.sub(b.pos, eye)), k = clamp(dist / 5, 1, VR.drone || VR.balloon ? 9 : 4);
+      list.push({ ...billboard(b.pos, 0.62 * k, 0.48 * k, eye), key: 'pin:' + b.pin.id, tex: b.tex, label: b.pin.titre || b.pin.metier || 'Repère', act: () => vrOpenPin(b.pin), depth: true, stalk: !VR.drone });
+    }
+    if (!VR.drone && !VR.balloon) VR.doors.forEach((d, i) => {
+      if (!d.n) Object.assign(d, vrDoorPrep(d));
+      const dist = V3.len(V3.sub(d.c, eye));
+      if (dist > 30) return;
+      // côté de l'observateur : vantail posé contre la face du mur, pictogramme juste devant (jamais dans le mur)
+      const side = Math.sign(V3.dot(V3.sub(eye, d.c), d.n)) || 1, f = V3.mul(d.n, side), off = d.half(side);
+      const act = () => vrDoor(d, side), key = 'door:' + i, near = dist <= 14 && dist >= 0.6;
+      if (d.tex) list.push({ c: V3.add(d.c, V3.mul(f, off + 0.06)), r: V3.cross([0, 1, 0], f), u: [0, 1, 0], w: d.w, h: d.h || 2.1, tex: d.tex, key, label: near ? 'Passer la porte' : '', act: near ? act : null, depth: true, door: true, pad: 1 });
+      if (near) list.push({ ...billboard(V3.add(V3.add(d.pos, V3.mul(f, off + 0.32)), [0, 0.15, 0]), 0.3, 0.35, eye), key, tex: VR.menuTex.door, label: 'Passer la porte', act, depth: true, alpha: clamp((14 - dist) / 4, 0, 1) });
+    });
+  } else if (VR.scene === 'pano') {
+    VR.pano.links.forEach((L, i) => {
+      const a = L.yaw * DEG2, b = (L.pitch || 0) * DEG2, dir = [Math.cos(b) * Math.sin(a), Math.sin(b), -Math.cos(b) * Math.cos(a)];
+      const c = V3.add(eye, V3.mul(dir, 3.2));
+      list.push({ ...billboard(c, 0.62, 0.48, eye, true, headQ), key: 'link:' + i, tex: L.tex, label: L.titre, act: () => vrPanoLink(L) });
+    });
+  }
+  if (VR.panel) {
+    const P = VR.panel;
+    list.push({ c: P.c, r: P.r, u: P.u, w: P.w, h: P.h, tex: P.tex, panel: true, pad: 1.0, label: '', act: null, top: true });
+  }
+  // menu aux pieds
+  // en montgolfière : les commandes sont au fond de la nacelle (on regarde par-dessus le bord sans les faire apparaître)
+  const B = VR.scene === 'maquette' && VR.balloon, show = B ? clamp((-pitch - 1.12) / 0.15, 0, 1) : clamp((-pitch - 0.62) / 0.2, 0, 1);
+  if (show > 0) {
+    const items = VR.scene === 'pano' ? ['back', 'quit'] : B ? ['up', 'down', B.paused ? 'go' : 'pause', 'land', 'quit']
+      : VR.intr ? ['stopi', 'intr', VR.drone ? 'ground' : 'drone', 'quit']
+      : ['start', VR.drone ? 'ground' : 'drone', 'ballon', ...(VR.plan.intrusion ? ['intr'] : []), ...(VR.pack.plans.length > 1 ? ['plan'] : []), 'quit'];
+    const fw = dirYaw(VR.menuYaw), right = [-fw[2], 0, fw[0]], n = items.length;
+    items.forEach((k, i) => {
+      const off = (i - (n - 1) / 2) * (B ? 0.27 : 0.36), c = V3.add(V3.add(eye, V3.mul(fw, B ? 0.3 : 0.62)), V3.add(V3.mul(right, off), [0, B ? -1.38 : -1.05, 0]));
+      list.push({ ...billboard(c, B ? 0.24 : 0.3, B ? 0.28 : 0.35, eye, true, headQ), key: 'menu:' + k, tex: VR.menuTex[k], label: { start: 'Retour au départ', drone: 'Vue drone', ground: 'Redescendre au sol', plan: 'Plan suivant', quit: 'Quitter la visite', back: 'Retour à la maquette',
+          ballon: 'Monter en montgolfière', intr: 'Tests d’intrusion', stopi: 'Arrêter le rejeu', up: 'Monter de 10 m', down: 'Descendre de 10 m', pause: 'Faire du surplace', go: 'Reprendre la balade', land: 'Atterrir ici' }[k],
+        act: () => vrMenu(k), top: true, alpha: show });
+    });
+  }
+  VR.quads = list;
+  return { fwd, pitch };
+}
+
+/* ---------- Image par image ---------- */
+/** Ce qui ne dépend pas de l'affichage : fondu, entrées, déplacement, cibles, regard. */
+function vrUpdate(now, dt, headQ) {
+  VR.fade += Math.sign(VR.fadeTo - VR.fade) * Math.min(Math.abs(VR.fadeTo - VR.fade), dt * 5);
+  if (VR.fade >= 0.999 && VR.onBlack) { const f = VR.onBlack; VR.onBlack = null; Promise.resolve(f()).finally(() => { VR.fadeTo = 0; }); }
+  for (const t of VR.trash.splice(0)) VR.gl.deleteTexture(t);
+  vrPollPads(dt);
+  const fwd0 = Q.rot(headQ, [0, 0, -1]);
+  if (VR.balloon && VR.scene === 'maquette') vrBalloonUpdate(dt, fwd0); else vrWalk(dt, fwd0);
+  if (VR.intr) vrIntrUpdate(dt);
+  const { fwd } = vrBuildTargets(headQ);
+  vrGaze(fwd, dt);
+  if (VR.stereo && !VR.sensor && !VR.saidNoSensor && now - VR.t0 > 2500) { VR.saidNoSensor = true; vrSay('Capteurs de mouvement indisponibles : glissez le doigt pour regarder'); }
+}
+/** Profondeur : assez de précision pour que deux faces proches ne scintillent pas. */
+const vrNearFar = () => [0.1, VR.drone || VR.balloon ? 4000 : Math.max(400, VR.extent * 4)];
+function vrFrame(now) {
+  if (!VR.on) return;
+  VR.raf = requestAnimationFrame(vrFrame);
+  const dt = Math.min(0.1, (now - VR.last) / 1000); VR.last = now;
+  const gl = VR.gl, cv = gl.canvas, qual = VR_QUALITY[VR.set.quality] || VR_QUALITY.standard;
+  // résolution : plafonnée en densité et en nombre de pixels (les très grands écrans ne ralentissent pas)
+  let dpr = Math.min(devicePixelRatio || 1, VR.stereo ? qual.dpr : 1.75);
+  dpr = Math.min(dpr, Math.sqrt(qual.px / (innerWidth * innerHeight)));
+  const W = Math.round(innerWidth * dpr), H = Math.round(innerHeight * dpr);
+  const hd = Math.min(dpr, 1.5), Wh = Math.round(innerWidth * hd), Hh = Math.round(innerHeight * hd);
+  if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; VR.fbo = null; }
+  const hud = $('#vrHud'); if (hud.width !== Wh || hud.height !== Hh) { hud.width = Wh; hud.height = Hh; VR.hudSig = null; }
+  const headQ = vrHeadQ(dt);
+  vrUpdate(now, dt, headQ);
+  vrPrepQuads();
+  if (VR.R) { vrRenduLocal(false); vrNightLights(now / 1000); }
+  // rendu
+  const eyes = VR.stereo ? [-1, 1] : [0], vw = VR.stereo ? Math.floor(W / 2) : W;
+  const fov = (VR.fovOverride || (VR.stereo ? VR.set.fov : 72)) * DEG2, asp = vw / H;   // fovOverride : captures (photos, 360°)
+  const [near, far] = vrNearFar(), proj = M4.persp(fov, asp, near, far);
+  const sh = VR.stereo ? Math.round((VR.set.shift || 0) / 100 * vw) : 0;   // centrage : chaque image en face de sa lentille
+  // image intermédiaire (lentilles, halo, fluidité) : sa définition suit la cadence réelle
+  const useFbo = vrNeedsFbo(), sc = useFbo ? vrAdaptScale(dt, now / 1000) : 1;
+  const Wf = Math.max(64, Math.round(W * sc)), Hf = Math.max(64, Math.round(H * sc)), vwf = VR.stereo ? Math.floor(Wf / 2) : Wf;
+  if (useFbo && (!VR.fbo || VR.fbo.w !== Wf || VR.fbo.h !== Hf)) VR.fbo = vrMakeFbo(Wf, Hf);
+  const fbo = useFbo && VR.fbo;
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fbo ? fbo.msaa || fbo.fb : null);
+  gl.disable(gl.SCISSOR_TEST);
+  gl.viewport(0, 0, fbo ? Wf : W, fbo ? Hf : H); gl.clearColor(0, 0, 0, 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  VR.now = (now - VR.t0) / 1000;
+  eyes.forEach((e, i) => {
+    const pos = V3.add(VR.head, Q.rot(headQ, [e * VR.ipd / 2, 0, 0]));
+    if (fbo) gl.viewport(i * vwf, 0, vwf, Hf); else gl.viewport(i * vw + e * sh, 0, vw, H);
+    if (!fbo && sh) { gl.enable(gl.SCISSOR_TEST); gl.scissor(i * vw, 0, vw, H); }
+    vrDrawEye(proj, M4.view(headQ, pos), pos);
+  });
+  gl.disable(gl.SCISSOR_TEST);
+  if (fbo) {
+    if (fbo.msaa) {   // anticrénelage : l'image multi-échantillonnée est résolue dans la texture
+      gl.bindFramebuffer(gl.READ_FRAMEBUFFER, fbo.msaa); gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, fbo.fb);
+      gl.blitFramebuffer(0, 0, Wf, Hf, 0, 0, Wf, Hf, gl.COLOR_BUFFER_BIT, gl.NEAREST);
+    }
+    vrPostPass(fbo, W, H, vw, sh, asp, VR.stereo);
+  }
+  vrHud(Wh, Hh, vw * Wh / W, hd, sh * Wh / W);
+}
+/** Image intermédiaire pour la correction des lentilles : texture + profondeur 24 bits, et en WebGL 2 un tampon
+    multi-échantillonné (anticrénelage 4×) résolu dans la texture à chaque image. */
+function vrMakeFbo(w, h) {
+  const gl = VR.gl, fb = gl.createFramebuffer(), tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+  let msaa = null;
+  if (VR.gl2 && VR.samples > 1) {
+    msaa = gl.createFramebuffer(); const cb = gl.createRenderbuffer(), db = gl.createRenderbuffer();
+    gl.bindRenderbuffer(gl.RENDERBUFFER, cb); gl.renderbufferStorageMultisample(gl.RENDERBUFFER, VR.samples, gl.RGBA8, w, h);
+    gl.bindRenderbuffer(gl.RENDERBUFFER, db); gl.renderbufferStorageMultisample(gl.RENDERBUFFER, VR.samples, gl.DEPTH_COMPONENT24, w, h);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, msaa);
+    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, cb);
+    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, db);
+    if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) msaa = null;
+  }
+  if (!msaa) {   // sans multi-échantillonnage : profondeur sur la texture elle-même (24 bits avec le stencil en WebGL 1)
+    const rb = gl.createRenderbuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.bindRenderbuffer(gl.RENDERBUFFER, rb);
+    if (VR.gl2) { gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT24, w, h); gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, rb); }
+    else { gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, w, h); gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, rb); }
+  }
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+  const ok = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  if (!ok) { VR.lens = null; return null; }
+  return { fb, tex, w, h, msaa };
+}
+
+function vrBindFull(P) {
+  const gl = VR.gl;
+  gl.bindBuffer(gl.ARRAY_BUFFER, VR.full);
+  gl.enableVertexAttribArray(P.a.p); gl.vertexAttribPointer(P.a.p, 2, gl.FLOAT, false, 0, 0);
+}
+function vrDrawEye(proj, view, eye) {
+  const gl = VR.gl, vp = M4.mul(proj, view);
+  // ciel ou photo 360°
+  const R = VR.R, S = R ? R.sky : VR.prog.sphere, rotOnly = view.slice(); rotOnly[12] = rotOnly[13] = rotOnly[14] = 0;
+  gl.useProgram(S.p); gl.disable(gl.DEPTH_TEST); gl.disable(gl.BLEND); gl.depthMask(false);
+  gl.uniformMatrix4fv(S.u.inv, false, M4.inv(M4.mul(proj, rotOnly)));
+  const pano = VR.scene === 'pano' && VR.pano.tex;
+  gl.uniform1f(S.u.sky, pano ? 0 : 1);
+  if (R && !pano && S.u.sunD) { gl.uniform3fv(S.u.sunD, R.sun); gl.uniform3fv(S.u.sunC, R.H.sun); gl.uniform3fv(S.u.zen, R.H.zen); gl.uniform3fv(S.u.hor, R.H.hor); gl.uniform3fv(S.u.gnd, R.H.gnd);
+    gl.uniform1f(S.u.tm, R.fx.anim ? VR.now : 0); gl.uniform1f(S.u.nite, R.H.nite); gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, R.det); gl.uniform1i(S.u.det, 1); }
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, pano || VR.texWhite); gl.uniform1i(S.u.t, 0);
+  vrBindFull(S); gl.drawArrays(gl.TRIANGLES, 0, 3);
+  gl.enable(gl.DEPTH_TEST); gl.depthMask(true); gl.depthFunc(gl.LEQUAL);
+  const fogd = vrFogDist(), tm = R && R.fx.anim ? VR.now : 0;
+  if (VR.scene === 'maquette') {
+    if (R) vrDrawGround(vp, eye, fogd, tm);                          // sol éclairé (ombres, plan) …
+    else qbDraw('sol', vp, eye, fogd);                               // … ou sol et plan en texture (WebGL 1)
+    const M = R ? (VR.v2 ? R.mesh : R.meshFlat) : VR.prog.mesh;
+    gl.useProgram(M.p); gl.uniformMatrix4fv(M.u.vp, false, vp);
+    if (R) { vrLightUniforms(M, eye, fogd, tm); gl.uniform1f(M.u.bk, VR.v2 ? 0 : 1); }
+    else { gl.uniform3fv(M.u.eye, eye); gl.uniform1f(M.u.fogd, fogd); gl.uniform3fv(M.u.fogc, VR_SKY); }
+    vrBindMesh(M, VR.meshBuf);
+    if (VR.nO) gl.drawArrays(gl.TRIANGLES, 0, VR.nO);                // maquette opaque
+    if (VR.balloon && VR.balloonBuf) {                                // nacelle et ballon autour de soi (repère local, suit la tête)
+      const h = VR.head, T = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, h[0], h[1], h[2], 1], n = VR.balloonN - (VR.balloon.burn > 0.1 ? 0 : VR.balloonFlame);
+      const B = R ? R.meshFlat : M;
+      if (B !== M) { gl.useProgram(B.p); vrLightUniforms(B, eye, 1e7, tm); }
+      gl.uniformMatrix4fv(B.u.vp, false, M4.mul(vp, T)); gl.uniform1f(B.u.fogd, 1e7);
+      if (R) { gl.uniform1f(B.u.bk, 1); if (B.u.shk) gl.uniform1f(B.u.shk, 0); if (B.u.aok) gl.uniform1f(B.u.aok, 0); }
+      vrBindMesh(B, VR.balloonBuf); gl.drawArrays(gl.TRIANGLES, 0, n);
+      if (R) { if (B.u.shk) gl.uniform1f(B.u.shk, 1); if (B.u.aok) gl.uniform1f(B.u.aok, 1); gl.uniform1f(B.u.bk, VR.v2 ? 0 : 1); }
+      gl.useProgram(M.p); gl.uniformMatrix4fv(M.u.vp, false, vp); gl.uniform1f(M.u.fogd, fogd);
+      vrBindMesh(M, VR.meshBuf);
+    }
+    if (VR.intr) vrIntrDraw(M, vp, eye, fogd, tm);                     // intrus d'un test d'intrusion rejoué
+    gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    if (VR.nA) { gl.depthMask(false); gl.drawArrays(gl.TRIANGLES, VR.nO, VR.nA); gl.depthMask(true); }   // vitres, volumes transparents
+  }
+  gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  qbDraw('monde', vp, eye, fogd);                                   // cible au sol, bulles, portes, liens, panneau
+  gl.disable(gl.DEPTH_TEST);
+  qbDraw('dessus', vp, eye, fogd);                                  // menu : toujours devant
+  gl.enable(gl.DEPTH_TEST);
+}
+const vrFogDist = () => VR.drone || VR.balloon ? 2600 : Math.max(160, VR.extent * 2.5);
+/** Maillage compact (20 octets par sommet) : position, couleur, normale et matériau (voir vr-rendu.js). */
+function vrBindMesh(M, buf) { vrBindMesh20(M, buf); }
+
+/* ---------- Quads texturés (sol, bulles, portes, panneaux, menu) ----------
+   Préparés une fois par image dans un seul tampon, puis dessinés pour chaque œil :
+   un envoi au processeur graphique par image au lieu d'un par quad et par œil. */
+const QB = { data: new Float32Array(30 * 128), list: [], n: 0 };
+const QB_UV = [0, 0, 1, 0, 1, 1, 0, 1], QB_IDX = [0, 1, 2, 0, 2, 3], QB_WHITE = [1, 1, 1, 1];
+function qbAdd(pass, tex, P, UV, tint, fog) {
+  if (QB.n + 30 > QB.data.length) { const d = new Float32Array(QB.data.length * 2); d.set(QB.data); QB.data = d; }
+  const d = QB.data, first = QB.n / 5;
+  for (let i = 0; i < 6; i++) { const k = QB_IDX[i], o = QB.n + i * 5; d[o] = P[k * 3]; d[o + 1] = P[k * 3 + 1]; d[o + 2] = P[k * 3 + 2]; d[o + 3] = UV[k * 2]; d[o + 4] = UV[k * 2 + 1]; }
+  QB.n += 30; QB.list.push({ pass, tex, tint, fog, first });
+}
+function qbQuad(pass, q, s, tint) {
+  const hw = q.w / 2 * s, hh = q.h / 2 * s, c = q.c, r = q.r, u = q.u, P = [];
+  for (const [a, b] of [[-1, 1], [1, 1], [1, -1], [-1, -1]]) P.push(c[0] + r[0] * a * hw + u[0] * b * hh, c[1] + r[1] * a * hw + u[1] * b * hh, c[2] + r[2] * a * hw + u[2] * b * hh);
+  qbAdd(pass, q.tex, P, QB_UV, tint || (q.alpha == null || q.alpha === 1 ? QB_WHITE : [1, 1, 1, q.alpha]), false);
+}
+/** Tous les quads de l'image (ils ne dépendent pas de l'œil : les panneaux font face à la tête). */
+function vrPrepQuads() {
+  QB.list.length = 0; QB.n = 0;
+  if (VR.scene === 'maquette') {
+    const R = 800, gx = Math.round(VR.head[0] / 2) * 2, gz = Math.round(VR.head[2] / 2) * 2;
+    if (!VR.R) qbAdd('sol', VR.texGround, [gx - R, -0.025, gz - R, gx + R, -0.025, gz - R, gx + R, -0.025, gz + R, gx - R, -0.025, gz + R], [(gx - R) / 2, (gz - R) / 2, (gx + R) / 2, (gz - R) / 2, (gx + R) / 2, (gz + R) / 2, (gx - R) / 2, (gz + R) / 2], QB_WHITE, true);
+    if (VR.planTex && !VR.R) { const r = VR.plan.rect; qbAdd('sol', VR.planTex, [r.x, 0.004, r.y, r.x + r.w, 0.004, r.y, r.x + r.w, 0.004, r.y + r.h, r.x, 0.004, r.y + r.h], QB_UV, QB_WHITE, true); }
+    if (VR.walk && VR.walk.ok) {
+      const p = VR.walk.p, s = 0.35 + Math.min(1.2, VR.walk.dist * 0.03), y = p[1] + 0.02;
+      qbAdd('monde', VR.texRing, [p[0] - s, y, p[2] - s, p[0] + s, y, p[2] - s, p[0] + s, y, p[2] + s, p[0] - s, y, p[2] + s], QB_UV, [0.3 + 0.7 * VR.walk.k, 0.85, 1, 0.9], false);
+    }
+    if (VR.intr) vrIntrQuads();
+  }
+  const tk = VR.target && VR.target.key;
+  for (const q of VR.quads) {
+    if (q.top) continue;
+    if (q.stalk) { const b = q.c, y0 = b[1] - q.h / 2, w = 0.025; qbAdd('monde', VR.texWhite, [b[0] - w, 0, b[2], b[0] + w, 0, b[2], b[0] + w, y0, b[2], b[0] - w, y0, b[2]], QB_UV, [0.13, 0.2, 0.33, 0.55], false); }
+    const hot = tk && q.key === tk;
+    qbQuad('monde', q, hot && !q.door ? 1.12 : 1, hot && q.door ? [1.2, 1.12, 0.9, 1] : null);
+  }
+  for (const q of VR.quads) if (q.top) qbQuad('dessus', q, tk && q.key === tk ? 1.12 : 1);
+  const gl = VR.gl;
+  gl.bindBuffer(gl.ARRAY_BUFFER, VR.quadBuf); gl.bufferData(gl.ARRAY_BUFFER, QB.data.subarray(0, QB.n), gl.DYNAMIC_DRAW);
+}
+function qbDraw(pass, vp, eye, fogd) {
+  const gl = VR.gl, T = VR.prog.tex;
+  let started = false, curFog = -1, curTex = null, curTint = null;
+  for (const it of QB.list) {
+    if (it.pass !== pass) continue;
+    if (!started) {
+      started = true; gl.useProgram(T.p);
+      gl.uniformMatrix4fv(T.u.vp, false, vp); gl.uniform3fv(T.u.eye, eye); gl.uniform3fv(T.u.fogc, VR_SKY); gl.uniform1i(T.u.t, 0); gl.activeTexture(gl.TEXTURE0);
+      gl.bindBuffer(gl.ARRAY_BUFFER, VR.quadBuf);
+      gl.enableVertexAttribArray(T.a.p); gl.vertexAttribPointer(T.a.p, 3, gl.FLOAT, false, 20, 0);
+      gl.enableVertexAttribArray(T.a.uv); gl.vertexAttribPointer(T.a.uv, 2, gl.FLOAT, false, 20, 12);
+    }
+    const f = it.fog ? fogd : 0;
+    if (f !== curFog) { gl.uniform1f(T.u.fogd, f); curFog = f; }
+    if (it.tint !== curTint) { gl.uniform4fv(T.u.tint, it.tint); curTint = it.tint; }
+    if (it.tex !== curTex) { gl.bindTexture(gl.TEXTURE_2D, it.tex); curTex = it.tex; }
+    gl.drawArrays(gl.TRIANGLES, it.first, 6);
+  }
+}
+
+/* ---------- Le regard : viser, remplir, valider ---------- */
+function vrGaze(fwd, dt) {
+  const o = VR.head;
+  VR.cooldown = Math.max(0, VR.cooldown - dt);
+  let best = null, bestT = 1e9, panelHit = null;
+  for (const q of VR.quads) {
+    if (q.alpha === 0) continue;
+    const h = quadHit(q, o, fwd);
+    if (!h) continue;
+    if (q.panel) { if (h.t < bestT) { panelHit = { q, h }; } continue; }
+    // les éléments « au-dessus » (menu) passent devant tout
+    const t = q.top ? h.t * 0.001 : h.t;
+    if (t < bestT) { bestT = t; best = q; }
+  }
+  // une bulle cachée derrière un mur ne se vise pas
+  if (best && !best.top && VR.scene === 'maquette' && vrRayMesh(o, fwd, bestT - 0.1)) best = null;
+  // un bouton du panneau ?
+  if (panelHit && (!best || !best.top)) {
+    const P = VR.panel, px = panelHit.h.u * P.cw, py = panelHit.h.v * P.ch, btn = P.buttons.find(b => px >= b.x && px <= b.x + b.w && py >= b.y && py <= b.y + b.h);
+    best = btn ? { label: btn.label, act: btn.act, key: 'panel:' + btn.id, panelBtn: btn } : { label: '', act: null, key: 'panel' };
+  }
+  // sinon : un endroit au sol
+  VR.walk = null;
+  if (!best && VR.scene === 'maquette' && !VR.balloon && !(VR.intr && VR.intr.view === 'suivre' && !VR.intr.done) && fwd[1] < -0.04) {
+    const tg = (0 - o[1]) / fwd[1], tmax = VR.drone ? 600 : 45;
+    const hit = vrRayMesh(o, fwd, Math.min(tg, tmax));
+    let p = null, ok = false;
+    if (!hit && tg <= tmax) { p = V3.add(o, V3.mul(fwd, tg)); ok = true; }
+    else if (hit) { p = V3.add(o, V3.mul(fwd, hit.t)); ok = hit.up > 0.85 && p[1] < 0.7; }
+    if (p) {
+      const dist = Math.hypot(p[0] - o[0], p[2] - o[2]);
+      if (ok && dist < 0.5 && !VR.drone) ok = false;
+      const prev = VR.walkAnchor, tol = Math.max(0.35, dist * 0.07);
+      if (!ok || !prev || Math.hypot(prev[0] - p[0], prev[2] - p[2]) > tol) VR.walkAnchor = ok ? p : null;
+      VR.walk = { p, ok, dist, k: 0 };
+      if (ok) best = { label: VR.drone ? 'Descendre ici' : `Aller ici · ${dist < 10 ? dist.toFixed(1).replace('.', ',') : Math.round(dist)} m`, act: () => vrTeleport(p), key: 'walk', walk: true };
+      else best = { label: '', act: null, key: 'blocked' };
+    } else VR.walkAnchor = null;
+  } else VR.walkAnchor = null;
+  const key = best ? best.key : null, prevKey = VR.target ? VR.target.key : null;
+  if (key !== prevKey || (best && best.walk && VR.walkAnchor !== VR.walkAnchorPrev)) VR.dwell = 0;
+  const panelHot = k => k && k.startsWith('panel:');
+  VR.walkAnchorPrev = VR.walkAnchor;
+  VR.target = best;
+  if (VR.panel && key !== prevKey && (panelHot(key) || panelHot(prevKey))) VR.panel.draw();
+  if (best && best.act && VR.cooldown === 0 && VR.fade < 0.05 && VR.dwellT > 0 && !(best.walk && VR.moving > 0.05)) {
+    VR.dwell += dt;
+    const need = best.walk ? VR.dwellT + 0.1 : VR.dwellT;
+    if (VR.walk) VR.walk.k = Math.min(1, VR.dwell / need);
+    if (VR.dwell >= need) vrActivate();
+  } else VR.dwell = 0;
+}
+function vrActivate() {
+  const t = VR.target;
+  if (!VR.on || VR.loading || !t || !t.act || VR.fade > 0.3) return;
+  VR.dwell = 0; VR.cooldown = 0.9; VR.walkAnchor = null;
+  if (navigator.vibrate) try { navigator.vibrate(12); } catch { }
+  t.act();
+}
+/** Libère une texture à l'image suivante (elle peut encore être dessinée dans celle-ci). */
+function vrFree(t) { if (t) VR.trash.push(t); }
+/** Écran noir le temps d'une action (déplacement, changement de scène). */
+function vrBlack(fn) { VR.fadeTo = 1; VR.onBlack = fn; }
+function vrTeleport(p) {
+  vrBlack(() => { VR.head = [p[0], (VR.drone ? 0 : p[1]) + VR_EYE, p[2]]; VR.drone = false; VR.panel = null; });
+}
+function vrDoor(d, side) {
+  const n = d.n || (r => [-Math.sin(r), 0, Math.cos(r)])((d.rot || 0) * DEG2);
+  side = side || Math.sign(V3.dot(V3.sub(VR.head, [d.x, VR.head[1], d.y]), n)) || 1;
+  const k = (d.half ? d.half(-side) : 0.1) + 0.9;   // de l'autre côté, à 90 cm de la face du mur
+  vrBlack(() => { VR.head = [d.x - n[0] * side * k, VR_EYE + (d.z || 0), d.y - n[2] * side * k]; VR.panel = null; });
+}
+function vrMenu(k) {
+  if (k === 'quit') return stopVr();
+  if (k === 'intr') return vrIntrList();
+  if (k === 'stopi') return vrIntrStop();
+  const B = VR.balloon;
+  if (k === 'ballon') return vrBalloonStart();
+  if (B && k === 'up') { B.alt = Math.min(150, B.alt + 10); return vrSay(`⬆️ Cap sur ${Math.round(B.alt)} m`); }
+  if (B && k === 'down') { B.alt = Math.max(6, B.alt - 10); return vrSay(`⬇️ Cap sur ${Math.round(B.alt)} m`); }
+  if (B && (k === 'pause' || k === 'go')) { B.paused = k === 'pause'; return vrSay(B.paused ? '⏸️ Surplace' : '▶️ On repart : regardez où aller'); }
+  if (B && k === 'land') return vrBalloonLand();
+  if (k === 'start') return vrBlack(() => { VR.scene = 'maquette'; VR.panel = null; vrGoStart(); });
+  if (k === 'back') return vrBlack(() => vrLeavePano());
+  if (k === 'plan') return vrBlack(() => vrLoadPlan((VR.planIdx + 1) % VR.pack.plans.length).then(() => vrSay('🗺️ ' + VR.plan.nom)));
+  if (k === 'drone') return vrBlack(() => {
+    const c = VR.center, e = VR.extent;
+    VR.head = [c[0], VR.hmax + e * 0.55 + 6, c[2] + e * 0.62]; VR.drone = true; VR.panel = null;
+    vrFace(c); vrSay('🚁 Vue drone · regardez un endroit pour y descendre');
+  });
+  if (k === 'ground') return vrBlack(() => { VR.drone = false; vrGoStart(); });
+}
+function vrSay(text) { VR.hint = { text, until: performance.now() + 3500 }; }
+
+/* ---------- Balade en montgolfière ----------
+   On monte doucement depuis l'endroit où l'on est, puis on dérive au gré du regard : la montgolfière part vers
+   où l'on regarde (à l'horizontale), plus vite quand elle est haute. Au fond de la nacelle : monter, descendre,
+   surplace, atterrir. Télécommande : ↑ ↓ monter / descendre, ← → tourner, Y atterrir.
+   Jamais plus bas que 4 m au-dessus des toits, jamais loin du site. */
+function vrBalloonStart() {
+  if (VR.scene !== 'maquette' || VR.balloon) return;
+  vrClosePanel();
+  const fwd = Q.rot(vrHeadQ(), [0, 0, -1]), dir = V3.norm([fwd[0], 0, fwd[2]]);
+  VR.drone = false;
+  VR.balloon = { alt: 30, vel: [0, 0, 0], vy: 0, dir, paused: false, landing: false, burn: 1, t: 0 };
+  vrSay('🎈 Décollage ! Regardez où aller · au fond de la nacelle : les commandes');
+}
+function vrBalloonGround() {
+  const h = VR.head, hit = vrRayMesh(h, [0, -1, 0], 2000);
+  return hit ? { y: h[1] - hit.t, roof: h[1] - hit.t > 0.4 } : { y: 0, roof: false };
+}
+function vrBalloonLand() {
+  const B = VR.balloon; if (!B) return;
+  if (vrBalloonGround().roof) return vrSay('🏢 Pas d’atterrissage sur un toit : avancez au-dessus du sol');
+  B.landing = true; B.paused = true; vrSay('🪂 Atterrissage…');
+}
+function vrBalloonStatus() {
+  const B = VR.balloon, g = B.g || { y: 0 }, v = Math.hypot(B.vel[0], B.vel[2]);
+  return B.landing ? '🪂 Atterrissage…' : `🎈 ${Math.round(VR.head[1] - g.y)} m · ${v < 0.2 ? 'surplace' : v.toFixed(1).replace('.', ',') + ' m/s'}`;
+}
+function vrBalloonUpdate(dt, fwd) {
+  const B = VR.balloon, h = VR.head;
+  B.t += dt;
+  const g = (B.tg = (B.tg || 0) - dt) > 0 && B.g ? B.g : (B.tg = 0.2, B.g = vrBalloonGround());   // sol sous la nacelle, 5 fois par seconde
+  // altitude visée : télécommande (↑ ↓ tenus) ou commandes de la nacelle ; plancher au-dessus des toits
+  if (Math.abs(VR.move) > 0.15 && !B.landing) B.alt = clamp(B.alt + VR.move * 4 * dt, 6, 150);
+  const floorY = g.y + (B.landing ? VR_EYE : 4 + VR_EYE);
+  const ty = B.landing ? floorY : Math.max(B.alt + VR_EYE, floorY);
+  const want = clamp((ty - h[1]) * 0.6, -2.2, 2.4);
+  B.vy += (want - B.vy) * Math.min(1, dt * 1.5);
+  B.burn = Math.max(0, B.vy - 0.2);
+  // dérive horizontale vers où l'on regarde (pas en regardant ses pieds ni le ciel), avec de l'inertie
+  const pitch = Math.asin(clamp(fwd[1], -1, 1));
+  if (pitch > -1.0 && pitch < 0.9) B.dir = V3.norm([fwd[0], 0, fwd[2]]);
+  const airborne = h[1] - g.y > 6, speed = B.paused || B.landing || VR.panel || !airborne ? 0 : 2.5 + clamp((h[1] - g.y) * 0.04, 0, 4);
+  let target = V3.mul(B.dir, speed);
+  const toC = V3.sub([VR.center[0], 0, VR.center[2]], [h[0], 0, h[2]]), far = V3.len(toC) - (VR.extent * 0.75 + 40);
+  if (far > 0) { target = V3.add(V3.mul(target, 0.3), V3.mul(V3.norm(toC), Math.min(6, 1.5 + far * 0.2))); if (!B.saidFar) { B.saidFar = true; vrSay('🌬️ Le vent vous ramène vers le site'); } } else B.saidFar = false;
+  B.vel = V3.add(B.vel, V3.mul(V3.sub(target, B.vel), Math.min(1, dt / 1.6)));
+  VR.moving = Math.min(0.6, Math.hypot(B.vel[0], B.vel[2]) / 8 + Math.abs(B.vy) / 6);
+  vrShift([B.vel[0] * dt, B.vy * dt, B.vel[2] * dt]);
+  if (B.landing && Math.abs(VR.head[1] - floorY) < 0.08) { VR.balloon = null; VR.moving = 0; VR.head = [VR.head[0], floorY, VR.head[2]]; vrSay('🧍 Posé en douceur !'); }
+}
+/** Nacelle en osier, câbles, brûleur et ballon à fuseaux de couleur, dans le repère de la tête (l'œil en 0).
+    Format du pack : [x, -z, y, r, g, b, a] par sommet ; la flamme du brûleur est à la fin (affichée en montée). */
+function vrBalloonMesh() {
+  const out = [], L = V3.norm([-0.4, 0.8, 0.45]);
+  const rgb = h => { const n = parseInt(h.slice(1), 16); return [(n >> 16) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255]; };
+  const tri = (a, b, c, col) => {
+    const n = V3.norm(V3.cross(V3.sub(b, a), V3.sub(c, a))), k = 0.62 + 0.38 * Math.abs(V3.dot(n, L)), [r, g, bb] = rgb(col);
+    for (const p of [a, b, c]) out.push(p[0], -p[2], p[1], Math.min(1, r * k), Math.min(1, g * k), Math.min(1, bb * k), 1);
+  };
+  const quad = (a, b, c, d, col) => { tri(a, b, c, col); tri(a, c, d, col); };
+  const box = (x0, x1, y0, y1, z0, z1, col) => {
+    const P = (x, y, z) => [x, y, z];
+    quad(P(x0, y0, z0), P(x1, y0, z0), P(x1, y1, z0), P(x0, y1, z0), col); quad(P(x0, y0, z1), P(x1, y0, z1), P(x1, y1, z1), P(x0, y1, z1), col);
+    quad(P(x0, y0, z0), P(x0, y0, z1), P(x0, y1, z1), P(x0, y1, z0), col); quad(P(x1, y0, z0), P(x1, y0, z1), P(x1, y1, z1), P(x1, y1, z0), col);
+    quad(P(x0, y1, z0), P(x1, y1, z0), P(x1, y1, z1), P(x0, y1, z1), col); quad(P(x0, y0, z0), P(x1, y0, z0), P(x1, y0, z1), P(x0, y0, z1), col);
+  };
+  const seg = (p, q, r, col) => {   // câble : prisme fin entre deux points
+    const d = V3.norm(V3.sub(q, p)), a = V3.norm(V3.cross(d, Math.abs(d[1]) < 0.9 ? [0, 1, 0] : [1, 0, 0])), b = V3.cross(d, a);
+    const c = [[1, 1], [-1, 1], [-1, -1], [1, -1]].map(([u, v]) => V3.add(V3.mul(a, u * r), V3.mul(b, v * r)));
+    for (let i = 0; i < 4; i++) { const j = (i + 1) % 4; quad(V3.add(p, c[i]), V3.add(p, c[j]), V3.add(q, c[j]), V3.add(q, c[i]), col); }
+  };
+  const s = 0.62, F = -VR_EYE, top = -0.95, t = 0.07;
+  box(-s, s, F - 0.04, F, -s, s, '#4a3220');                                                       // plancher
+  for (let i = 0; i < 6; i++) {                                                                     // parois d'osier tressé
+    const y0 = F + (top - F) * i / 6, y1 = F + (top - F) * (i + 1) / 6, col = i % 2 ? '#a0743f' : '#b8864b';
+    box(-s, s, y0, y1, -s, -s + t, col); box(-s, s, y0, y1, s - t, s, col); box(-s, -s + t, y0, y1, -s + t, s - t, col); box(s - t, s, y0, y1, -s + t, s - t, col);
+  }
+  box(-s - 0.03, s + 0.03, top, top + 0.07, -s - 0.03, -s + t + 0.03, '#3b2614'); box(-s - 0.03, s + 0.03, top, top + 0.07, s - t - 0.03, s + 0.03, '#3b2614');
+  box(-s - 0.03, -s + t + 0.03, top, top + 0.07, -s + t + 0.03, s - t - 0.03, '#3b2614'); box(s - t - 0.03, s + 0.03, top, top + 0.07, -s + t + 0.03, s - t - 0.03, '#3b2614');
+  // cadre du brûleur, câbles et brûleur
+  const fy = 2.1, fs = 0.42;
+  for (const [x, z] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) { seg([x * (s - 0.04), top + 0.07, z * (s - 0.04)], [x * fs, fy, z * fs], 0.015, '#2b2b2b'); seg([x * fs, fy, z * fs], [x * 1.05, 3.6, z * 1.05], 0.012, '#2b2b2b'); }
+  for (const [a, b] of [[[-fs, -fs], [fs, -fs]], [[fs, -fs], [fs, fs]], [[fs, fs], [-fs, fs]], [[-fs, fs], [-fs, -fs]]]) seg([a[0], fy, a[1]], [b[0], fy, b[1]], 0.025, '#6b7280');
+  box(-0.16, 0.16, fy - 0.12, fy + 0.22, -0.16, 0.16, '#9aa3ad');
+  // ballon : profil de révolution, 24 fuseaux de couleur, ouvert en bas
+  const prof = [[1.1, 3.6], [2.0, 4.6], [3.4, 5.6], [4.9, 6.6]];
+  for (let k = 1; k <= 9; k++) { const a = -0.85 + k / 9 * (Math.PI / 2 + 0.85); prof.push([Math.max(0.05, 8 * Math.cos(a)), 11.6 + 8 * Math.sin(a)]); }
+  const N = 24, cols = ['#d7263d', '#f4c430', '#2e86ab', '#f4c430'];
+  for (let i = 0; i < N; i++) {
+    const a0 = i / N * Math.PI * 2, a1 = (i + 1) / N * Math.PI * 2, col = cols[i % 4];
+    for (let j = 0; j < prof.length - 1; j++) {
+      const [r0, y0] = prof[j], [r1, y1] = prof[j + 1], P = (r, y, a) => [r * Math.cos(a), y, r * Math.sin(a)];
+      quad(P(r0, y0, a0), P(r0, y0, a1), P(r1, y1, a1), P(r1, y1, a0), j === prof.length - 2 ? '#f8fafc' : col);
+    }
+  }
+  const nBody = out.length / 7;
+  // flamme (seulement quand on monte)
+  for (const [w, y0, y1, col] of [[0.14, fy + 0.22, fy + 1.0, '#ff8c1a'], [0.07, fy + 0.22, fy + 1.3, '#ffd23f']]) {
+    const tip = [0, y1, 0], b = [[-w, -w], [w, -w], [w, w], [-w, w]].map(([x, z]) => [x, y0, z]);
+    for (let i = 0; i < 4; i++) tri(b[i], b[(i + 1) % 4], tip, col);
+  }
+  const gl = VR.gl;
+  VR.balloonBuf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, VR.balloonBuf); gl.bufferData(gl.ARRAY_BUFFER, vrPackMesh(out), gl.STATIC_DRAW);
+  VR.balloonN = out.length / 7; VR.balloonFlame = VR.balloonN - nBody;
+}
+
+/* ---------- Panneaux d'information ---------- */
+function vrPanel(build, opts = {}) {
+  const cw = 1024, [c, g] = vrCanvas(cw, opts.height || 720), buttons = [];
+  const draw = () => {
+    g.clearRect(0, 0, c.width, c.height); buttons.length = 0;
+    build(g, c, buttons);
+    if (panel.tex) { const gl = VR.gl; gl.bindTexture(gl.TEXTURE_2D, panel.tex); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c); gl.generateMipmap && VR.gl2 && gl.generateMipmap(gl.TEXTURE_2D); }
+  };
+  const headQ = vrHeadQ(), fwd = Q.rot(headQ, [0, 0, -1]), fh = V3.norm([fwd[0], 0, fwd[2]]), dist = 1.5;
+  const panel = { cw, ch: c.height, w: 1.25, h: 1.25 * c.height / cw, buttons, draw, canvas: c };
+  panel.c = V3.add(V3.add(VR.head, V3.mul(fh, dist)), [0, -0.12 + clamp(fwd[1], -0.4, 0.4) * dist * 0.5, 0]);
+  panel.r = V3.norm(V3.cross(fh, [0, 1, 0])); panel.u = [0, 1, 0];
+  draw();
+  panel.tex = vrTexture(c, { mip: false });
+  if (VR.panel?.tex) vrFree(VR.panel.tex);
+  VR.panel = panel;
+  return panel;
+}
+function vrClosePanel() { if (VR.audio) { VR.audio.pause(); VR.audio = null; } if (VR.panel?.tex) vrFree(VR.panel.tex); VR.panel = null; }
+function panelFrame(g, c, color) {
+  g.fillStyle = 'rgba(10,20,40,.35)'; roundRect(g, 10, 18, c.width - 20, c.height - 24, 46); g.fill();
+  g.fillStyle = '#fff'; roundRect(g, 4, 4, c.width - 20, c.height - 24, 44); g.fill();
+  g.fillStyle = color; roundRect(g, 4, 4, c.width - 20, 22, 44); g.fill(); g.fillRect(4, 16, c.width - 20, 10);
+}
+function panelButton(g, buttons, id, x, y, w, h, text, bg, act, label) {
+  const hot = VR.target && VR.target.key === 'panel:' + id;
+  g.fillStyle = bg; roundRect(g, x, y, w, h, h / 2); g.fill();
+  if (hot) { g.strokeStyle = '#ffc94a'; g.lineWidth = 8; roundRect(g, x, y, w, h, h / 2); g.stroke(); }
+  g.fillStyle = '#fff'; g.font = `800 ${Math.round(h * 0.44)}px ${VR_FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, x + w / 2, y + h / 2 + 2);
+  buttons.push({ id, x, y, w, h, act, label: label || text });
+}
+function vrWelcome() {
+  vrPanel((g, c, buttons) => {
+    panelFrame(g, c, '#2f7fdc');
+    g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.fillStyle = '#16233d';
+    g.font = `900 64px ${VR_FONT}`; g.fillText(fitText(g, VR.pack.nom || 'Visite', 900), c.width / 2, 120);
+    g.font = `700 36px ${VR_FONT}`; g.fillStyle = '#61708c'; g.fillText(fitText(g, VR.plan.nom || '', 900), c.width / 2, 172);
+    g.textAlign = 'left'; g.fillStyle = '#16233d'; g.font = `700 40px ${VR_FONT}`;
+    const pad = (navigator.getGamepads?.() || []).some(p => p);
+    [['👀', VR.dwellT ? 'Regardez le sol pour vous déplacer' : 'Visez le sol, validez pour y aller'], ['🫧', VR.dwellT ? 'Fixez une bulle pour l’ouvrir' : 'Visez une bulle, validez pour l’ouvrir'],
+      pad ? ['🎮', 'Joystick : avancer · ← → tourner · B : retour'] : ['⬇️', 'Baissez la tête : le menu']].forEach(([e, t], i) => { g.fillText(e, 90, 268 + i * 82); g.fillText(t, 170, 268 + i * 82); });
+    panelButton(g, buttons, 'go', c.width / 2 - 230, c.height - 150, 460, 100, 'C’est parti !', '#3fb04a', () => vrClosePanel(), 'C’est parti !');
+  }, { height: 640 });
+}
+/** Menu de la visite devant soi (bouton Menu de la télécommande) : on vise un bouton et on valide. */
+function vrMenuPanel() {
+  const items = VR.scene === 'pano' ? [['back', '↩️ Retour à la maquette', '#3fb04a']] :
+    VR.balloon ? [['up', '⬆️ Monter de 10 m', '#f2a019'], ['down', '⬇️ Descendre de 10 m', '#2f7fdc'], [VR.balloon.paused ? 'go' : 'pause', VR.balloon.paused ? '▶️ Reprendre la balade' : '⏸️ Faire du surplace', '#475569'], ['land', '🪂 Atterrir ici', '#16a34a']] :
+    [['start', '🏁 Retour au départ', '#3fb04a'], [VR.drone ? 'ground' : 'drone', VR.drone ? '🧍 Redescendre au sol' : '🚁 Vue drone', '#2f7fdc'], ['ballon', '🎈 Montgolfière', '#d7263d'], ...(VR.plan.intrusion ? [['intr', '🚨 Tests d’intrusion', '#b91c1c']] : []), ...(VR.pack.plans.length > 1 ? [['plan', '🗺️ Plan suivant', '#f2a019']] : [])];
+  if (VR.intr && VR.scene !== 'pano') items.unshift(['stopi', '⏹️ Arrêter le rejeu', '#475569']);
+  items.push(['quit', '🚪 Quitter la visite', '#dc2626']);
+  const P = vrPanel((g, c, buttons) => {
+    panelFrame(g, c, '#16233d');
+    g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.fillStyle = '#16233d'; g.font = `900 52px ${VR_FONT}`; g.fillText('Menu', c.width / 2, 92);
+    items.forEach(([k, t, bg], i) => panelButton(g, buttons, 'm-' + k, 120, 130 + i * 118, c.width - 260, 96, t, bg, () => { vrClosePanel(); vrMenu(k); }, t.replace(/^\S+ /, '')));
+  }, { height: 170 + items.length * 118 });
+  P.menu = true;
+}
+async function vrOpenPin(pin) {
+  if (pin.pano && VR.pack.panos[pin.pano]) return vrBlack(() => vrEnterPano(pin.pano));
+  let photo = null;
+  const P = vrPanel((g, c, buttons) => {
+    panelFrame(g, c, pin.color || '#2f7fdc');
+    g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+    g.font = `80px ${VR_FONT}`; g.fillText(TYPE_EMOJI[pin.type] || '📍', 50, 140);
+    g.fillStyle = '#16233d'; g.font = `900 54px ${VR_FONT}`; g.fillText(fitText(g, pin.titre || pin.metier || 'Repère', 780), 160, 112);
+    g.font = `700 32px ${VR_FONT}`; g.fillStyle = '#61708c';
+    g.fillText(fitText(g, [pin.metier, ({ photo: 'Photo', note: 'Note', audio: 'Note audio' })[pin.type]].filter(Boolean).join(' · ') || ' ', 780), 162, 156);
+    let y = 200;
+    if (pin.etat) { g.font = `800 34px ${VR_FONT}`; const w = g.measureText(pin.etat).width + 60; g.fillStyle = pin.etatColor || '#475569'; roundRect(g, 50, y, w, 56, 28); g.fill(); g.fillStyle = '#fff'; g.fillText(pin.etat, 80, y + 40); y += 80; }
+    if (photo) { const mh = 470, k = Math.min((c.width - 120) / photo.width, mh / photo.height), w = photo.width * k, h = photo.height * k; g.drawImage(photo, (c.width - 20 - w) / 2, y, w, h); y += h + 24; }
+    g.fillStyle = '#16233d'; g.font = `600 36px ${VR_FONT}`;
+    for (const l of wrapText(g, pin.note || (photo || pin.audio ? '' : 'Pas d’observation.'), c.width - 130, photo ? 3 : 8)) { g.fillText(l, 52, y + 36); y += 48; }
+    const by = c.height - 130;
+    if (pin.audio) {
+      const playing = VR.audio && !VR.audio.paused, a = VR.audio;
+      panelButton(g, buttons, 'play', 50, by, 400, 96, playing ? '⏸ Pause' : '▶ Écouter', '#db2777', () => vrToggleAudio(pin));
+      if (a && a.duration) { g.fillStyle = '#eef2f7'; roundRect(g, 480, by + 38, 260, 20, 10); g.fill(); g.fillStyle = '#db2777'; roundRect(g, 480, by + 38, 260 * (a.currentTime / a.duration), 20, 10); g.fill(); }
+    }
+    panelButton(g, buttons, 'close', c.width - 290, by, 240, 96, '✕ Fermer', '#475569', () => vrClosePanel());
+  }, { height: pin.photo ? (pin.note ? 900 : 800) : 640 });
+  if (pin.photo) {
+    try { photo = await vrBitmap(await vrFile(pin.photo), 1200); if (VR.panel === P) P.draw(); } catch (e) { console.warn(e); }
+  }
+}
+async function vrToggleAudio(pin) {
+  if (VR.audio && VR.audio.src && VR.audioPin === pin.id) { if (VR.audio.paused) VR.audio.play().catch(() => { }); else VR.audio.pause(); return; }
+  try {
+    const url = URL.createObjectURL(await vrFile(pin.audio)); VR.urls.push(url);
+    const a = new Audio(url); VR.audio = a; VR.audioPin = pin.id;
+    const P = VR.panel, tick = () => { if (VR.panel === P) P.draw(); };
+    a.ontimeupdate = tick; a.onplay = tick; a.onpause = tick; a.onended = tick;
+    await a.play();
+  } catch (e) { console.warn(e); vrSay('🔇 Lecture audio impossible'); }
+}
+
+/* ---------- Photos 360° ---------- */
+async function vrEnterPano(id) {
+  const P = VR.pack.panos[id];
+  vrClosePanel();
+  if (VR.pano?.tex) vrFree(VR.pano.tex);
+  for (const L of VR.pano?.links || []) vrFree(L.tex);
+  const tex = vrTexture(await vrBitmap(await vrFile(P.img), 4096), { mip: false });
+  const links = P.links.map(L => ({ ...L, tex: vrTexture(L.pano ? bubbleTexture({ type: 'panorama', titre: L.titre, color: '#0891b2' }) : L.plan ? iconTexture('🗺️', L.titre, '#f2a019') : bubbleTexture({ type: L.type, titre: L.titre, color: L.color })) }));
+  if (VR.scene !== 'pano') { VR.maquetteHead = VR.head.slice(); VR.maquetteBalloon = VR.balloon; VR.balloon = null; }
+  VR.pano = { id, tex, links, data: P };
+  VR.scene = 'pano'; VR.head = [0, VR_EYE, 0];
+  vrSay('🌐 ' + P.titre + ' · baissez la tête pour revenir');
+}
+function vrLeavePano() {
+  if (VR.pano) { vrFree(VR.pano.tex); for (const L of VR.pano.links) vrFree(L.tex); }
+  VR.pano = null; VR.scene = 'maquette'; VR.panel = null;
+  VR.head = VR.maquetteHead || VR.head; VR.balloon = VR.maquetteBalloon; VR.maquetteBalloon = null;
+}
+function vrPanoLink(L) {
+  if (L.pano && VR.pack.panos[L.pano]) return vrBlack(() => vrEnterPano(L.pano));
+  if (L.plan) {
+    const i = VR.pack.plans.findIndex(p => p.id === L.plan);
+    if (i >= 0) return vrBlack(async () => { vrLeavePano(); await vrLoadPlan(i); vrSay('🗺️ ' + VR.plan.nom); });
+    return vrSay('Ce plan n’est pas dans le pack');
+  }
+  vrOpenPin({ type: L.type, titre: L.titre, note: L.note, color: L.color });
+}
+
+/* ---------- Viseur et messages (par-dessus la 3D) ---------- */
+/** Viseur et messages par-dessus la 3D : calque 2D en définition réduite, redessiné seulement quand il change. */
+function vrHud(W, H, vw, dpr, sh = 0) {
+  const t = VR.target, now = performance.now();
+  const need0 = t && t.walk ? VR.dwellT + 0.1 : VR.dwellT, k0 = t && t.act && need0 > 0 ? Math.min(1, VR.dwell / need0) : 0;
+  const hint = VR.hint && now < VR.hint.until ? VR.hint.text : '', bal = VR.balloon && VR.scene === 'maquette' ? vrBalloonStatus() : VR.intr && VR.scene === 'maquette' ? vrIntrStatus() : '';
+  const sig = [W, H, sh, t && t.label, !!(t && t.act), Math.round(k0 * 40), hint, bal, Math.round(VR.fade * 50), Math.round(VR.moving * 20)].join('|');
+  if (sig === VR.hudSig) return;
+  VR.hudSig = sig;
+  const g = VR.hudCtx || (VR.hudCtx = $('#vrHud').getContext('2d'));
+  g.clearRect(0, 0, W, H);
+  const centers = VR.stereo ? [vw / 2 - sh, vw * 1.5 + sh] : [W / 2];
+  // vignette de confort : on assombrit les bords quand on se déplace en continu (moins de mal des transports)
+  if (VR.moving > 0.02) for (const cx of centers) {
+    const r0 = Math.min(vw, H) * 0.32, r1 = Math.max(vw, H) * 0.62, gr = g.createRadialGradient(cx, H / 2, r0, cx, H / 2, r1);
+    gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, `rgba(0,0,0,${0.75 * VR.moving})`);
+    g.save(); if (VR.stereo) { g.beginPath(); g.rect(cx < vw ? 0 : vw, 0, vw, H); g.clip(); } g.fillStyle = gr; g.fillRect(0, 0, W, H); g.restore();
+  }
+  const k = k0, R = 11 * dpr * (VR.stereo ? 1 : 1.2);
+  for (const cx of centers) {
+    const cy = H / 2;
+    g.lineWidth = 3 * dpr; g.strokeStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.arc(cx, cy, R + 1.5 * dpr, 0, 7); g.stroke();
+    g.strokeStyle = t && t.act ? '#ffc94a' : 'rgba(255,255,255,.9)'; g.beginPath(); g.arc(cx, cy, t && t.act ? R : R * 0.55, 0, 7); g.stroke();
+    if (k > 0) { g.lineWidth = 5 * dpr; g.strokeStyle = '#3fb04a'; g.beginPath(); g.arc(cx, cy, R, -Math.PI / 2, -Math.PI / 2 + k * Math.PI * 2); g.stroke(); }
+    g.fillStyle = '#fff'; g.beginPath(); g.arc(cx, cy, 2 * dpr, 0, 7); g.fill();
+    const label = t && t.label;
+    if (label) vrHudPill(g, label, cx, cy + R + 22 * dpr, dpr, t.act ? 'rgba(22,35,61,.82)' : 'rgba(185,28,28,.82)');
+    if (hint) vrHudPill(g, hint, cx, H * 0.2, dpr, 'rgba(47,127,220,.9)');
+    if (bal) vrHudPill(g, bal, cx, H * 0.86, dpr, 'rgba(215,38,61,.85)');
+  }
+  if (VR.fade > 0.001) { g.fillStyle = `rgba(0,0,0,${VR.fade})`; g.fillRect(0, 0, W, H); }
+}
+function vrHudPill(g, text, cx, cy, dpr, bg) {
+  g.font = `800 ${13 * dpr}px ${VR_FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle';
+  const w = g.measureText(text).width + 22 * dpr, h = 26 * dpr;
+  g.fillStyle = bg; roundRect(g, cx - w / 2, cy - h / 2, w, h, h / 2); g.fill();
+  g.fillStyle = '#fff'; g.fillText(text, cx, cy + dpr);
+}
+
+/* ---------- Accueil : essai de la télécommande (rien n'est envoyé nulle part) ---------- */
+function remoteShow(text) { const b = $('#remoteTest'); if (!b) return; b.textContent = text; b.classList.remove('flash'); void b.offsetWidth; b.classList.add('flash'); }
+addEventListener('keydown', e => {
+  if (VR.on || !$('#remoteTest') || /^(INPUT|SELECT)$/.test(e.target.tagName)) return;
+  const a = vrKeyAction(e); remoteShow(`Touche « ${e.key === ' ' ? 'Espace' : e.key} »${a ? ' → ' + VR_ACT_LABEL[a] : ' (non utilisée)'}`);
+});
+const VR_PAD_ACT = { 0: 'ok', 1: 'back', 2: 'menu', 3: 'drone', 4: 'left', 5: 'right', 6: 'ok', 7: 'ok', 8: 'back', 9: 'menu', 12: 'fwd', 13: 'rev', 14: 'left', 15: 'right' };
+let homePadLoop = 0, homePadPrev = {};
+function homePads() {
+  homePadLoop = 0;
+  if (VR.on) return;
+  let any = false;
+  for (const pad of navigator.getGamepads?.() || []) {
+    if (!pad) continue; any = true;
+    pad.buttons.forEach((bt, i) => { const k = pad.index + ':' + i; if (bt.pressed && !homePadPrev[k]) remoteShow(`🎮 Bouton ${i} → ${VR_ACT_LABEL[VR_PAD_ACT[i]] || 'non utilisé'}`); homePadPrev[k] = bt.pressed; });
+    (pad.axes || []).forEach((v, i) => { const k = pad.index + ':a' + i, on = Math.abs(v) > 0.7; if (on && !homePadPrev[k]) remoteShow(`🎮 Joystick ${i < 2 ? 'gauche' : 'droit'} ${i % 2 ? (v < 0 ? '↑ → Avancer' : '↓ → Reculer') : (v < 0 ? '← → Tourner à gauche' : '→ → Tourner à droite')}`); homePadPrev[k] = on; });
+  }
+  if (any) homePadLoop = requestAnimationFrame(homePads);
+}
+addEventListener('gamepadconnected', e => {
+  if (VR.on) vrSay('🎮 Manette connectée');
+  else { remoteShow('🎮 Reconnue : ' + (e.gamepad.id || 'manette').replace(/\s*\(.*$/, '')); if (!homePadLoop) homePadLoop = requestAnimationFrame(homePads); }
+});
+
+/* points d'entrée pour les essais automatiques */
+window.GROMA_VR = { state: VR, start: startVr, stop: stopVr, current: () => current, activate: vrActivate, intrusion: (i, opts) => { Object.assign(vrIntrOpts, opts || {}); vrIntrStart(i); }, intrList: () => vrIntrList() };
+
+/* ======================================================================
+   RENDU GRAPHIQUE (WebGL 2) — options à la carte, pensées pour le téléphone
+   • Chaque option ajoute ou retire du code dans les shaders (#define) : une option coupée ne coûte rien.
+   • Tout ce qui ne bouge pas est calculé UNE fois au chargement du plan, sur le processeur graphique :
+     ombres du soleil (carte d'ombre de tout le site + carte fine autour du visiteur, refaite seulement quand il
+     s'éloigne de plus de 8 m), ombres de contact (occupation du sol vue de dessus, floutée).
+   • Par pixel : au plus 4 lectures de texture (ombre, contact, détail, plan) et quelques calculs.
+   • Fluidité : la définition baisse toute seule si le téléphone n'arrive plus à suivre, et remonte ensuite.
+   ====================================================================== */
+const VR_FX_KEYS = [
+  ['ombres', 'Ombres du soleil', 'Ombres portées nettes, précalculées au chargement'],
+  ['contact', 'Ombres de contact', 'Pieds des murs, dessous des véhicules et du mobilier'],
+  ['materiaux', 'Matériaux réalistes', 'Reflets du ciel (vitres, métal, carrosseries), grain du béton, de l’enrobé, du gazon, du bois'],
+  ['ciel', 'Ciel et brume réalistes', 'Soleil, nuages qui défilent, horizon, brume atmosphérique'],
+  ['cinema', 'Couleurs « cinéma »', 'Rendu des lumières fortes comme une caméra (tone mapping ACES)'],
+  ['halo', 'Halo des lumières', 'Lampadaires, LED et gyrophares qui rayonnent (surtout la nuit) — le plus gourmand'],
+  ['lisse', 'Surfaces lisses', 'Arbres, poteaux, dômes et carrosseries sans facettes'],
+  ['fluidite', 'Fluidité automatique', 'Baisse la définition quand le téléphone peine, la remonte ensuite'],
+  ['prediction', 'Anticipation des mouvements de tête', 'Compense le retard des capteurs (moins de flottement)'],
+  ['couleurs', 'Correction des couleurs des lentilles', 'Supprime les franges colorées sur les bords (casque)'],
+  ['anim', 'Animations', 'Gyrophares et flashs qui clignotent, végétation dans le vent, nuages'],
+];
+const VR_PRESETS = {
+  leger: { ombres: 0, contact: 0, materiaux: 0, ciel: 0, cinema: 0, halo: 0, lisse: 1, fluidite: 1, prediction: 1, couleurs: 0, anim: 0 },
+  equilibre: { ombres: 1, contact: 1, materiaux: 1, ciel: 1, cinema: 1, halo: 0, lisse: 1, fluidite: 1, prediction: 1, couleurs: 1, anim: 1 },
+  haute: { ombres: 1, contact: 1, materiaux: 1, ciel: 1, cinema: 1, halo: 1, lisse: 1, fluidite: 1, prediction: 1, couleurs: 1, anim: 1 },
+};
+const VR_SHADOW_RES = { leger: [1024, 1024], equilibre: [2048, 1536], haute: [4096, 2048] };
+/** Heure de la visite : soleil (azimut depuis le nord, hauteur en degrés) et couleurs en lumière linéaire. */
+const VR_HEURES = {
+  matin: { label: 'Matin', az: 105, el: 18, sun: [1.6, 1.24, 0.88], zen: [0.20, 0.36, 0.66], hor: [0.66, 0.72, 0.80], gnd: [0.20, 0.19, 0.17], nite: 0 },
+  midi: { label: 'Midi', az: 175, el: 55, sun: [1.9, 1.8, 1.62], zen: [0.16, 0.34, 0.72], hor: [0.62, 0.72, 0.85], gnd: [0.22, 0.21, 0.19], nite: 0 },
+  apresmidi: { label: 'Après-midi', az: 225, el: 38, sun: [1.85, 1.66, 1.42], zen: [0.17, 0.35, 0.72], hor: [0.64, 0.73, 0.85], gnd: [0.22, 0.20, 0.18], nite: 0 },
+  soir: { label: 'Fin de journée', az: 262, el: 9, sun: [1.6, 0.9, 0.42], zen: [0.18, 0.24, 0.46], hor: [0.72, 0.6, 0.55], gnd: [0.17, 0.14, 0.12], nite: 0.15 },
+  nuit: { label: 'Nuit', az: 200, el: 35, sun: [0.16, 0.2, 0.3], zen: [0.006, 0.01, 0.03], hor: [0.035, 0.045, 0.08], gnd: [0.02, 0.02, 0.028], nite: 1 },
+};
+function vrFx(set) {
+  const p = set.rendu === 'perso' ? { ...VR_PRESETS.equilibre, ...(set.fx || {}) } : { ...(VR_PRESETS[set.rendu] || VR_PRESETS.equilibre) };
+  return p;
+}
+const vrSunDir = h => { const a = h.az * DEG2, e = h.el * DEG2; return [Math.sin(a) * Math.cos(e), Math.sin(e), -Math.cos(a) * Math.cos(e)]; };   // nord = −z, est = +x
+
+/* ---------- Shaders ---------- */
+const VR_GL3 = '#version 300 es\n';
+const VR_LIGHT_GLSL = `
+uniform vec3 eye,sunD,sunC,zen,hor,gnd,fogc;uniform float fogd,tm,nite;
+vec3 aces(vec3 x){x*=.86;x=clamp((x*(2.51*x+.03))/(x*(2.43*x+.59)+.14),0.,1.);return clamp(mix(vec3(dot(x,vec3(.299,.587,.114))),x,1.18),0.,1.);}
+vec3 skyc(vec3 d){return mix(hor,zen,pow(max(d.y,0.),.5));}
+vec3 finish(vec3 col,vec3 w){float dist=length(w-eye);
+#ifdef SKY
+float f=(1.-exp(-dist/fogd*.9))*.65;vec3 V=normalize(w-eye);vec3 fc=fogc+sunC*.06*pow(max(dot(V,sunD),0.),6.);
+#else
+float f=clamp((dist-fogd*.45)/(fogd*.55),0.,1.)*.6;vec3 fc=fogc;
+#endif
+col=mix(col,fc,f);
+#ifdef TONE
+col=aces(col);
+#else
+col=clamp(col,0.,1.);
+#endif
+return sqrt(col);}
+`;
+const VR_SHADOW_GLSL = `
+#ifdef SHADOW
+uniform highp sampler2DShadow sh0,sh1;uniform float shk;in vec4 s0,s1;
+float shadowAt(){vec3 a=s1.xyz/s1.w*.5+.5;
+if(a.x>.03&&a.x<.97&&a.y>.03&&a.y<.97&&a.z<1.)return texture(sh1,a);
+vec3 b=s0.xyz/s0.w*.5+.5;if(b.x<0.||b.y<0.||b.x>1.||b.y>1.||b.z>1.)return 1.;return texture(sh0,b);}
+#endif
+#ifdef AO
+uniform sampler2D aot;uniform vec4 aor;uniform float aok;
+#endif
+#ifdef NIGHT
+uniform vec4 lp[8];
+vec3 pools(vec3 w,vec3 N,vec3 alb){vec3 s=vec3(0.);for(int i=0;i<8;i++){vec4 L=lp[i];vec3 d=L.xyz-w;float r2=dot(d,d);float f=max(0.,1.-r2/(L.w*L.w))*step(w.y,L.y-.3);s+=f*f*max(dot(N,normalize(d)),0.);}return alb*vec3(1.,.8,.55)*s*1.5;}
+#endif
+`;
+function vrMeshSrc(D) {
+  const defs = Object.entries(D).filter(([, v]) => v).map(([k]) => `#define ${k}\n`).join('');
+  const vs = VR_GL3 + defs + `in vec3 p;in vec4 c;in vec3 nr;in float mt;uniform mat4 vp;uniform float tm;uniform vec3 sunD;
+#ifdef SHADOW
+uniform mat4 sm0,sm1;out vec4 s0,s1;
+#endif
+out vec4 vc;out vec3 vw;out vec3 vn;flat out int vm;
+void main(){vec3 w=vec3(p.x,p.z,-p.y);vn=vec3(nr.x,nr.z,-nr.y);vm=int(mt+.5);
+#ifdef ANIM
+if(vm==3){float h=min(max(0.,w.y-1.),8.);w.xz+=vec2(sin(tm*1.4+w.x*.31+w.z*.17),cos(tm*1.1+w.z*.27+w.x*.13))*h*.007;}
+#endif
+vc=c;vw=w;
+#ifdef SHADOW
+vec4 wo=vec4(w+sunD*.06,1.);s0=sm0*wo;s1=sm1*wo;
+#endif
+gl_Position=vp*vec4(w,1.);}`;
+  const fs = VR_GL3 + defs + `precision highp float;precision highp int;in vec4 vc;in vec3 vw;in vec3 vn;flat in int vm;uniform float bk;out vec4 o;
+#ifdef MAT
+uniform sampler2D det;
+#endif
+${VR_LIGHT_GLSL}${VR_SHADOW_GLSL}
+void main(){vec3 V=normalize(eye-vw);
+#ifdef FLATN
+vec3 N=normalize(cross(dFdx(vw),dFdy(vw)));if(dot(N,V)<0.)N=-N;
+#else
+vec3 N=normalize(vn);
+#endif
+int m=vm;vec3 alb=vc.rgb*vc.rgb;float spec=0.,rough=.8,env=0.;
+#ifdef MAT
+vec3 an=abs(N);vec2 uv=an.y>.7?vw.xz:(an.x>an.z?vw.zy:vw.xy);
+float sc=m==4?.22:m==3?1.2:m==9?.7:.5;vec2 u2=m==10?vec2(uv.x*2.,uv.y*.3):uv*sc;vec4 d4=texture(det,u2);
+if(m==4)alb*=.8+.4*d4.r;else if(m==5)alb*=.72+.56*d4.r;else if(m==9)alb*=.66+.68*d4.g;else if(m==3)alb*=.58+.84*d4.g;else if(m==10)alb*=.74+.52*d4.a;else alb*=.95+.1*d4.r;
+if(m==2){spec=.6;rough=.35;env=.32;}else if(m==8){spec=.45;rough=.18;env=.2;}else if(m==1){spec=1.;rough=.05;env=.85;}else if(m==0){spec=.08;rough=.6;env=.03;}else if(m==11){spec=.03;rough=.9;}
+#endif
+float ndl=dot(N,sunD),sh=1.,ao=1.;
+#ifdef SHADOW
+sh=mix(1.,ndl>0.?shadowAt():0.,shk);
+#endif
+#ifdef AO
+ao=1.-texture(aot,(vw.xz-aor.xy)*aor.zw).r*(1.-smoothstep(0.,1.2,vw.y))*.6*aok;
+#else
+ao=mix(1.,mix(.78,1.,smoothstep(0.,.9,vw.y)),1.-abs(N.y));
+#endif
+vec3 amb=mix(gnd,mix(hor,zen,.45),N.y*.5+.5);vec3 col;
+if(bk>.5)col=alb*(mix(hor,zen,.4)*1.2*ao+sunC*.32*sh);
+else{float wr=m==3?.4:0.;col=alb*(amb*.56*ao+sunC*max((ndl+wr)/(1.+wr),0.)*sh);}
+#ifdef MAT
+if(spec>0.){vec3 H=normalize(sunD+V);col+=sunC*pow(max(dot(N,H),0.),mix(12.,400.,1.-rough))*spec*sh*.35;
+float fr=env*(.06+.94*pow(1.-max(dot(N,V),0.),5.));col=mix(col,skyc(reflect(-V,N))*(.4+.6*ao),clamp(fr+env*.3,0.,1.));}
+#endif
+#ifdef NIGHT
+col+=pools(vw,N,alb);
+#endif
+if(m==6)col+=alb*(.3+nite*2.6);
+#ifdef ANIM
+if(m==7)col+=alb*step(.5,fract(tm*1.7+vw.x*.07+vw.z*.05))*(1.4+nite*2.6);
+#else
+if(m==7)col+=alb*(.3+nite*2.);
+#endif
+float a=vc.a;
+#ifdef MAT
+if(m==1)a=mix(a,1.,.55*pow(1.-max(dot(N,V),0.),3.));
+#endif
+o=vec4(finish(col,vw),a);}`;
+  return [vs, fs];
+}
+function vrGroundSrc(D) {
+  const defs = Object.entries(D).filter(([, v]) => v).map(([k]) => `#define ${k}\n`).join('');
+  const vs = VR_GL3 + defs + `in vec3 p;uniform mat4 vp;uniform vec3 sunD;
+#ifdef SHADOW
+uniform mat4 sm0,sm1;out vec4 s0,s1;
+#endif
+out vec3 vw;void main(){vw=p;
+#ifdef SHADOW
+vec4 wo=vec4(p+sunD*.06,1.);s0=sm0*wo;s1=sm1*wo;
+#endif
+gl_Position=vp*vec4(p,1.);}`;
+  const fs = VR_GL3 + defs + `precision highp float;in vec3 vw;out vec4 o;uniform sampler2D det,pt;uniform vec4 pr;uniform float hp;uniform vec3 gc;
+${VR_LIGHT_GLSL}${VR_SHADOW_GLSL}
+void main(){vec3 alb=gc;
+#ifdef MAT
+vec4 d1=texture(det,vw.xz*.31),d2=texture(det,vw.xz*.037);alb*=(.7+.6*d1.g)*(.8+.4*d2.r);
+#endif
+vec2 q=(vw.xz-pr.xy)*pr.zw;
+if(hp>.5&&q.x>=0.&&q.y>=0.&&q.x<=1.&&q.y<=1.){vec3 pc=texture(pt,q).rgb;alb=mix(alb,pc*pc*.92,.92);}
+vec3 N=vec3(0.,1.,0.);float sh=1.,ao=1.;
+#ifdef SHADOW
+sh=shadowAt();
+#endif
+#ifdef AO
+ao=1.-texture(aot,(vw.xz-aor.xy)*aor.zw).r*.6*aok;
+#endif
+vec3 col=alb*(mix(hor,zen,.45)*.56*ao+sunC*sunD.y*sh);
+#ifdef NIGHT
+col+=pools(vw,N,alb);
+#endif
+o=vec4(finish(col,vw),1.);}`;
+  return [vs, fs];
+}
+function vrSkySrc(D) {
+  const defs = Object.entries(D).filter(([, v]) => v).map(([k]) => `#define ${k}\n`).join('');
+  return [VR_GL3 + `in vec2 p;out vec2 vp;void main(){vp=p;gl_Position=vec4(p,.99999,1.);}`,
+    VR_GL3 + defs + `precision highp float;in vec2 vp;out vec4 o;uniform mat4 inv;uniform sampler2D t,det;uniform float sky,tm,nite;uniform vec3 sunD,sunC,zen,hor,gnd;
+vec3 aces(vec3 x){x*=.78;return clamp((x*(2.51*x+.03))/(x*(2.43*x+.59)+.14),0.,1.);}
+void main(){vec4 w=inv*vec4(vp,1.,1.);vec3 d=normalize(w.xyz/w.w);
+if(sky<.5){float u=.5+atan(d.x,-d.z)/6.2831853;float v=.5-asin(clamp(d.y,-1.,1.))/3.1415927;o=texture(t,vec2(u,v));return;}
+#ifdef SKY
+float h=d.y;vec3 c=h>0.?mix(hor,zen,pow(h,.5)):mix(hor,gnd*1.6,clamp(-h*5.,0.,1.));
+float mu=max(dot(d,sunD),0.);c+=sunC*(pow(mu,900.)*(nite>.5?6.:30.)+pow(mu,10.)*.12);
+if(h>0.){vec2 uv=d.xz/(h+.12)*.07+vec2(tm*.0025,tm*.001);float k=smoothstep(.42,.8,texture(det,uv).b)*smoothstep(0.,.3,h);
+vec3 cc=mix(hor*1.15,sunC*.45+zen*.5,.4)*(nite>.5?.25:1.);c=mix(c,cc,k*.75);
+if(nite>.5){vec3 g=floor(d*260.);float s=fract(sin(dot(g,vec3(12.9898,78.233,37.719)))*43758.5453);c+=step(.9982,s)*(1.-k)*h*vec3(.8);}}
+#ifdef TONE
+c=aces(c);
+#else
+c=clamp(c,0.,1.);
+#endif
+o=vec4(sqrt(c),1.);
+#else
+float h=d.y;vec3 c=h>0.?mix(vec3(.86,.93,.98),vec3(.42,.68,.93),pow(h,.6)):mix(vec3(.80,.90,.97),vec3(.72,.76,.70),clamp(-h*6.,0.,1.));o=vec4(c,1.);
+#endif
+}`];
+}
+const VR_DEPTH_SRC = [VR_GL3 + 'in vec3 p;uniform mat4 m;void main(){gl_Position=m*vec4(p.x,p.z,-p.y,1.);}', VR_GL3 + 'precision mediump float;out vec4 o;void main(){o=vec4(1.);}'];
+/** Passe finale : correction des lentilles (k), franges colorées (ca), halo (bl), image de définition réduite (agrandie ici). */
+const VR_POST_SRC = [VR_GL3 + 'in vec2 p;out vec2 vp;void main(){vp=p;gl_Position=vec4(p,0.,1.);}',
+  VR_GL3 + `precision mediump float;in vec2 vp;out vec4 o;uniform sampler2D t,bl;uniform float off,hw,asp,ca,bs;uniform vec2 k;
+void main(){vec2 q=vec2(vp.x*asp,vp.y)/length(vec2(asp,1.));float r2=dot(q,q);float f=(1.+k.x*r2+k.y*r2*r2)/(1.+k.x+k.y);vec2 s=vp*f;
+if(abs(s.x)>1.||abs(s.y)>1.){o=vec4(0.,0.,0.,1.);return;}
+vec2 uv=s*.5+.5;vec2 U=vec2(off+uv.x*hw,uv.y);vec3 c;
+if(ca>0.){vec2 dr=vp*f*(1.+ca*r2)*.5+.5,db=vp*f*(1.-ca*r2)*.5+.5;c=vec3(texture(t,vec2(off+dr.x*hw,dr.y)).r,texture(t,U).g,texture(t,vec2(off+db.x*hw,db.y)).b);}
+else c=texture(t,U).rgb;
+if(bs>0.)c+=texture(bl,U).rgb*bs;
+o=vec4(c,1.);}`];
+const VR_BRIGHT_SRC = [VR_POST_SRC[0], VR_GL3 + `precision mediump float;in vec2 vp;out vec4 o;uniform sampler2D t;uniform vec2 px;
+void main(){vec2 uv=vp*.5+.5;vec3 c=(texture(t,uv+px).rgb+texture(t,uv-px).rgb+texture(t,uv+vec2(px.x,-px.y)).rgb+texture(t,uv-vec2(px.x,-px.y)).rgb)*.25;
+float l=max(c.r,max(c.g,c.b));o=vec4(c*smoothstep(.9,1.,l),1.);}`];
+const VR_BLUR_SRC = [VR_POST_SRC[0], VR_GL3 + `precision mediump float;in vec2 vp;out vec4 o;uniform sampler2D t;uniform vec2 dir;
+void main(){vec2 uv=vp*.5+.5;vec4 c=texture(t,uv)*.227;c+=(texture(t,uv+dir*1.385)+texture(t,uv-dir*1.385))*.316;c+=(texture(t,uv+dir*3.23)+texture(t,uv-dir*3.23))*.07;o=c;}`];
+/** Occupation du sol (vue de dessus) → ombre de contact floutée */
+const VR_AO_SRC = [VR_POST_SRC[0], VR_GL3 + `precision highp float;in vec2 vp;out vec4 o;uniform highp sampler2D dt;uniform vec2 dir;uniform float top,rng,pass;
+void main(){vec2 uv=vp*.5+.5;
+if(pass<.5){float z=texture(dt,uv).r;float h=top-z*rng;o=vec4(clamp((h-.12)/.9,0.,1.),0.,0.,1.);return;}
+float c=texture(dt,uv).r*.2;for(int i=1;i<5;i++){float w=(5.-float(i))*.04;c+=(texture(dt,uv+dir*float(i)).r+texture(dt,uv-dir*float(i)).r)*w;}o=vec4(c,0.,0.,1.);}`];
+
+/* ---------- Textures de détail (générées une fois, 256 × 256, répétables) ---------- */
+function vrDetailTexture() {
+  const N = 256, img = new ImageData(N, N), d = img.data;
+  // bruit de valeur répétable à plusieurs octaves
+  const lat = (s, g) => { const a = new Float32Array(g * g); let x = s; for (let i = 0; i < g * g; i++) { x = (x * 1103515245 + 12345) & 0x7fffffff; a[i] = x / 0x7fffffff; } return a; };
+  const noise = (g, s) => { const L = lat(s, g); return (u, v) => { const x = u * g, y = v * g, i = Math.floor(x), j = Math.floor(y), fx = x - i, fy = y - j, sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy);
+    const at = (a, b) => L[((b % g + g) % g) * g + ((a % g + g) % g)]; return (at(i, j) * (1 - sx) + at(i + 1, j) * sx) * (1 - sy) + (at(i, j + 1) * (1 - sx) + at(i + 1, j + 1) * sx) * sy; }; };
+  const n8 = noise(8, 7), n16 = noise(16, 11), n32 = noise(32, 13), n64 = noise(64, 17), n4 = noise(4, 19), c8 = noise(8, 23), c16 = noise(16, 29), w8 = noise(8, 31);
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const u = x / N, v = y / N, k = (y * N + x) * 4;
+    const grain = 0.35 * n16(u, v) + 0.3 * n32(u, v) + 0.35 * n64(u, v);                        // béton, enrobé
+    const leaf = Math.min(1, Math.max(0, 0.15 + 0.5 * n8(u, v) + 0.45 * n32(u, v) + 0.2 * (n64(u, v) - 0.5)));   // feuillage, gazon
+    const cloud = 0.55 * c8(u, v) + 0.3 * c16(u, v) + 0.15 * n32(u, v) + 0.1 * (n4(u, v) - 0.5);  // nuages
+    const wood = 0.5 + 0.5 * Math.sin((v * 34 + 3.2 * w8(u, v)) * Math.PI);                      // veinage
+    d[k] = grain * 255; d[k + 1] = leaf * 255; d[k + 2] = Math.min(1, Math.max(0, cloud)) * 255; d[k + 3] = (0.55 + 0.45 * wood) * 255;
+  }
+  const gl = VR.gl, t = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, t); gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img); gl.generateMipmap(gl.TEXTURE_2D);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+  if (VR.aniso) gl.texParameterf(gl.TEXTURE_2D, VR.aniso.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(4, gl.getParameter(VR.aniso.MAX_TEXTURE_MAX_ANISOTROPY_EXT)));
+  return t;
+}
+
+/* ---------- Mise en place ---------- */
+/** Compile les programmes selon les options (WebGL 2) ; renvoie false si le téléphone n'a que WebGL 1. */
+function vrRenduInit() {
+  const gl = VR.gl; VR.R = null;
+  if (!VR.gl2) return false;
+  const fx = vrFx(VR.set), H = VR_HEURES[VR.set.heure] || VR_HEURES.apresmidi;
+  const D = { SHADOW: !!fx.ombres, AO: !!fx.contact, MAT: !!fx.materiaux, SKY: !!fx.ciel, TONE: !!fx.cinema, ANIM: !!fx.anim, NIGHT: H.nite > 0.5, FLATN: !fx.lisse };
+  try {
+    const R = {
+      fx, H, D, sun: vrSunDir(H), res: VR_SHADOW_RES[VR.set.rendu] || VR_SHADOW_RES.equilibre,
+      mesh: vrProgram(gl, vrMeshSrc(D)), meshFlat: vrProgram(gl, vrMeshSrc({ ...D, FLATN: true })), ground: vrProgram(gl, vrGroundSrc(D)), sky: vrProgram(gl, vrSkySrc(D)),
+      post: vrProgram(gl, VR_POST_SRC), det: vrDetailTexture(), scale: 1, ft: 0, tgt: 0, tMin: 1, lastAdj: 0, light8: new Float32Array(32), lightT: 0,
+    };
+    if (D.SHADOW) R.depth = vrProgram(gl, VR_DEPTH_SRC);
+    if (D.AO) R.aoProg = vrProgram(gl, VR_AO_SRC);
+    if (fx.halo) { R.bright = vrProgram(gl, VR_BRIGHT_SRC); R.blur = vrProgram(gl, VR_BLUR_SRC); }
+    R.gbuf = gl.createBuffer();
+    VR.R = R;
+    return true;
+  } catch (e) { console.warn('rendu avancé indisponible', e); VR.R = null; return false; }
+}
+/** Texture de profondeur (ombres : comparaison matérielle filtrée = adoucissement 2 × 2 gratuit) */
+function vrDepthTarget(size, compare) {
+  const gl = VR.gl, tex = gl.createTexture(), fb = gl.createFramebuffer();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT24, size, size, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_INT, null);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, compare ? gl.LINEAR : gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, compare ? gl.LINEAR : gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  if (compare) { gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_COMPARE_FUNC, gl.LEQUAL); }
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, tex, 0);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  return { tex, fb, size };
+}
+function vrColorTarget(w, h, linear = true) {
+  const gl = VR.gl, tex = gl.createTexture(), fb = gl.createFramebuffer();
+  gl.bindTexture(gl.TEXTURE_2D, tex); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, linear ? gl.LINEAR : gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, linear ? gl.LINEAR : gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0); gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  return { tex, fb, w, h };
+}
+/** Projection orthographique vue depuis la direction d (vers la scène), centrée en c, demi-largeur r, profondeur ±depth */
+function vrOrtho(d, c, r, depth) {
+  const f = V3.norm(V3.mul(d, -1)), up = Math.abs(f[1]) > 0.95 ? [0, 0, -1] : [0, 1, 0], s = V3.norm(V3.cross(f, up)), u = V3.cross(s, f);
+  const e = V3.sub(c, V3.mul(f, depth));
+  const view = [s[0], u[0], -f[0], 0, s[1], u[1], -f[1], 0, s[2], u[2], -f[2], 0, -V3.dot(s, e), -V3.dot(u, e), V3.dot(f, e), 1];
+  const n = 0, fa = depth * 2, proj = [1 / r, 0, 0, 0, 0, 1 / r, 0, 0, 0, 0, -2 / (fa - n), 0, 0, 0, -(fa + n) / (fa - n), 1];
+  return M4.mul(proj, view);
+}
+/** Profondeur de la maquette opaque vue depuis la matrice m, dans la cible T */
+function vrDepthPass(T, m) {
+  const gl = VR.gl, P = VR.R.depth || (VR.R.depth = vrProgram(gl, VR_DEPTH_SRC));
+  gl.bindFramebuffer(gl.FRAMEBUFFER, T.fb); gl.viewport(0, 0, T.size, T.size);
+  gl.disable(gl.SCISSOR_TEST); gl.disable(gl.BLEND); gl.enable(gl.DEPTH_TEST); gl.depthMask(true); gl.colorMask(false, false, false, false);
+  gl.clear(gl.DEPTH_BUFFER_BIT); gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(2.5, 6);
+  gl.useProgram(P.p); gl.uniformMatrix4fv(P.u.m, false, m);
+  gl.bindBuffer(gl.ARRAY_BUFFER, VR.meshBuf); gl.enableVertexAttribArray(P.a.p); gl.vertexAttribPointer(P.a.p, 3, gl.FLOAT, false, 20, 0);
+  if (VR.nO) gl.drawArrays(gl.TRIANGLES, 0, VR.nO);
+  gl.disable(gl.POLYGON_OFFSET_FILL); gl.colorMask(true, true, true, true); gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+}
+/** Précalculs du plan : ombre de tout le site, ombres de contact. Quelques dizaines de millisecondes, une seule fois. */
+function vrRenduPlan() {
+  const R = VR.R; if (!R) return;
+  const gl = VR.gl, B = VR.plan.bounds || { x0: -10, y0: -10, x1: 10, y1: 10, hmax: 3 };
+  const cx = (B.x0 + B.x1) / 2, cz = (B.y0 + B.y1) / 2, half = Math.max(10, Math.hypot(B.x1 - B.x0, B.y1 - B.y0) / 2 + 4), hm = Math.max(3, B.hmax || 3);
+  R.sm0 = R.sm1 = null;
+  if (R.D.SHADOW) {
+    R.t0 = R.t0 || vrDepthTarget(R.res[0], true); R.t1 = R.t1 || vrDepthTarget(R.res[1], true);
+    R.sm0 = vrOrtho(R.sun, [cx, hm / 2, cz], half, half + hm + 20); vrDepthPass(R.t0, R.sm0);
+    R.local = null; vrRenduLocal(true);
+  }
+  if (R.D.AO) {
+    const S = Math.max(half, 12) + 6, res = S > 120 ? 2048 : 1024, top = hm + 5, rng = top + 5;
+    const T = vrDepthTarget(res, false), m = vrOrtho([0, 1, 0], [cx, top - rng / 2, cz], S, rng / 2);
+    vrDepthPass(T, m);
+    const A = R.aoA && R.aoA.w === res ? R.aoA : vrColorTarget(res, res), Bt = R.aoB && R.aoB.w === res ? R.aoB : vrColorTarget(res, res), P = R.aoProg;
+    gl.useProgram(P.p); gl.disable(gl.DEPTH_TEST); gl.disable(gl.BLEND); gl.viewport(0, 0, res, res); vrBindFull(P); gl.activeTexture(gl.TEXTURE0); gl.uniform1i(P.u.dt, 0);
+    gl.uniform1f(P.u.top, top); gl.uniform1f(P.u.rng, rng);
+    const step = Math.max(1, 0.35 / (2 * S / res)) / res;    // pas de flou ≈ 35 cm (rayon ≈ 1,4 m)
+    const pass = (src, dst, n, dir) => { gl.bindFramebuffer(gl.FRAMEBUFFER, dst.fb); gl.bindTexture(gl.TEXTURE_2D, src); gl.uniform1f(P.u.pass, n); gl.uniform2fv(P.u.dir, dir); gl.drawArrays(gl.TRIANGLES, 0, 3); };
+    pass(T.tex, A, 0, [0, 0]); pass(A.tex, Bt, 1, [step, 0]); pass(Bt.tex, A, 1, [0, step]);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.deleteTexture(T.tex); gl.deleteFramebuffer(T.fb);
+    R.aoA = A; R.aoB = Bt;
+    // texture ↔ monde (vue de dessus, « haut » = −z) : u = (x − x0) / 2S, v = (z1 − z) / 2S
+    R.aor = [cx - S, cz + S, 1 / (2 * S), -1 / (2 * S)];
+  }
+}
+/** Carte d'ombre fine autour du visiteur (48 à 64 m), refaite seulement quand il s'en éloigne */
+function vrRenduLocal(force) {
+  const R = VR.R; if (!R || !R.D.SHADOW || VR.scene !== 'maquette') return;
+  const h = VR.head, r = R.res[1] >= 2048 ? 32 : 24, c = [Math.round(h[0] / 4) * 4, 0, Math.round(h[2] / 4) * 4];
+  if (!force && R.local && Math.hypot(c[0] - R.local[0], c[2] - R.local[2]) < 8) return;
+  if (VR.drone || VR.balloon) { if (!R.local || force) { R.sm1 = R.sm0; R.local = c; } return; }   // vue aérienne : la carte du site suffit
+  R.local = c; R.sm1 = vrOrtho(R.sun, [c[0], 4, c[2]], r, r + (VR.hmax || 3) + 20); vrDepthPass(R.t1, R.sm1);
+}
+/** Uniformes communs (soleil, ciel, brume, ombres, contact, lumières de nuit) */
+function vrLightUniforms(P, eye, fogd, now) {
+  const gl = VR.gl, R = VR.R, H = R.H;
+  gl.uniform3fv(P.u.eye, eye); gl.uniform3fv(P.u.sunD, R.sun); gl.uniform3fv(P.u.sunC, H.sun);
+  gl.uniform3fv(P.u.zen, H.zen); gl.uniform3fv(P.u.hor, H.hor); gl.uniform3fv(P.u.gnd, H.gnd);
+  gl.uniform3fv(P.u.fogc, R.D.SKY ? H.hor : VR_SKY.map(v => v * v)); gl.uniform1f(P.u.fogd, fogd); gl.uniform1f(P.u.tm, now); gl.uniform1f(P.u.nite, H.nite);
+  if (R.D.SHADOW) {
+    gl.uniformMatrix4fv(P.u.sm0, false, R.sm0); gl.uniformMatrix4fv(P.u.sm1, false, R.sm1 || R.sm0);
+    gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, R.t0.tex); gl.uniform1i(P.u.sh0, 2);
+    gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D, (R.sm1 && R.sm1 !== R.sm0 ? R.t1 : R.t0).tex); gl.uniform1i(P.u.sh1, 3);
+    if (P.u.shk) gl.uniform1f(P.u.shk, 1);
+  }
+  if (R.D.AO) { gl.activeTexture(gl.TEXTURE4); gl.bindTexture(gl.TEXTURE_2D, R.aoA.tex); gl.uniform1i(P.u.aot, 4); gl.uniform4fv(P.u.aor, R.aor); gl.uniform1f(P.u.aok, 1); }
+  if (R.D.NIGHT && P.u['lp[0]']) gl.uniform4fv(P.u['lp[0]'], R.light8);
+  if (P.u.det) { gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, R.det); gl.uniform1i(P.u.det, 1); }
+  gl.activeTexture(gl.TEXTURE0);
+}
+/** Lumières de nuit : les 8 plus proches du visiteur (recalculées 2 fois par seconde) */
+function vrNightLights(now) {
+  const R = VR.R; if (!R || !R.D.NIGHT || now - R.lightT < 0.5) return;
+  R.lightT = now;
+  const L = (VR.plan.lights || []).map(([x, y, z, r]) => [x, z, y, r]).sort((a, b) => (a[0] - VR.head[0]) ** 2 + (a[2] - VR.head[2]) ** 2 - (b[0] - VR.head[0]) ** 2 - (b[2] - VR.head[2]) ** 2);
+  R.light8.fill(0); for (let i = 0; i < Math.min(8, L.length); i++) R.light8.set([L[i][0], L[i][1], L[i][2], L[i][3]], i * 4); for (let i = L.length; i < 8; i++) R.light8[i * 4 + 3] = 0.001;
+}
+/** Sol : un grand carré qui suit le visiteur (gazon fin, image du plan, ombres) */
+function vrDrawGround(vp, eye, fogd, now) {
+  const gl = VR.gl, R = VR.R, P = R.ground, Rr = 1500, gx = Math.round(VR.head[0] / 50) * 50, gz = Math.round(VR.head[2] / 50) * 50;
+  if (R.gpos !== gx + ',' + gz) { R.gpos = gx + ',' + gz; gl.bindBuffer(gl.ARRAY_BUFFER, R.gbuf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([gx - Rr, -0.025, gz - Rr, gx + Rr, -0.025, gz - Rr, gx + Rr, -0.025, gz + Rr, gx - Rr, -0.025, gz - Rr, gx + Rr, -0.025, gz + Rr, gx - Rr, -0.025, gz + Rr]), gl.STATIC_DRAW); }
+  gl.useProgram(P.p); gl.uniformMatrix4fv(P.u.vp, false, vp); vrLightUniforms(P, eye, fogd, now);
+  const night = R.H.nite > 0.5; gl.uniform3fv(P.u.gc, night ? [0.11, 0.13, 0.09] : [0.27, 0.34, 0.19]);
+  const r = VR.plan.rect, pt = VR.planTex;
+  gl.uniform1f(P.u.hp, pt && r ? 1 : 0);
+  if (pt && r) { gl.activeTexture(gl.TEXTURE5); gl.bindTexture(gl.TEXTURE_2D, pt); gl.uniform1i(P.u.pt, 5); gl.uniform4fv(P.u.pr, [r.x, r.y, 1 / r.w, 1 / r.h]); gl.activeTexture(gl.TEXTURE0); }
+  else { gl.activeTexture(gl.TEXTURE5); gl.bindTexture(gl.TEXTURE_2D, VR.texWhite); gl.uniform1i(P.u.pt, 5); gl.activeTexture(gl.TEXTURE0); }
+  gl.bindBuffer(gl.ARRAY_BUFFER, R.gbuf); gl.enableVertexAttribArray(P.a.p); gl.vertexAttribPointer(P.a.p, 3, gl.FLOAT, false, 12, 0);
+  gl.drawArrays(gl.TRIANGLES, 0, 6);
+}
+/** Maillage compact (20 octets) : position, couleur, normale, matériau */
+function vrBindMesh20(M, buf) {
+  const gl = VR.gl;
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.enableVertexAttribArray(M.a.p); gl.vertexAttribPointer(M.a.p, 3, gl.FLOAT, false, 20, 0);
+  gl.enableVertexAttribArray(M.a.c); gl.vertexAttribPointer(M.a.c, 4, gl.UNSIGNED_BYTE, true, 20, 12);
+  if (M.a.nr != null && M.a.nr >= 0) { gl.enableVertexAttribArray(M.a.nr); gl.vertexAttribPointer(M.a.nr, 3, gl.BYTE, true, 20, 16); }
+  if (M.a.mt != null && M.a.mt >= 0) { gl.enableVertexAttribArray(M.a.mt); gl.vertexAttribPointer(M.a.mt, 1, gl.UNSIGNED_BYTE, false, 20, 19); }
+}
+/** Format des packs v1 (7 flottants, couleur déjà éclairée) → 20 octets, normale de la face, matériau neutre */
+function vrPackMesh(f) {
+  const n = Math.floor(f.length / 7), buf = new ArrayBuffer(n * 20), F = new Float32Array(buf), U = new Uint8Array(buf), I = new Int8Array(buf);
+  for (let t = 0; t + 2 < n; t += 3) {
+    const a = t * 7, b = a + 7, c = b + 7, e1 = [f[b] - f[a], f[b + 1] - f[a + 1], f[b + 2] - f[a + 2]], e2 = [f[c] - f[a], f[c + 1] - f[a + 1], f[c + 2] - f[a + 2]], nn = V3.norm(V3.cross(e1, e2));
+    for (let k = 0; k < 3; k++) {
+      const s = (t + k) * 7, i = t + k, o = i * 5, B = i * 20;
+      F[o] = f[s]; F[o + 1] = f[s + 1]; F[o + 2] = f[s + 2];
+      U[B + 12] = f[s + 3] * 255 + 0.5; U[B + 13] = f[s + 4] * 255 + 0.5; U[B + 14] = f[s + 5] * 255 + 0.5; U[B + 15] = f[s + 6] * 255 + 0.5;
+      I[B + 16] = nn[0] * 127; I[B + 17] = nn[1] * 127; I[B + 18] = nn[2] * 127; U[B + 19] = 0;
+    }
+  }
+  return buf;
+}
+
+/* ---------- Image finale : halo, définition variable, lentilles, franges ---------- */
+/** Faut-il dessiner dans une image intermédiaire ? (lentilles, halo, fluidité, franges) */
+const vrNeedsFbo = () => !!(VR.lens || (VR.R && (VR.R.fx.halo || VR.R.fx.fluidite)));
+/** Fluidité : la définition suit la cadence réelle (par paliers de 10 %, jamais sous 60 %) */
+function vrAdaptScale(dt, now) {
+  const R = VR.R; if (!R || !R.fx.fluidite) return 1;
+  if (now - VR.t0 / 1000 < 2) { R.tMin = Math.min(R.tMin, Math.max(1 / 120, dt)); return R.scale; }
+  const tgt = Math.min(1 / 30, Math.max(1 / 120, R.tMin));
+  R.ft = R.ft ? R.ft * 0.94 + dt * 0.06 : dt;
+  if (now - R.lastAdj > 1.2) {
+    if (R.ft > tgt * 1.18 && R.scale > 0.6) { R.scale = Math.round((R.scale - 0.1) * 10) / 10; R.lastAdj = now; }
+    else if (R.ft < tgt * 1.04 && R.scale < 1 && now - R.lastAdj > 4) { R.scale = Math.round((R.scale + 0.1) * 10) / 10; R.lastAdj = now; }
+  }
+  return R.scale;
+}
+function vrBloom(fbo) {
+  const R = VR.R, gl = VR.gl, w = Math.max(16, fbo.w >> 2), h = Math.max(16, fbo.h >> 2);
+  if (!R.b1 || R.b1.w !== w || R.b1.h !== h) { R.b1 = vrColorTarget(w, h); R.b2 = vrColorTarget(w, h); }
+  gl.disable(gl.DEPTH_TEST); gl.disable(gl.BLEND); gl.disable(gl.SCISSOR_TEST); gl.viewport(0, 0, w, h); gl.activeTexture(gl.TEXTURE0);
+  let P = R.bright; gl.useProgram(P.p); vrBindFull(P); gl.uniform1i(P.u.t, 0); gl.uniform2f(P.u.px, 1 / fbo.w, 1 / fbo.h);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, R.b1.fb); gl.bindTexture(gl.TEXTURE_2D, fbo.tex); gl.drawArrays(gl.TRIANGLES, 0, 3);
+  P = R.blur; gl.useProgram(P.p); vrBindFull(P); gl.uniform1i(P.u.t, 0);
+  for (let i = 0; i < 2; i++) {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, R.b2.fb); gl.bindTexture(gl.TEXTURE_2D, R.b1.tex); gl.uniform2f(P.u.dir, (1.5 + i) / w, 0); gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, R.b1.fb); gl.bindTexture(gl.TEXTURE_2D, R.b2.tex); gl.uniform2f(P.u.dir, 0, (1.5 + i) / h); gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  return R.b1.tex;
+}
+/** Passe finale : chaque œil (ou la vue unique) depuis l'image intermédiaire */
+function vrPostPass(fbo, W, H, vw, sh, asp, stereo) {
+  const gl = VR.gl, R = VR.R, bl = R && R.fx.halo ? vrBloom(fbo) : null;
+  const P = R ? R.post : VR.prog.lens;
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  gl.viewport(0, 0, W, H); gl.clearColor(0, 0, 0, 1); gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.useProgram(P.p); gl.disable(gl.DEPTH_TEST); gl.disable(gl.BLEND);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, fbo.tex); gl.uniform1i(P.u.t, 0);
+  if (R) { gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, bl || fbo.tex); gl.uniform1i(P.u.bl, 1); gl.activeTexture(gl.TEXTURE0); gl.uniform1f(P.u.bs, bl ? (R.H.nite > 0.5 ? 0.8 : 0.3) : 0);
+    gl.uniform1f(P.u.ca, VR.lens && R.fx.couleurs ? 0.018 + VR.lens[0] * 0.03 : 0); gl.uniform1f(P.u.hw, stereo ? 0.5 : 1); }
+  gl.uniform1f(P.u.asp, asp); gl.uniform2f(P.u.k, VR.lens ? VR.lens[0] : 0, VR.lens ? VR.lens[1] : 0);
+  vrBindFull(P);
+  if (!stereo) { gl.uniform1f(P.u.off, 0); gl.drawArrays(gl.TRIANGLES, 0, 3); return; }
+  gl.enable(gl.SCISSOR_TEST);
+  for (let i = 0; i < 2; i++) { const e = i ? 1 : -1; gl.scissor(i * vw, 0, vw, H); gl.viewport(i * vw + e * sh, 0, vw, H); gl.uniform1f(P.u.off, i * 0.5); gl.drawArrays(gl.TRIANGLES, 0, 3); }
+  gl.disable(gl.SCISSOR_TEST);
+}
+
+/* ---------- Anticipation des mouvements de tête ---------- */
+/** Vitesse de rotation mesurée entre deux signaux des capteurs (rad/s, repère monde), lissée */
+function vrTrackOmega(q, t) {
+  if (VR.devPrev && VR.devPrevT) {
+    const dt = (t - VR.devPrevT) / 1000;
+    if (dt > 0.002 && dt < 0.1) {
+      const p = VR.devPrev, inv = [-p[0], -p[1], -p[2], p[3]]; let d = Q.mul(q, inv); if (d[3] < 0) d = d.map(v => -v);
+      const s = Math.hypot(d[0], d[1], d[2]), ang = 2 * Math.atan2(s, d[3]), w = s > 1e-6 ? [d[0] / s * ang / dt, d[1] / s * ang / dt, d[2] / s * ang / dt] : [0, 0, 0];
+      VR.omega = VR.omega ? VR.omega.map((v, i) => v * 0.5 + w[i] * 0.5) : w;
+    }
+  }
+  VR.devPrev = q; VR.devPrevT = t;
+}
+/** Orientation anticipée de lead secondes (au plus 0,3 rad) */
+function vrPredict(q, lead) {
+  const w = VR.omega; if (!w) return q;
+  const sp = Math.hypot(w[0], w[1], w[2]); if (sp < 0.05) return q;
+  const ang = Math.min(0.3, sp * lead), ax = [w[0] / sp, w[1] / sp, w[2] / sp];
+  return Q.mul(Q.axis(ax, ang), q);
+}
+
+/* ---------- Réglages : section « Rendu graphique » de l'accueil ---------- */
+function vrRenduSettingsUi(set) {
+  const box = el('div', { class: 'fx-list' });
+  const refresh = () => {
+    const fx = vrFx(set);
+    box.replaceChildren(...VR_FX_KEYS.map(([k, lab, tip]) => el('label', { class: 'fx-row', title: tip },
+      el('input', { type: 'checkbox', checked: !!fx[k], onchange: e => { set.fx = { ...vrFx(set), [k]: e.target.checked ? 1 : 0 }; set.rendu = 'perso'; sel.value = 'perso'; vrSaveSettings(set); } }),
+      el('span', {}, lab, el('small', {}, tip)))));
+  };
+  const sel = el('select', { id: 'set-rendu', onchange: e => { set.rendu = e.target.value; if (set.rendu !== 'perso') delete set.fx; vrSaveSettings(set); refresh(); } },
+    [['leger', 'Léger (vieux téléphone, autonomie)'], ['equilibre', 'Équilibré (conseillé)'], ['haute', 'Haute qualité (téléphone récent)'], ['perso', 'Personnalisé']].map(([v, t]) => { const o = el('option', { value: v }, t); if (set.rendu === v) o.selected = true; return o; }));
+  const heure = el('select', { id: 'set-heure', onchange: e => { set.heure = e.target.value; vrSaveSettings(set); } },
+    Object.entries(VR_HEURES).map(([v, h]) => { const o = el('option', { value: v }, h.label); if (set.heure === v) o.selected = true; return o; }));
+  refresh();
+  return el('details', { class: 'vr-set', id: 'vrFx' }, el('summary', {}, '✨ Rendu graphique'),
+    el('label', {}, 'Niveau', sel), el('label', {}, 'Heure de la visite', heure),
+    el('p', { class: 'hint' }, 'Chaque option se coupe séparément. Les ombres et les ombres de contact sont calculées une fois au chargement : elles coûtent peu pendant la visite. Le halo est l’option la plus gourmande.'),
+    box);
+}
+
+/* ======================================================================
+   Rejeu des tests d'intrusion dans le casque (calculés dans Groma PC et rangés dans le pack : plan.intrusion).
+   • Menu « 🚨 Intrusions » : liste des chemins (piéton, véhicule) avec leur verdict, point de vue et vitesse.
+   • Une silhouette rouge (ou un véhicule) suit le chemin ; le tracé se dessine au sol derrière elle :
+     rouge là où rien ne la détecte, orange là où elle est sous surveillance.
+   • À chaque événement : franchissement (escalade, forçage), détection (pictogramme sur le capteur), point critique.
+   • À la fin : bilan (arrêté à temps ou non, détecté ou non) et ce qu'il faut améliorer.
+   Rien n'est recalculé dans le casque : il rejoue la chronologie du pack (léger pour le téléphone).
+   ====================================================================== */
+const VR_INTR_VERD = { ok: ['🟢', 'Tenu', '#16a34a'], warn: ['🟠', 'Fragile', '#d97706'], err: ['🔴', 'Faille', '#dc2626'] };
+const vrIntrClock = s => { s = Math.max(0, Math.round(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+const vrIntrDur = s => { s = Math.round(s); return s < 60 ? s + ' s' : Math.floor(s / 60) + ' min' + (s % 60 ? ' ' + String(s % 60).padStart(2, '0') : ''); };
+let vrIntrOpts = { view: 'drone', speed: 0 };   // speed 0 = automatique (× 4 pour un piéton, temps réel pour un véhicule)
+
+/** Silhouettes (format du pack, repère local : x à droite, y en haut, z vers l'avant) : intrus à pied et véhicule. */
+function vrIntrMeshes() {
+  if (VR.intrMesh) return VR.intrMesh;
+  const mk = (build) => {
+    const out = [];
+    const rgb = h => { const n = parseInt(h.slice(1), 16); return [(n >> 16) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255]; };
+    const tri = (a, b, c, col) => { const [r, g, bb] = rgb(col); for (const p of [a, b, c]) out.push(p[0], -p[2], p[1], r, g, bb, 1); };
+    const quad = (a, b, c, d, col) => { tri(a, b, c, col); tri(a, c, d, col); };
+    const box = (x0, x1, y0, y1, z0, z1, col, top) => {
+      const P = (x, y, z) => [x, y, z], s = top || col;
+      quad(P(x0, y0, z1), P(x1, y0, z1), P(x1, y1, z1), P(x0, y1, z1), col); quad(P(x1, y0, z0), P(x0, y0, z0), P(x0, y1, z0), P(x1, y1, z0), col);
+      quad(P(x0, y0, z0), P(x0, y0, z1), P(x0, y1, z1), P(x0, y1, z0), col); quad(P(x1, y0, z1), P(x1, y0, z0), P(x1, y1, z0), P(x1, y1, z1), col);
+      quad(P(x0, y1, z1), P(x1, y1, z1), P(x1, y1, z0), P(x0, y1, z0), s); quad(P(x0, y0, z0), P(x1, y0, z0), P(x1, y0, z1), P(x0, y0, z1), col);
+    };
+    build(box);
+    const gl = VR.gl, buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.bufferData(gl.ARRAY_BUFFER, vrPackMesh(out), gl.STATIC_DRAW);
+    return { buf, n: out.length / 7 };
+  };
+  const R = '#ff2d3d', D = '#b3121f', K = '#2a0a0e';
+  VR.intrMesh = {
+    pieton: mk(box => {   // intrus en capuche, sac à dos
+      box(-0.17, -0.03, 0, 0.82, -0.09, 0.09, D); box(0.03, 0.17, 0, 0.82, -0.09, 0.09, D);
+      box(-0.22, 0.22, 0.8, 1.45, -0.13, 0.13, R); box(-0.18, 0.18, 0.9, 1.35, -0.3, -0.13, D);
+      box(-0.31, -0.22, 0.86, 1.42, -0.07, 0.07, R); box(0.22, 0.31, 0.86, 1.42, -0.07, 0.07, R);
+      box(-0.13, 0.13, 1.47, 1.76, -0.13, 0.13, D); box(-0.1, 0.1, 1.53, 1.66, 0.13, 0.14, K);
+    }),
+    vehicule: mk(box => {   // berline sombre, vitres noires
+      box(-0.9, 0.9, 0.3, 0.95, -2.25, 2.25, R, D); box(-0.8, 0.8, 0.95, 1.45, -1.1, 0.9, K);
+      for (const [x, z] of [[-0.92, -1.4], [0.92, -1.4], [-0.92, 1.45], [0.92, 1.45]]) box(x - 0.12, x + 0.12, 0, 0.62, z - 0.32, z + 0.32, '#111111');
+      box(-0.8, -0.5, 0.65, 0.8, 2.25, 2.27, '#fff6c8'); box(0.5, 0.8, 0.65, 0.8, 2.25, 2.27, '#fff6c8');
+    }),
+  };
+  VR.intrTex = { det: vrTexture(iconTexture('🚨', '', '#16a34a')), cam: vrTexture(iconTexture('📹', '', '#4f46e5')), delay: vrTexture(iconTexture('⛓️', '', '#b45309')),
+    tail: vrTexture(iconTexture('🚪', '', '#b45309')), cdp: vrTexture(iconTexture('⚠️', '', '#111827')), end: vrTexture(iconTexture('🎯', '', '#dc2626')) };
+  return VR.intrMesh;
+}
+
+/** Liste des chemins du plan : on vise un chemin et on valide pour le rejouer. */
+function vrIntrList() {
+  const I = VR.plan.intrusion; if (!I || !I.runs.length) return vrSay('Aucun test d’intrusion dans ce pack');
+  const runs = I.runs.slice(0, 6);
+  const P = vrPanel((g, c, buttons) => {
+    panelFrame(g, c, '#dc2626');
+    g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.fillStyle = '#16233d'; g.font = `900 50px ${VR_FONT}`; g.fillText('🚨 Tests d’intrusion', c.width / 2, 84);
+    g.font = `700 28px ${VR_FONT}`; g.fillStyle = '#61708c'; g.fillText(`Calculés dans Groma · ${runs[0].moment === 'jour' ? 'de jour' : 'de nuit'} · intervention en ${vrIntrDur(runs[0].tResp)}`, c.width / 2, 126);
+    runs.forEach((r, i) => {
+      const [ic, vt] = VR_INTR_VERD[r.verdict] || VR_INTR_VERD.err, y = 150 + i * 104;
+      panelButton(g, buttons, 'run' + i, 60, y, c.width - 140, 88, `${r.titre} · ${ic} ${vt}`, r.verdict === 'ok' ? '#16a34a' : r.verdict === 'warn' ? '#d97706' : '#b91c1c', () => vrIntrStart(i), r.titre);
+    });
+    const y = 160 + runs.length * 104;
+    g.textAlign = 'left'; g.fillStyle = '#16233d'; g.font = `800 30px ${VR_FONT}`; g.fillText('Regarder depuis :', 60, y + 40);
+    [['drone', '🚁 Le ciel'], ['suivre', '🏃 Derrière lui'], ['ici', '🧍 Ici']].forEach(([k, t], j) => panelButton(g, buttons, 'v' + k, 60 + j * 300, y + 60, 280, 80, t, vrIntrOpts.view === k ? '#2f7fdc' : '#94a3b8', () => { vrIntrOpts.view = k; P.draw(); }, t));
+    g.fillStyle = '#16233d'; g.font = `800 30px ${VR_FONT}`; g.textAlign = 'left'; g.fillText('Vitesse :', 60, y + 190);
+    [[0, 'Auto'], [1, 'Réelle'], [4, '× 4']].forEach(([k, t], j) => panelButton(g, buttons, 's' + k, 260 + j * 230, y + 152, 210, 70, t, vrIntrOpts.speed === k ? '#2f7fdc' : '#94a3b8', () => { vrIntrOpts.speed = k; P.draw(); }, 'Vitesse ' + t));
+    panelButton(g, buttons, 'close', c.width - 300, c.height - 120, 240, 86, '✕ Fermer', '#475569', () => vrClosePanel());
+  }, { height: 430 + runs.length * 104 });
+}
+function vrIntrStart(i) {
+  const run = VR.plan.intrusion.runs[i]; if (!run) return;
+  vrIntrMeshes(); vrClosePanel();
+  const speed = vrIntrOpts.speed || (run.prof === 'vehicule' || run.dur < 40 ? 1 : 4);
+  vrBlack(() => {
+    VR.balloon = null;
+    VR.intr = { i, run, t: -1.5, speed, seen: 0, pulse: {}, done: false, view: vrIntrOpts.view };
+    let a = 1e9, b = -1e9, c = 1e9, d = -1e9; for (const [x, y] of run.pts) { a = Math.min(a, x); b = Math.max(b, x); c = Math.min(c, y); d = Math.max(d, y); }
+    VR.intr.box = [a, b, c, d];
+    if (VR.intr.view === 'drone') {
+      const cx = (a + b) / 2, cz = (c + d) / 2, span = Math.max(b - a, d - c, 20), s = run.pts[0];
+      const away = V3.norm([s[0] - cx || 0.01, 0, s[1] - cz || 0.01]);   // on se place du côté du départ, en hauteur
+      VR.head = [cx + away[0] * span * 0.75, VR.hmax + span * 0.45 + 8, cz + away[2] * span * 0.75]; VR.drone = true;
+      vrFace([cx, 0, cz]); if (!VR.sensor) VR.dragPitch = -0.55;   // sans casque : on regarde déjà vers le site
+    } else if (VR.intr.view === 'suivre') { VR.drone = false; vrIntrFollow(0, true); if (!VR.sensor) VR.dragPitch = -0.15; }
+    vrSay(`${run.titre} · ${vrIntrDur(run.dur)}${speed > 1 ? ' (× ' + speed + ')' : ''}`);
+  });
+}
+function vrIntrStop() { VR.intr = null; VR.moving = 0; vrSay('Rejeu arrêté'); }
+/** Position et cap de l'intrus au temps t (les arrêts aux obstacles comptent). */
+function vrIntrAt(run, t) {
+  const P = run.pts; if (t <= 0) return { x: P[0][0], y: P[0][1], dx: P[1] ? P[1][0] - P[0][0] : 0, dy: P[1] ? P[1][1] - P[0][1] : 1, n: 1 };
+  for (let n = 1; n < P.length; n++) if (P[n][2] >= t) {
+    const a = P[n - 1], b = P[n], k = b[2] > a[2] ? (t - a[2]) / (b[2] - a[2]) : 1;
+    return { x: a[0] + (b[0] - a[0]) * k, y: a[1] + (b[1] - a[1]) * k, dx: b[0] - a[0], dy: b[1] - a[1], n };
+  }
+  const L = P[P.length - 1], M = P[P.length - 2] || L; return { x: L[0], y: L[1], dx: L[0] - M[0], dy: L[1] - M[1], n: P.length };
+}
+/** Point de vue « derrière lui » : 4 m en arrière, glissement doux (vignette de confort). */
+function vrIntrFollow(dt, snap) {
+  const I = VR.intr, q = vrIntrAt(I.run, Math.max(0, I.t)), l = Math.hypot(q.dx, q.dy) || 1, back = I.run.prof === 'vehicule' ? 8 : 4;
+  const want = [q.x - q.dx / l * back, VR_EYE + (I.run.prof === 'vehicule' ? 1.2 : 0), q.y - q.dy / l * back];
+  if (snap) { VR.head = want; vrFace([q.x, VR_EYE, q.y]); return; }
+  const k = Math.min(1, dt * 2.5), d = V3.sub(want, VR.head);
+  VR.head = V3.add(VR.head, V3.mul(d, k));
+  VR.moving = Math.min(0.6, V3.len(d) * 0.25);
+}
+function vrIntrUpdate(dt) {
+  const I = VR.intr; if (!I || VR.scene !== 'maquette') return;
+  if (VR.fade > 0.3) return;
+  if (!I.done) I.t += dt * I.speed;
+  const ev = I.run.ev;
+  while (I.seen < ev.length && ev[I.seen].t <= I.t) {
+    const e = ev[I.seen++]; I.pulse[I.seen - 1] = performance.now();
+    if (e.k !== 'end') vrSay((e.k === 'det' ? '🚨 ' : e.k === 'cam' ? '📹 ' : e.k === 'cdp' ? '⚠️ ' : '⛓️ ') + e.txt);
+    if ((e.k === 'det' || e.k === 'end') && navigator.vibrate) try { navigator.vibrate(e.k === 'det' ? 30 : [20, 40, 20]); } catch { }
+  }
+  if (I.view === 'suivre') vrIntrFollow(dt);
+  if (!I.done && I.t >= I.run.dur + 0.5) { I.done = true; VR.moving = 0; setTimeout(() => { if (VR.intr === I) vrIntrBilan(); }, 900); }
+}
+function vrIntrStatus() {
+  const I = VR.intr, r = I.run;
+  let miss = 1; for (let k = 0; k < I.seen; k++) { const e = r.ev[k]; if (e.k === 'det' || e.k === 'cam') miss *= 1 - (e.p || 0); }
+  return `🚨 ${vrIntrClock(Math.min(I.t, r.dur))} / ${vrIntrClock(r.dur)} · détecté ${Math.round((1 - miss) * 100)} %${I.speed > 1 ? ' · × ' + I.speed : ''}`;
+}
+/** Tracé au sol et pictogrammes des événements (préparés avec les autres quads de l'image). */
+function vrIntrQuads() {
+  const I = VR.intr, r = I.run, P = r.pts, w = (r.prof === 'vehicule' ? 0.5 : 0.28) * (VR.drone ? 3 : 1), now = performance.now(), cur = vrIntrAt(r, Math.max(0, I.t));
+  for (let n = 1; n < P.length; n++) {
+    const a = P[n - 1], b = P[n], dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy); if (L < 0.01) continue;
+    const nx = -dy / L * w, ny = dx / L * w, past = n < cur.n, y = 0.05;
+    let e = b; if (n === cur.n) e = [cur.x, cur.y];
+    const tint = past || n === cur.n ? (b[3] ? [1, 0.6, 0.1, 0.9] : [1, 0.1, 0.15, 0.95]) : [1, 1, 1, 0.28];
+    qbAdd('monde', VR.texWhite, [a[0] + nx, y, a[1] + ny, e[0] + nx, y, e[1] + ny, e[0] - nx, y, e[1] - ny, a[0] - nx, y, a[1] - ny], QB_UV, tint, false);
+    if (n === cur.n && e !== b) qbAdd('monde', VR.texWhite, [e[0] + nx, y, e[1] + ny, b[0] + nx, y, b[1] + ny, b[0] - nx, y, b[1] - ny, e[0] - nx, y, e[1] - ny], QB_UV, [1, 1, 1, 0.28], false);
+  }
+  const eye = VR.head, far = VR.drone ? 3 : 1;
+  r.ev.forEach((e, k) => {
+    const tex = VR.intrTex[e.k]; if (!tex) return;
+    const shown = k < I.seen, t0 = I.pulse[k], age = t0 ? (now - t0) / 1000 : 9, pop = shown ? 1 + Math.max(0, 0.6 - age) : 0.8;
+    if (!shown && e.k !== 'end') return;
+    const sensor = e.sx != null, pos = sensor ? [e.sx, Math.max(e.sz || 0, 0.8) + 0.5, e.sy] : [e.x, 1.6, e.y];
+    const dist = V3.len(V3.sub(pos, eye)), s = clamp(dist / 6, 1, 6) * far * 0.5 * pop;
+    qbQuad('monde', { ...billboard(pos, s * 0.85, s, eye), tex, alpha: shown ? 1 : 0.55 }, 1);
+    if (sensor && shown && age < 2.5) {   // trait du capteur vers l'intrus au moment de la détection
+      const a = pos, b = [e.x, 1, e.y], d = V3.sub(b, a), L = V3.len(d), side = V3.mul(V3.norm(V3.cross(d, [0, 1, 0])), 0.04 * far);
+      if (L > 0.5) qbAdd('monde', VR.texWhite, [...V3.add(a, side), ...V3.add(b, side), ...V3.sub(b, side), ...V3.sub(a, side)], QB_UV, e.k === 'det' ? [0.2, 1, 0.4, 0.8 * (1 - age / 2.5)] : [0.5, 0.5, 1, 0.7 * (1 - age / 2.5)], false);
+    }
+  });
+}
+/** Silhouette de l'intrus (comme la nacelle : maillage à couleurs fixes, sans ombre). */
+function vrIntrDraw(M, vp, eye, fogd, tm) {
+  const I = VR.intr, r = I.run, gl = VR.gl, R = VR.R, mesh = vrIntrMeshes()[r.prof === 'vehicule' ? 'vehicule' : 'pieton'];
+  const q = vrIntrAt(r, Math.max(0, I.t)), a = Math.atan2(q.dx, q.dy), c = Math.cos(a), s = Math.sin(a);
+  const moving = I.t > 0 && !I.done, bob = r.prof === 'pieton' && moving ? Math.abs(Math.sin(I.t / I.speed * 7)) * 0.05 : 0;
+  const T = [c, 0, -s, 0, 0, 1, 0, 0, s, 0, c, 0, q.x, bob, q.y, 1];
+  const B = R ? R.meshFlat : M;
+  if (B !== M) { gl.useProgram(B.p); vrLightUniforms(B, eye, fogd, tm); }
+  gl.uniformMatrix4fv(B.u.vp, false, M4.mul(vp, T));
+  if (R) { gl.uniform1f(B.u.bk, 1); if (B.u.shk) gl.uniform1f(B.u.shk, 0); if (B.u.aok) gl.uniform1f(B.u.aok, 0); }
+  vrBindMesh(B, mesh.buf); gl.drawArrays(gl.TRIANGLES, 0, mesh.n);
+  if (R) { if (B.u.shk) gl.uniform1f(B.u.shk, 1); if (B.u.aok) gl.uniform1f(B.u.aok, 1); gl.uniform1f(B.u.bk, VR.v2 ? 0 : 1); }
+  gl.useProgram(M.p); gl.uniformMatrix4fv(M.u.vp, false, vp);
+  vrBindMesh(M, VR.meshBuf);
+}
+/** Bilan du chemin : arrêté à temps ou non, ce qu'il faut améliorer. */
+function vrIntrBilan() {
+  const I = VR.intr; if (!I) return;
+  const r = I.run, [ic, vt, col] = VR_INTR_VERD[r.verdict] || VR_INTR_VERD.err, reco = (r.reco || []).slice(0, 3);
+  vrPanel((g, c, buttons) => {
+    panelFrame(g, c, col);
+    g.textAlign = 'left'; g.textBaseline = 'alphabetic'; g.fillStyle = '#16233d'; g.font = `900 50px ${VR_FONT}`; g.fillText(fitText(g, r.titre, 640), 50, 92);
+    g.font = `900 46px ${VR_FONT}`; g.fillStyle = col; g.textAlign = 'right'; g.fillText(`${ic} ${vt}`, c.width - 70, 92);
+    const M = [['Arrêté à temps', Math.round(r.pi * 100) + ' %'], ['Détecté', Math.round(r.pd * 100) + ' %'], ['Durée', vrIntrDur(r.dur)], [r.prof === 'vehicule' && r.vImp ? 'Impact' : 'Longueur', r.prof === 'vehicule' && r.vImp ? r.vImp + ' km/h' : r.len + ' m']];
+    M.forEach(([k, v], i) => { const x = 50 + i * 232; g.fillStyle = '#eef2f7'; roundRect(g, x, 120, 216, 110, 20); g.fill(); g.textAlign = 'center'; g.fillStyle = '#61708c'; g.font = `700 26px ${VR_FONT}`; g.fillText(k, x + 108, 160); g.fillStyle = '#16233d'; g.font = `900 40px ${VR_FONT}`; g.fillText(v, x + 108, 210); });
+    g.textAlign = 'left'; g.fillStyle = '#16233d'; g.font = `800 32px ${VR_FONT}`; g.fillText(reco.length ? 'À améliorer' : 'Aucun point faible relevé sur ce chemin', 50, 280);
+    let y = 320; g.font = `600 30px ${VR_FONT}`;
+    for (const t of reco) for (const [li, l] of wrapText(g, t, c.width - 150, 3).entries()) { if (!li) { g.fillStyle = col; g.fillText('•', 52, y); } g.fillStyle = '#16233d'; g.fillText(l, 82, y); y += 40; }
+    const by = c.height - 130;
+    panelButton(g, buttons, 'again', 50, by, 280, 96, '↻ Rejouer', '#2f7fdc', () => vrIntrStart(I.i));
+    panelButton(g, buttons, 'list', 350, by, 330, 96, '🚨 Autre chemin', '#dc2626', () => { VR.intr = null; vrIntrList(); }, 'Autre chemin');
+    panelButton(g, buttons, 'close', c.width - 300, by, 240, 96, '✕ Fermer', '#475569', () => { vrClosePanel(); VR.intr = null; vrGoStart(); }, 'Fermer');
+  }, { height: 480 + reco.length * 90 });
+}
+
+/* ---------- Démarrage ---------- */
+$('#emblem').innerHTML = gromaEmblem('emblem');
+$('#scene').innerHTML = romanScene(440, 250);
+$('#btnOpen').addEventListener('click', openPackFile);
+if (/^https?:$/.test(location.protocol)) {
+  document.head.append(el('link', { rel: 'manifest', href: 'groma-vr.webmanifest' }), el('link', { rel: 'apple-touch-icon', href: 'groma-vr-icon-192.png' }));
+  navigator.serviceWorker?.register('groma-vr-sw.js').catch(() => { });
+}
+</script>
+</body>
+</html>
